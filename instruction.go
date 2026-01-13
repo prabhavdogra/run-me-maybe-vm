@@ -5,7 +5,8 @@ import "fmt"
 type InstructionSet uint8
 
 const (
-	InstructionPush InstructionSet = iota
+	InstructionNoOp InstructionSet = iota
+	InstructionPush
 	InstructionPop
 	InstructionDup
 	InstructionSwap
@@ -13,11 +14,24 @@ const (
 	InstructionSub
 	InstructionMul
 	InstructionDiv
+	InstructionMod
+	InstructionCmpe
+	InstructionCmpne
+	InstructionCmpg
+	InstructionCmpl
+	InstructionCmpge
+	InstructionCmple
+	InstructionZjmp
+	InstructionNzjmp
+	InstructionJmp
 	InstructionPrint
+	InstructionHalt
 )
 
 func (i InstructionSet) String() string {
 	switch i {
+	case InstructionNoOp:
+		return "NOOP"
 	case InstructionPush:
 		return "PUSH"
 	case InstructionPop:
@@ -36,6 +50,28 @@ func (i InstructionSet) String() string {
 		return "DUP"
 	case InstructionSwap:
 		return "SWAP"
+	case InstructionCmpe:
+		return "CMPE"
+	case InstructionCmpne:
+		return "CMPNE"
+	case InstructionCmpg:
+		return "CMPG"
+	case InstructionCmpl:
+		return "CMPL"
+	case InstructionCmpge:
+		return "CMPGE"
+	case InstructionCmple:
+		return "CMPLE"
+	case InstructionJmp:
+		return "JMP"
+	case InstructionZjmp:
+		return "ZJMP"
+	case InstructionNzjmp:
+		return "NZJMP"
+	case InstructionMod:
+		return "MOD"
+	case InstructionHalt:
+		return "HALT"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
@@ -45,6 +81,8 @@ func runInstructions(machine *Machine) {
 	for insPtr := 0; insPtr < len(machine.instructions); insPtr++ {
 		instr := machine.instructions[insPtr]
 		switch instr.instructionType {
+		case InstructionNoOp:
+			// do nothing
 		case InstructionPush:
 			push(machine, instr.value)
 		case InstructionPop:
@@ -58,6 +96,69 @@ func runInstructions(machine *Machine) {
 			b := pop(machine)
 			push(machine, a)
 			push(machine, b)
+		case InstructionMod:
+			a := pop(machine)
+			b := pop(machine)
+			if b == 0 {
+				panic("ERROR: modulo by zero")
+			}
+			push(machine, a%b)
+		case InstructionCmpe:
+			a := pop(machine)
+			b := pop(machine)
+			if a == b {
+				push(machine, 1)
+			} else {
+				push(machine, 0)
+			}
+		case InstructionCmpne:
+			a := pop(machine)
+			b := pop(machine)
+			if a != b {
+				push(machine, 1)
+			} else {
+				push(machine, 0)
+			}
+		case InstructionCmpg:
+			a := pop(machine)
+			b := pop(machine)
+			push(machine, b)
+			push(machine, a)
+			if a > b {
+				push(machine, 1)
+			} else {
+				push(machine, 0)
+			}
+		case InstructionCmpl:
+			a := pop(machine)
+			b := pop(machine)
+			push(machine, b)
+			push(machine, a)
+			if a < b {
+				push(machine, 1)
+			} else {
+				push(machine, 0)
+			}
+		case InstructionCmpge:
+			a := pop(machine)
+			b := pop(machine)
+			push(machine, b)
+			push(machine, a)
+			if a >= b {
+				push(machine, 1)
+			} else {
+				push(machine, 0)
+			}
+		case InstructionCmple:
+			a := pop(machine)
+			b := pop(machine)
+			push(machine, b)
+			push(machine, a)
+			if a <= b {
+				push(machine, 1)
+			} else {
+				push(machine, 0)
+			}
 		case InstructionAdd:
 			a := pop(machine)
 			b := pop(machine)
@@ -73,15 +174,39 @@ func runInstructions(machine *Machine) {
 		case InstructionDiv:
 			a := pop(machine)
 			b := pop(machine)
-			push(machine, a/b)
 			if b == 0 {
 				panic("ERROR: division by zero")
 			}
+			push(machine, a/b)
+		case InstructionJmp:
+			target := int(instr.value)
+			if target >= machine.programSize() {
+				panic("ERROR: jump target out of range")
+			}
+			insPtr = target - 1 // -1 because loop will increment
+		case InstructionNzjmp:
+			if pop(machine) == 1 {
+				target := int(instr.value)
+				if target >= machine.programSize() {
+					panic("ERROR: jump target out of range")
+				}
+				insPtr = target - 1 // -1 because loop will increment
+			}
+		case InstructionZjmp:
+			if pop(machine) == 1 {
+				target := int(instr.value)
+				if target >= machine.programSize() {
+					panic("ERROR: jump target out of range")
+				}
+				insPtr = target - 1 // -1 because loop will increment
+			}
 		case InstructionPrint:
-			x := pop(machine)
-			fmt.Println(x)
+			fmt.Println(pop(machine))
+		case InstructionHalt:
+			insPtr = machine.programSize()
 		default:
 			panic("ERROR: unknown instruction")
 		}
 	}
+	printStack(machine)
 }
