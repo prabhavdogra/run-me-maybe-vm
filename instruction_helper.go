@@ -2,6 +2,44 @@ package main
 
 import "fmt"
 
+func push(machine *Machine, value int64) {
+	if len(machine.stack) >= maxStackSize {
+		panic("ERROR: stack overflow")
+	}
+	machine.stack = append(machine.stack, value)
+}
+
+func pop(machine *Machine) int64 {
+	if len(machine.stack) == 0 {
+		panic("ERROR: stack underflow")
+	}
+	value := machine.stack[len(machine.stack)-1]
+	machine.stack = machine.stack[:len(machine.stack)-1]
+	return value
+}
+
+func indexSwap(machine *Machine, index int64) {
+	if index < 0 || int(index) >= len(machine.stack) {
+		panic("ERROR: index out of bounds for swap")
+	}
+	tempValue := machine.stack[index]
+	machine.stack[index] = pop(machine)
+	push(machine, tempValue)
+}
+
+func indexDup(machine *Machine, index int64) {
+	if index < 0 || int(index) >= len(machine.stack) {
+		panic("ERROR: index out of bounds for swap")
+	}
+	push(machine, machine.stack[index])
+}
+
+func (machine *Machine) programSize() int {
+	return len(machine.instructions)
+}
+
+// ---- Instruction helper functions ----
+
 func pushIns(value int64) Instruction {
 	return Instruction{instructionType: InstructionPush, value: value}
 }
@@ -14,8 +52,16 @@ func dupIns() Instruction {
 	return Instruction{instructionType: InstructionDup}
 }
 
+func inDupIns(index int64) Instruction {
+	return Instruction{instructionType: InstructionInDup, value: index}
+}
+
 func swapIns() Instruction {
 	return Instruction{instructionType: InstructionSwap}
+}
+
+func inSwapIns(index int64) Instruction {
+	return Instruction{instructionType: InstructionInSwap, value: index}
 }
 
 func addIns() Instruction {
@@ -92,8 +138,4 @@ func printStack(machine *Machine) {
 		fmt.Printf("[%d]: %d\n", i, machine.stack[i])
 	}
 	fmt.Println("------ END OF STACK")
-}
-
-func (machine *Machine) programSize() int {
-	return len(machine.instructions)
 }

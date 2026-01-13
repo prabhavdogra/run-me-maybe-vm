@@ -14,20 +14,12 @@ var program = []Instruction{
 	printIns(),
 }
 
-func push(machine *Machine, value int64) {
-	if len(machine.stack) >= maxStackSize {
-		panic("ERROR: stack overflow")
+func swap(machine *Machine, index int) {
+	if index < 0 || index >= len(machine.stack) {
+		panic("ERROR: swap index out of bounds")
 	}
-	machine.stack = append(machine.stack, value)
-}
-
-func pop(machine *Machine) int64 {
-	if len(machine.stack) == 0 {
-		panic("ERROR: stack underflow")
-	}
-	value := machine.stack[len(machine.stack)-1]
-	machine.stack = machine.stack[:len(machine.stack)-1]
-	return value
+	topIndex := len(machine.stack) - 1
+	machine.stack[topIndex], machine.stack[index] = machine.stack[index], machine.stack[topIndex]
 }
 
 func main() {
@@ -38,4 +30,5 @@ func main() {
 	writeProgram(loadedMachine, "program.bin")
 	loadedMachine = readProgram("program.bin")
 	runInstructions(loadedMachine)
+	printStack(loadedMachine)
 }

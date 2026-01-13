@@ -9,7 +9,9 @@ const (
 	InstructionPush
 	InstructionPop
 	InstructionDup
+	InstructionInDup
 	InstructionSwap
+	InstructionInSwap
 	InstructionAdd
 	InstructionSub
 	InstructionMul
@@ -91,11 +93,15 @@ func runInstructions(machine *Machine) {
 			x := pop(machine)
 			push(machine, x)
 			push(machine, x)
+		case InstructionInDup:
+			indexDup(machine, instr.value)
 		case InstructionSwap:
 			a := pop(machine)
 			b := pop(machine)
 			push(machine, a)
 			push(machine, b)
+		case InstructionInSwap:
+			indexSwap(machine, instr.value)
 		case InstructionMod:
 			a := pop(machine)
 			b := pop(machine)
