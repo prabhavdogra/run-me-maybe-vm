@@ -1,12 +1,17 @@
 package main
 
 var program = []Instruction{
+	pushIns(14),
+	pushIns(14),
+	pushIns(14),
+	pushIns(14),
 	pushIns(5),
-	pushIns(10),
-	cmpgIns(),
-	zjmpIns(5),
-	haltIns(),
-	pushIns(42),
+	nzjmpIns(7),
+	pushIns(15),
+	noopIns(),
+	noopIns(),
+	noopIns(),
+	printIns(),
 }
 
 func push(machine *Machine, value int64) {

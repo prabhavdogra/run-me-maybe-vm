@@ -181,22 +181,22 @@ func runInstructions(machine *Machine) {
 		case InstructionJmp:
 			target := int(instr.value)
 			if target >= machine.programSize() {
-				panic("ERROR: jump target out of range")
+				panic("ERROR: jump target out of bounds")
 			}
 			insPtr = target - 1 // -1 because loop will increment
 		case InstructionNzjmp:
-			if pop(machine) == 1 {
+			if pop(machine) != 0 {
 				target := int(instr.value)
 				if target >= machine.programSize() {
-					panic("ERROR: jump target out of range")
+					panic("ERROR: jump target out of bounds")
 				}
 				insPtr = target - 1 // -1 because loop will increment
 			}
 		case InstructionZjmp:
-			if pop(machine) == 1 {
+			if pop(machine) == 0 {
 				target := int(instr.value)
 				if target >= machine.programSize() {
-					panic("ERROR: jump target out of range")
+					panic("ERROR: jump target out of bounds")
 				}
 				insPtr = target - 1 // -1 because loop will increment
 			}
