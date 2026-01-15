@@ -1,5 +1,7 @@
 package main
 
+import "vm/lexer"
+
 var program = []Instruction{
 	pushIns(14),
 	pushIns(14),
@@ -23,6 +25,7 @@ func swap(machine *Machine, index int) {
 }
 
 func main() {
+	lexer.Lex()
 	loadedMachine := &Machine{
 		stack:        make([]int64, 0, maxStackSize),
 		instructions: program,
