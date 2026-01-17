@@ -15,74 +15,64 @@ func Init(l *lexer.Lexer) *ParserList {
 }
 
 func generateList(tokens token.Tokens) *ParserList {
-	// Initialize root with a NoOp token
+	if len(tokens) == 0 {
+		return nil
+	}
+
+	// Start parser list with the first token
 	root := &ParserList{
-		Value: token.GetNoOpToken(0, 1),
+		Value: tokens[0],
 		Next:  nil,
 	}
-	for id, parsedToken := range tokens {
-		switch parsedToken.Type {
-		case token.TypeNoOp:
-			root.AddNextNode(parsedToken)
+
+	// Validate first token doesn't violate expectations
+	switch tokens[0].Type {
+	case token.TypeInt:
+		panic("ERROR: program cannot start with an integer token")
+	case token.TypePush, token.TypeInDup, token.TypeInSwap:
+		if len(tokens) < 2 || tokens[1].Type != token.TypeInt {
+			panic("ERROR: expected integer value after push/indup/inswap instruction at the start of the program")
+		}
+	}
+
+	// Iterate through tokens by absolute index and append to the parser list.
+	// When we encounter instructions that require an integer operand, also
+	// append that integer token and advance the index to consume it.
+	for i := 1; i < len(tokens); i++ {
+		t := tokens[i]
+		switch t.Type {
 		case token.TypePush:
-			root.AddNextNode(parsedToken)
-			if tokens.PeekToken(id+1).Type != token.TypeInt {
+			if tokens.PeekToken(i+1).Type != token.TypeInt {
 				panic("ERROR: expected integer value after push instruction")
 			}
-		case token.TypePop:
-			root.AddNextNode(parsedToken)
-		case token.TypeDup:
-			root.AddNextNode(parsedToken)
+			root.AddNextNode(t)
+			root.AddNextNode(tokens[i+1])
+			i++ // consume the integer token
 		case token.TypeInDup:
-			root.AddNextNode(parsedToken)
-			if tokens.PeekToken(id+1).Type != token.TypeInt {
+			if tokens.PeekToken(i+1).Type != token.TypeInt {
 				panic("ERROR: expected integer value after indup instruction")
 			}
-		case token.TypeSwap:
-			root.AddNextNode(parsedToken)
+			root.AddNextNode(t)
+			root.AddNextNode(tokens[i+1])
+			i++
 		case token.TypeInSwap:
-			root.AddNextNode(parsedToken)
-			if tokens.PeekToken(id+1).Type != token.TypeInt {
+			if tokens.PeekToken(i+1).Type != token.TypeInt {
 				panic("ERROR: expected integer value after inswap instruction")
 			}
-		case token.TypeAdd:
-			root.AddNextNode(parsedToken)
-		case token.TypeSub:
-			root.AddNextNode(parsedToken)
-		case token.TypeMul:
-			root.AddNextNode(parsedToken)
-		case token.TypeDiv:
-			root.AddNextNode(parsedToken)
-		case token.TypeMod:
-			root.AddNextNode(parsedToken)
-		case token.TypeCmpe:
-			root.AddNextNode(parsedToken)
-		case token.TypeCmpne:
-			root.AddNextNode(parsedToken)
-		case token.TypeCmpg:
-			root.AddNextNode(parsedToken)
-		case token.TypeCmpl:
-			root.AddNextNode(parsedToken)
-		case token.TypeCmpge:
-			root.AddNextNode(parsedToken)
-		case token.TypeCmple:
-			root.AddNextNode(parsedToken)
-		case token.TypeJmp:
-			root.AddNextNode(parsedToken)
-		case token.TypeZjmp:
-			root.AddNextNode(parsedToken)
-		case token.TypeNzjmp:
-			root.AddNextNode(parsedToken)
-		case token.TypePrint:
-			root.AddNextNode(parsedToken)
-		case token.TypeInt:
-			root.AddNextNode(parsedToken)
-		case token.TypeHalt:
-			root.AddNextNode(parsedToken)
+			root.AddNextNode(t)
+			root.AddNextNode(tokens[i+1])
+			i++
+		case token.TypeNoOp, token.TypePop, token.TypeDup, token.TypeSwap,
+			token.TypeAdd, token.TypeSub, token.TypeMul, token.TypeDiv,
+			token.TypeMod, token.TypeCmpe, token.TypeCmpne, token.TypeCmpg,
+			token.TypeCmpl, token.TypeCmpge, token.TypeCmple, token.TypeJmp,
+			token.TypeZjmp, token.TypeNzjmp, token.TypePrint, token.TypeInt, token.TypeHalt:
+			root.AddNextNode(t)
 		default:
 			panic("unknown token type encountered during parsing")
 		}
 	}
+
 	return root
 }
 

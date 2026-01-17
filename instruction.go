@@ -83,7 +83,7 @@ func (i InstructionSet) String() string {
 	}
 }
 
-func runInstructions(machine *Machine) {
+func runInstructions(machine *Machine) *Machine {
 	for insPtr := 0; insPtr < len(machine.instructions); insPtr++ {
 		instr := machine.instructions[insPtr]
 		switch instr.instructionType {
@@ -219,4 +219,5 @@ func runInstructions(machine *Machine) {
 			panic("ERROR: unknown instruction")
 		}
 	}
+	return machine
 }

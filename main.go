@@ -23,7 +23,7 @@ func main() {
 		stack:        make([]int64, 0, maxStackSize),
 		instructions: instructions,
 	}
-	runInstructions(loadedMachine)
+	loadedMachine = runInstructions(loadedMachine)
 	if debugMode {
 		printStack(loadedMachine)
 	}
