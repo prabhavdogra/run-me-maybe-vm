@@ -6,10 +6,15 @@ import (
 )
 
 func main() {
-	lex := lexer.Init("test.wm").Lex()
-	// lex.Print()
+	args := parseArgs()
+	lex := lexer.Init(args.FileName).Lex()
+	if args.DebugMode {
+		lex.Print()
+	}
 	parsedTokens := parser.Init(lex)
-	// parsedTokens.Print()
+	if args.DebugMode {
+		parsedTokens.Print()
+	}
 	instructions := generateInstructions(parsedTokens)
 	instructions.Print()
 	loadedMachine := &Machine{
