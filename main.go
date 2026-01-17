@@ -1,6 +1,9 @@
 package main
 
-import "vm/lexer"
+import (
+	"vm/internal/lexer"
+	"vm/internal/parser"
+)
 
 var program = []Instruction{
 	pushIns(14),
@@ -16,16 +19,9 @@ var program = []Instruction{
 	printIns(),
 }
 
-func swap(machine *Machine, index int) {
-	if index < 0 || index >= len(machine.stack) {
-		panic("ERROR: swap index out of bounds")
-	}
-	topIndex := len(machine.stack) - 1
-	machine.stack[topIndex], machine.stack[index] = machine.stack[index], machine.stack[topIndex]
-}
-
 func main() {
-	lexer.Lex()
+	lex := lexer.Init("test.wm").Lex()
+	parser.Init(lex)
 	loadedMachine := &Machine{
 		stack:        make([]int64, 0, maxStackSize),
 		instructions: program,

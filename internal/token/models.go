@@ -1,9 +1,10 @@
-package lexer
+package token
 
 type TokenType uint8
 
 const (
-	TypeNoOp TokenType = iota
+	TypeInvalid TokenType = iota
+	TypeNoOp
 	TypePush
 	TypePop
 	TypeDup
@@ -26,6 +27,7 @@ const (
 	TypeNzjmp
 	TypePrint
 	TypeHalt
+	TypeInt
 )
 
 type Token struct {

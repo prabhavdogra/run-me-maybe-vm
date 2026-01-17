@@ -1,13 +1,14 @@
-package lexer
+package token
 
 import (
 	"fmt"
-	"os"
 	"unicode"
 )
 
-func printToken(token Token) {
-	switch token.Type {
+type Tokens []Token
+
+func (t *Token) Print() {
+	switch t.Type {
 	case TypeNoOp:
 		fmt.Println("TYPE NOP")
 	case TypePush:
@@ -54,13 +55,17 @@ func printToken(token Token) {
 		fmt.Println("TYPE PRINT")
 	case TypeHalt:
 		fmt.Println("TYPE HALT")
+	case TypeInt:
+		fmt.Println("TYPE INT")
+	default:
+		fmt.Println("TYPE INVALID")
 	}
 
 	fmt.Printf(
 		"text: %s, line: %d, character: %d\n",
-		token.Text,
-		token.Line,
-		token.Character,
+		t.Text,
+		t.Line,
+		t.Character,
 	)
 }
 
@@ -122,19 +127,11 @@ func checkBuiltinKeywords(name string) TokenType {
 	case "halt":
 		return TypeHalt
 	default:
-		return TypeNoOp
+		return TypeInvalid
 	}
 }
 
-func openFile(filePath string) ([]byte, error) {
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("could not open file %s:  %w", filePath, err)
-	}
-	return data, nil
-}
-
-func generateKeyword(input string, line int, currentIndex int, char int) (Token, int) {
+func GenerateKeyword(input string, line int, currentIndex int, char int) (Token, int) {
 	keyword := ""
 	for len(input) > currentIndex && unicode.IsLetter(rune(input[currentIndex])) {
 		keyword += string(input[currentIndex])
@@ -144,36 +141,18 @@ func generateKeyword(input string, line int, currentIndex int, char int) (Token,
 	return InitToken(tokenType, keyword, line, char), currentIndex
 }
 
-func Lex() {
-	byteArray, err := openFile("test.wm")
-	if err != nil {
-		fmt.Println(err)
-		return
+func GenerateInt(input string, line int, currentIndex int, char int) (Token, int) {
+	number := ""
+	for len(input) > currentIndex && unicode.IsDigit(rune(input[currentIndex])) {
+		number += string(input[currentIndex])
+		currentIndex++
 	}
+	return InitToken(TypeInt, number, line, char), currentIndex
+}
 
-	input := string(byteArray)
-	currentIndex := 0
-	line := 1
-	character := 1
-
-	for currentIndex < len(input) {
-
-		if input[currentIndex] == '\n' {
-			line++
-			character = 0
-		}
-
-		if unicode.IsLetter(rune(input[currentIndex])) {
-			var token Token
-			token, currentIndex = generateKeyword(input, line, currentIndex, character)
-			printToken(token)
-		} else if unicode.IsDigit(rune(input[currentIndex])) {
-			fmt.Println("NUMERIC")
-			currentIndex++
-		} else { // whitespace token
-			currentIndex++
-		}
-		character++
+func (t Tokens) PeekToken(index int) *Token {
+	if index < 0 || index >= len(t) {
+		return nil
 	}
-
+	return &t[index]
 }
