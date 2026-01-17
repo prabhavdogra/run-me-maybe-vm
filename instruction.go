@@ -211,12 +211,12 @@ func runInstructions(machine *Machine) {
 				insPtr = target - 1 // -1 because loop will increment
 			}
 		case InstructionPrint:
-			fmt.Println(pop(machine))
+			value := pop(machine)
+			fmt.Println(value)
 		case InstructionHalt:
 			insPtr = machine.programSize()
 		default:
 			panic("ERROR: unknown instruction")
 		}
 	}
-	printStack(machine)
 }

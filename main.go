@@ -24,6 +24,8 @@ func main() {
 		instructions: instructions,
 	}
 	runInstructions(loadedMachine)
+	if debugMode {
+		printStack(loadedMachine)
+	}
 	writeProgram(loadedMachine, "program.bin")
-	printStack(loadedMachine)
 }
