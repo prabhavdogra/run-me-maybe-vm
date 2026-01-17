@@ -21,7 +21,9 @@ var program = []Instruction{
 
 func main() {
 	lex := lexer.Init("test.wm").Lex()
-	parser.Init(lex)
+	// lex.Print()
+	parsedTokens := parser.Init(lex)
+	parsedTokens.Print()
 	loadedMachine := &Machine{
 		stack:        make([]int64, 0, maxStackSize),
 		instructions: program,

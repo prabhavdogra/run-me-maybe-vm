@@ -36,3 +36,12 @@ type Token struct {
 	Line      int
 	Character int
 }
+
+func GetNoOpToken(line int, char int) Token {
+	return InitToken(
+		TypeNoOp,
+		"noop",
+		line,
+		char,
+	)
+}

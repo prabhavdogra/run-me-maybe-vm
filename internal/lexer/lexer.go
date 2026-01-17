@@ -57,8 +57,11 @@ func (l *Lexer) Lex() *Lexer {
 		}
 		character++
 	}
+	return l
+}
+
+func (l *Lexer) Print() {
 	for _, token := range l.Tokens {
 		token.Print()
 	}
-	return l
 }

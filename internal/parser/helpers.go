@@ -15,8 +15,9 @@ func Init(l *lexer.Lexer) *ParserList {
 }
 
 func generateList(tokens token.Tokens) *ParserList {
+	// Initialize root with a NoOp token
 	root := &ParserList{
-		Value: tokens[0],
+		Value: token.GetNoOpToken(0, 1),
 		Next:  nil,
 	}
 	for id, parsedToken := range tokens {
@@ -93,5 +94,11 @@ func (pl *ParserList) AddNextNode(token token.Token) {
 	current.Next = &ParserList{
 		Value: token,
 		Next:  nil,
+	}
+}
+
+func (pl *ParserList) Print() {
+	for current := pl; current != nil; current = current.Next {
+		current.Value.Print()
 	}
 }
