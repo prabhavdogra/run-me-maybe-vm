@@ -8,6 +8,10 @@ import (
 	"vm/internal/token"
 )
 
+type InstructionList []Instruction
+
+// ---- Stack helper functions ----
+
 func push(machine *Machine, value int64) {
 	if len(machine.stack) >= maxStackSize {
 		panic("ERROR: stack overflow")
@@ -146,38 +150,41 @@ func printStack(machine *Machine) {
 	fmt.Println("------ END OF STACK")
 }
 
-func generateInstructions(parsedTokens *parser.ParserList) []Instruction {
+func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 	instructions := []Instruction{}
-	for parsedTokens != nil {
-		peekNode := parsedTokens.Next
-		switch parsedTokens.Value.Type {
+	cur := parsedTokens
+	for cur != nil {
+		switch cur.Value.Type {
 		case token.TypeInvalid:
 			panic("ERROR: invalid token encountered during instruction generation")
 		case token.TypeNoOp:
 			instructions = append(instructions, noopIns())
 		case token.TypePush:
-			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
 				panic("ERROR: invalid integer value for push instruction")
 			}
+			cur = cur.Next
 			instructions = append(instructions, pushIns(value))
 		case token.TypePop:
 			instructions = append(instructions, popIns())
 		case token.TypeDup:
 			instructions = append(instructions, dupIns())
 		case token.TypeInDup:
-			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
 				panic("ERROR: invalid integer value for indup instruction")
 			}
+			cur = cur.Next
 			instructions = append(instructions, inDupIns(value))
 		case token.TypeSwap:
 			instructions = append(instructions, swapIns())
 		case token.TypeInSwap:
-			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
 				panic("ERROR: invalid integer value for inswap instruction")
 			}
+			cur = cur.Next
 			instructions = append(instructions, inSwapIns(value))
 		case token.TypeAdd:
 			instructions = append(instructions, addIns())
@@ -202,30 +209,42 @@ func generateInstructions(parsedTokens *parser.ParserList) []Instruction {
 		case token.TypeMod:
 			instructions = append(instructions, modIns())
 		case token.TypeJmp:
-			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
 				panic("ERROR: invalid integer value for jmp instruction")
 			}
+			cur = cur.Next
 			instructions = append(instructions, jmpIns(value))
 		case token.TypeZjmp:
-			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
 				panic("ERROR: invalid integer value for zjmp instruction")
 			}
+			cur = cur.Next
 			instructions = append(instructions, zjmpIns(value))
 		case token.TypeNzjmp:
-			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
 				panic("ERROR: invalid integer value for nzjmp instruction")
 			}
+			cur = cur.Next
 			instructions = append(instructions, nzjmpIns(value))
 		case token.TypePrint:
 			instructions = append(instructions, printIns())
+		case token.TypeInt:
+			panic("ERROR: unexpected standalone integer token encountered during instruction generation")
 		case token.TypeHalt:
 			instructions = append(instructions, haltIns())
 		default:
 			panic("ERROR: unknown token type encountered during instruction generation")
 		}
+		cur = cur.Next
 	}
 	return instructions
+}
+
+func (il InstructionList) Print() {
+	for i, instr := range il {
+		fmt.Printf("[%d]: Type=%s, Value=%d\n", i, instr.instructionType.String(), instr.value)
+	}
 }

@@ -9,11 +9,12 @@ func main() {
 	lex := lexer.Init("test.wm").Lex()
 	// lex.Print()
 	parsedTokens := parser.Init(lex)
-	parsedTokens.Print()
-	instruction := generateInstructions(parsedTokens)
+	// parsedTokens.Print()
+	instructions := generateInstructions(parsedTokens)
+	instructions.Print()
 	loadedMachine := &Machine{
 		stack:        make([]int64, 0, maxStackSize),
-		instructions: instruction,
+		instructions: instructions,
 	}
 	writeProgram(loadedMachine, "program.bin")
 	loadedMachine = readProgram("program.bin")

@@ -50,8 +50,12 @@ func (i InstructionSet) String() string {
 		return "PRINT"
 	case InstructionDup:
 		return "DUP"
+	case InstructionInDup:
+		return "INDUP"
 	case InstructionSwap:
 		return "SWAP"
+	case InstructionInSwap:
+		return "INSWAP"
 	case InstructionCmpe:
 		return "CMPE"
 	case InstructionCmpne:
