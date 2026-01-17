@@ -16,13 +16,14 @@ func main() {
 		parsedTokens.Print()
 	}
 	instructions := generateInstructions(parsedTokens)
-	instructions.Print()
+	if args.DebugMode {
+		instructions.Print()
+	}
 	loadedMachine := &Machine{
 		stack:        make([]int64, 0, maxStackSize),
 		instructions: instructions,
 	}
-	writeProgram(loadedMachine, "program.bin")
-	loadedMachine = readProgram("program.bin")
 	runInstructions(loadedMachine)
+	writeProgram(loadedMachine, "program.bin")
 	printStack(loadedMachine)
 }
