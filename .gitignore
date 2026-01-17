@@ -1,3 +1,4 @@
 # Binaries
 __debug_bin*
 program.bin
+*.wm
