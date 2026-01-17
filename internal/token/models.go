@@ -8,9 +8,9 @@ const (
 	TypePush
 	TypePop
 	TypeDup
-	TypeIndup
+	TypeInDup
 	TypeSwap
-	TypeInswap
+	TypeInSwap
 	TypeAdd
 	TypeSub
 	TypeMul

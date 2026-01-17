@@ -5,28 +5,15 @@ import (
 	"vm/internal/parser"
 )
 
-var program = []Instruction{
-	pushIns(14),
-	pushIns(14),
-	pushIns(14),
-	pushIns(14),
-	pushIns(5),
-	nzjmpIns(7),
-	pushIns(15),
-	noopIns(),
-	noopIns(),
-	noopIns(),
-	printIns(),
-}
-
 func main() {
 	lex := lexer.Init("test.wm").Lex()
 	// lex.Print()
 	parsedTokens := parser.Init(lex)
 	parsedTokens.Print()
+	instruction := generateInstructions(parsedTokens)
 	loadedMachine := &Machine{
 		stack:        make([]int64, 0, maxStackSize),
-		instructions: program,
+		instructions: instruction,
 	}
 	writeProgram(loadedMachine, "program.bin")
 	loadedMachine = readProgram("program.bin")

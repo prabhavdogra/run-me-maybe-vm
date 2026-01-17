@@ -33,14 +33,14 @@ func generateList(tokens token.Tokens) *ParserList {
 			root.AddNextNode(parsedToken)
 		case token.TypeDup:
 			root.AddNextNode(parsedToken)
-		case token.TypeIndup:
+		case token.TypeInDup:
 			root.AddNextNode(parsedToken)
 			if tokens.PeekToken(id+1).Type != token.TypeInt {
 				panic("ERROR: expected integer value after indup instruction")
 			}
 		case token.TypeSwap:
 			root.AddNextNode(parsedToken)
-		case token.TypeInswap:
+		case token.TypeInSwap:
 			root.AddNextNode(parsedToken)
 			if tokens.PeekToken(id+1).Type != token.TypeInt {
 				panic("ERROR: expected integer value after inswap instruction")

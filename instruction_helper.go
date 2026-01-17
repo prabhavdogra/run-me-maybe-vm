@@ -1,6 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+
+	"vm/internal/parser"
+	"vm/internal/token"
+)
 
 func push(machine *Machine, value int64) {
 	if len(machine.stack) >= maxStackSize {
@@ -138,4 +144,88 @@ func printStack(machine *Machine) {
 		fmt.Printf("[%d]: %d\n", i, machine.stack[i])
 	}
 	fmt.Println("------ END OF STACK")
+}
+
+func generateInstructions(parsedTokens *parser.ParserList) []Instruction {
+	instructions := []Instruction{}
+	for parsedTokens != nil {
+		peekNode := parsedTokens.Next
+		switch parsedTokens.Value.Type {
+		case token.TypeInvalid:
+			panic("ERROR: invalid token encountered during instruction generation")
+		case token.TypeNoOp:
+			instructions = append(instructions, noopIns())
+		case token.TypePush:
+			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			if err != nil {
+				panic("ERROR: invalid integer value for push instruction")
+			}
+			instructions = append(instructions, pushIns(value))
+		case token.TypePop:
+			instructions = append(instructions, popIns())
+		case token.TypeDup:
+			instructions = append(instructions, dupIns())
+		case token.TypeInDup:
+			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			if err != nil {
+				panic("ERROR: invalid integer value for indup instruction")
+			}
+			instructions = append(instructions, inDupIns(value))
+		case token.TypeSwap:
+			instructions = append(instructions, swapIns())
+		case token.TypeInSwap:
+			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			if err != nil {
+				panic("ERROR: invalid integer value for inswap instruction")
+			}
+			instructions = append(instructions, inSwapIns(value))
+		case token.TypeAdd:
+			instructions = append(instructions, addIns())
+		case token.TypeSub:
+			instructions = append(instructions, subIns())
+		case token.TypeMul:
+			instructions = append(instructions, mulIns())
+		case token.TypeDiv:
+			instructions = append(instructions, divIns())
+		case token.TypeCmpe:
+			instructions = append(instructions, cmpeIns())
+		case token.TypeCmpne:
+			instructions = append(instructions, cmpneIns())
+		case token.TypeCmpg:
+			instructions = append(instructions, cmpgIns())
+		case token.TypeCmpl:
+			instructions = append(instructions, cmplIns())
+		case token.TypeCmpge:
+			instructions = append(instructions, cmpgeIns())
+		case token.TypeCmple:
+			instructions = append(instructions, cmpleIns())
+		case token.TypeMod:
+			instructions = append(instructions, modIns())
+		case token.TypeJmp:
+			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			if err != nil {
+				panic("ERROR: invalid integer value for jmp instruction")
+			}
+			instructions = append(instructions, jmpIns(value))
+		case token.TypeZjmp:
+			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			if err != nil {
+				panic("ERROR: invalid integer value for zjmp instruction")
+			}
+			instructions = append(instructions, zjmpIns(value))
+		case token.TypeNzjmp:
+			value, err := strconv.ParseInt(peekNode.Value.Text, 10, 64)
+			if err != nil {
+				panic("ERROR: invalid integer value for nzjmp instruction")
+			}
+			instructions = append(instructions, nzjmpIns(value))
+		case token.TypePrint:
+			instructions = append(instructions, printIns())
+		case token.TypeHalt:
+			instructions = append(instructions, haltIns())
+		default:
+			panic("ERROR: unknown token type encountered during instruction generation")
+		}
+	}
+	return instructions
 }

@@ -1,15 +1,3 @@
-push 1
-push 0
-push 1
-indup 1
-inswap 0
-pop
-dup
-inswap 1
-pop
-indup 0
-indup 1
-add
-swap
+push 5
 print
-jmp 3
+jmp 0

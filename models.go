@@ -11,8 +11,6 @@ type Instruction struct {
 	value           int64
 }
 
-var ProgramSize = len(program)
-
 const maxStackSize = 1024
 
 var debugMode = false

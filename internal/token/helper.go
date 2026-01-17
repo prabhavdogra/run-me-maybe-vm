@@ -17,11 +17,11 @@ func (t *Token) Print() {
 		fmt.Println("TYPE POP")
 	case TypeDup:
 		fmt.Println("TYPE DUP")
-	case TypeIndup:
+	case TypeInDup:
 		fmt.Println("TYPE INDUP")
 	case TypeSwap:
 		fmt.Println("TYPE SWAP")
-	case TypeInswap:
+	case TypeInSwap:
 		fmt.Println("TYPE INSWAP")
 	case TypeAdd:
 		fmt.Println("TYPE ADD")
@@ -89,11 +89,11 @@ func checkBuiltinKeywords(name string) TokenType {
 	case "dup":
 		return TypeDup
 	case "indup":
-		return TypeIndup
+		return TypeInDup
 	case "swap":
 		return TypeSwap
 	case "inswap":
-		return TypeInswap
+		return TypeInSwap
 	case "add":
 		return TypeAdd
 	case "sub":
