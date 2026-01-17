@@ -138,6 +138,9 @@ func GenerateKeyword(input string, line int, currentIndex int, char int) (Token,
 		currentIndex++
 	}
 	tokenType := checkBuiltinKeywords(keyword)
+	if tokenType == TypeInvalid {
+		panic(fmt.Sprintf("ERROR: unknown keyword '%s' at line %d, character %d", keyword, line, char))
+	}
 	return InitToken(tokenType, keyword, line, char), currentIndex
 }
 

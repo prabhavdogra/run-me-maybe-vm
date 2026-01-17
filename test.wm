@@ -1,19 +1,25 @@
+push 10
+
 push 1
 push 1
 push 0
 
-indup 1
-inswap 0
-pop
-
-dup
+indup 2
 inswap 1
 pop
 
-indup 0
+dup
+inswap 2
+pop
+
 indup 1
+indup 2
 add
 swap
 print
 
-jmp 3
+push 1
+indup 0
+sub
+inswap 0
+nzjmp 4
