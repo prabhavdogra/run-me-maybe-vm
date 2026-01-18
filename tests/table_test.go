@@ -1,4 +1,4 @@
-package main
+package tests
 
 import (
 	"os"
@@ -8,42 +8,16 @@ import (
 	"testing"
 )
 
+type ProgramTestCase struct {
+	name     string
+	program  string
+	expected []string
+}
+
 func TestPrograms(t *testing.T) {
-	cases := []struct {
-		name     string
-		program  string
-		expected []string
-	}{
-		{
-			name: "fibonacci",
-			program: `
-				push 10
-				push 1
-				push 1
-				push 0
-
-				indup 2
-				inswap 1
-				pop
-
-				dup
-				inswap 2
-				pop
-
-				indup 1
-				indup 2
-				add
-				swap
-				print
-
-				push 1
-				indup 0
-				sub
-				inswap 0
-				nzjmp 4
-			`,
-			expected: []string{"0", "1", "1", "2", "3", "5", "8", "13", "21", "34", "55"},
-		},
+	cases := []ProgramTestCase{
+		fib,
+		label,
 	}
 
 	intLineRE := regexp.MustCompile(`^\s*-?\d+\s*$`)

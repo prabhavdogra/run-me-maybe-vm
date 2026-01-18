@@ -233,6 +233,10 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 			instructions = append(instructions, printIns())
 		case token.TypeInt:
 			panic("ERROR: unexpected standalone integer token encountered during instruction generation")
+		case token.TypeLabelDefinition:
+			panic("ERROR: unexpected label definition token encountered during instruction generation")
+		case token.TypeLabel:
+			panic("ERROR: unexpected label token encountered during instruction generation")
 		case token.TypeHalt:
 			instructions = append(instructions, haltIns())
 		default:

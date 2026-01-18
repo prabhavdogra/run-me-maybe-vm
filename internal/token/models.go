@@ -28,11 +28,13 @@ const (
 	TypePrint
 	TypeHalt
 	TypeInt
+	TypeLabelDefinition
+	TypeLabel
 )
 
 type Token struct {
 	Type      TokenType
 	Text      string
-	Line      int
+	Line      int64
 	Character int
 }

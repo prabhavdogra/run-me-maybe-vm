@@ -7,60 +7,67 @@ import (
 
 type Tokens []Token
 
-func (t *Token) Print() {
-	switch t.Type {
+func (tt TokenType) String() string {
+	switch tt {
 	case TypeNoOp:
-		fmt.Println("TYPE NOP")
+		return "TYPE NOP"
 	case TypePush:
-		fmt.Println("TYPE PUSH")
+		return "TYPE PUSH"
 	case TypePop:
-		fmt.Println("TYPE POP")
+		return "TYPE POP"
 	case TypeDup:
-		fmt.Println("TYPE DUP")
+		return "TYPE DUP"
 	case TypeInDup:
-		fmt.Println("TYPE INDUP")
+		return "TYPE INDUP"
 	case TypeSwap:
-		fmt.Println("TYPE SWAP")
+		return "TYPE SWAP"
 	case TypeInSwap:
-		fmt.Println("TYPE INSWAP")
+		return "TYPE INSWAP"
 	case TypeAdd:
-		fmt.Println("TYPE ADD")
+		return "TYPE ADD"
 	case TypeSub:
-		fmt.Println("TYPE SUB")
+		return "TYPE SUB"
 	case TypeMul:
-		fmt.Println("TYPE MUL")
+		return "TYPE MUL"
 	case TypeDiv:
-		fmt.Println("TYPE DIV")
+		return "TYPE DIV"
 	case TypeMod:
-		fmt.Println("TYPE MOD")
+		return "TYPE MOD"
 	case TypeCmpe:
-		fmt.Println("TYPE CMPE")
+		return "TYPE CMPE"
 	case TypeCmpne:
-		fmt.Println("TYPE CMPNE")
+		return "TYPE CMPNE"
 	case TypeCmpg:
-		fmt.Println("TYPE CMPG")
+		return "TYPE CMPG"
 	case TypeCmpl:
-		fmt.Println("TYPE CMPL")
+		return "TYPE CMPL"
 	case TypeCmpge:
-		fmt.Println("TYPE CMPGE")
+		return "TYPE CMPGE"
 	case TypeCmple:
-		fmt.Println("TYPE CMPLE")
+		return "TYPE CMPLE"
 	case TypeJmp:
-		fmt.Println("TYPE JMP")
+		return "TYPE JMP"
 	case TypeZjmp:
-		fmt.Println("TYPE ZJMP")
+		return "TYPE ZJMP"
 	case TypeNzjmp:
-		fmt.Println("TYPE NZJMP")
+		return "TYPE NZJMP"
 	case TypePrint:
-		fmt.Println("TYPE PRINT")
-	case TypeHalt:
-		fmt.Println("TYPE HALT")
+		return "TYPE PRINT"
 	case TypeInt:
-		fmt.Println("TYPE INT")
+		return "TYPE INT"
+	case TypeLabelDefinition:
+		return "TYPE LABEL DEFINITION"
+	case TypeLabel:
+		return "TYPE LABEL"
+	case TypeHalt:
+		return "TYPE HALT"
 	default:
-		fmt.Println("TYPE INVALID")
+		return "TYPE INVALID"
 	}
+}
 
+func (t *Token) Print() {
+	fmt.Println(t.Type.String())
 	fmt.Printf(
 		"text: %s, line: %d, character: %d\n",
 		t.Text,
@@ -69,7 +76,14 @@ func (t *Token) Print() {
 	)
 }
 
-func InitToken(tokenType TokenType, text string, line int, char int) Token {
+func checkLabelType(label string) TokenType {
+	if len(label) >= 2 && label[len(label)-1] == ':' {
+		return TypeLabelDefinition
+	}
+	return TypeLabel
+}
+
+func InitToken(tokenType TokenType, text string, line int64, char int) Token {
 	return Token{
 		Type:      tokenType,
 		Text:      text,
@@ -127,24 +141,25 @@ func checkBuiltinKeywords(name string) TokenType {
 	case "halt":
 		return TypeHalt
 	default:
-		return TypeInvalid
+		return checkLabelType(name)
 	}
 }
 
-func GenerateKeyword(input string, line int, currentIndex int, char int) (Token, int) {
+func GenerateKeyword(input string, line int64, currentIndex int, char int) (Token, int) {
 	keyword := ""
-	for len(input) > currentIndex && unicode.IsLetter(rune(input[currentIndex])) {
+	for len(input) > currentIndex &&
+		(unicode.IsLetter(rune(input[currentIndex])) || rune(input[currentIndex]) == ':') {
 		keyword += string(input[currentIndex])
 		currentIndex++
 	}
 	tokenType := checkBuiltinKeywords(keyword)
-	if tokenType == TypeInvalid {
-		panic(fmt.Sprintf("ERROR: unknown keyword '%s' at line %d, character %d", keyword, line, char))
+	if tokenType == TypeLabelDefinition {
+		keyword = keyword[:len(keyword)-1]
 	}
 	return InitToken(tokenType, keyword, line, char), currentIndex
 }
 
-func GenerateInt(input string, line int, currentIndex int, char int) (Token, int) {
+func GenerateInt(input string, line int64, currentIndex int, char int) (Token, int) {
 	number := ""
 	for len(input) > currentIndex && unicode.IsDigit(rune(input[currentIndex])) {
 		number += string(input[currentIndex])
@@ -158,4 +173,8 @@ func (t Tokens) PeekToken(index int) *Token {
 		return nil
 	}
 	return &t[index]
+}
+
+func GetNoOpToken(line int64, char int) Token {
+	return InitToken(TypeNoOp, "noop", line, char)
 }

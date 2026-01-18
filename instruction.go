@@ -112,7 +112,7 @@ func runInstructions(machine *Machine) *Machine {
 			if b == 0 {
 				panic("ERROR: modulo by zero")
 			}
-			push(machine, a%b)
+			push(machine, b%a)
 		case InstructionCmpe:
 			a := pop(machine)
 			b := pop(machine)
@@ -172,22 +172,22 @@ func runInstructions(machine *Machine) *Machine {
 		case InstructionAdd:
 			a := pop(machine)
 			b := pop(machine)
-			push(machine, a+b)
+			push(machine, b+a)
 		case InstructionSub:
 			a := pop(machine)
 			b := pop(machine)
-			push(machine, a-b)
+			push(machine, b-a)
 		case InstructionMul:
 			a := pop(machine)
 			b := pop(machine)
-			push(machine, a*b)
+			push(machine, b*a)
 		case InstructionDiv:
 			a := pop(machine)
 			b := pop(machine)
 			if b == 0 {
 				panic("ERROR: division by zero")
 			}
-			push(machine, a/b)
+			push(machine, b/a)
 		case InstructionJmp:
 			target := int(instr.value)
 			if target >= machine.programSize() {

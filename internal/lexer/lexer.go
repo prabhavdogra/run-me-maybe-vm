@@ -35,13 +35,15 @@ func (l *Lexer) Lex() *Lexer {
 	}
 
 	currentIndex := 0
-	line := 1
+	line := int64(1)
 	character := 1
 
 	for currentIndex < len(input) {
 		var lexedToken token.Token
-
 		if input[currentIndex] == '\n' {
+			if currentIndex > 0 && input[currentIndex-1] == '\n' {
+				l.addToken(token.GetNoOpToken(line, character))
+			}
 			line++
 			character = 0
 		}
