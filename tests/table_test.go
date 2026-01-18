@@ -18,6 +18,7 @@ func TestPrograms(t *testing.T) {
 	cases := []ProgramTestCase{
 		fib,
 		label,
+		label2,
 	}
 
 	intLineRE := regexp.MustCompile(`^\s*-?\d+\s*$`)

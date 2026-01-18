@@ -41,7 +41,8 @@ func (l *Lexer) Lex() *Lexer {
 	for currentIndex < len(input) {
 		var lexedToken token.Token
 		if input[currentIndex] == '\n' {
-			if currentIndex > 0 && input[currentIndex-1] == '\n' {
+			if (currentIndex == 0 && len(l.Tokens) == 0) ||
+				(currentIndex != 0 && input[currentIndex-1] == '\n') {
 				l.addToken(token.GetNoOpToken(line, character))
 			}
 			line++
