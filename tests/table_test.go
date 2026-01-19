@@ -23,7 +23,7 @@ func TestPrograms(t *testing.T) {
 	}
 	cases = append(cases, operatorsTest...)
 
-	literalLineRE := regexp.MustCompile(`^\s*(INT -?\d+|FLOAT -?\d+\.?\d*)\s*$`)
+	literalLineRE := regexp.MustCompile(`^\s*(INT -?\d+|FLOAT -?\d+\.?\d*|CHAR .)\s*$`)
 
 	for _, tc := range cases {
 		tc := tc

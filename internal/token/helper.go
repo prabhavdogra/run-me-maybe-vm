@@ -57,6 +57,8 @@ func (tt TokenType) String() string {
 		return "TYPE INT"
 	case TypeFloat:
 		return "TYPE FLOAT"
+	case TypeChar:
+		return "TYPE CHAR"
 	case TypeLabelDefinition:
 		return "TYPE LABEL DEFINITION"
 	case TypeLabel:
@@ -180,6 +182,25 @@ func GenerateNumber(input string, line int64, currentIndex int, char int) (Token
 	}
 
 	return InitToken(TypeFloat, number, line, char), currentIndex
+}
+
+func GenerateChar(input string, line int64, currentIndex int, char int) (Token, int) {
+	currentIndex++ // skip opening '
+
+	if currentIndex >= len(input) {
+		panic(fmt.Sprintf("ERROR: unterminated character literal at line %d", line))
+	}
+
+	charValue := input[currentIndex]
+	currentIndex++ // skip the character
+
+	if currentIndex >= len(input) || input[currentIndex] != '\'' {
+		panic(fmt.Sprintf("ERROR: unterminated character literal at line %d", line))
+	}
+
+	currentIndex++ // skip closing '
+
+	return InitToken(TypeChar, string(charValue), line, char), currentIndex
 }
 
 func (t Tokens) PeekToken(index int) Token {

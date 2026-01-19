@@ -29,6 +29,7 @@ const (
 	TypeHalt
 	TypeInt
 	TypeFloat
+	TypeChar
 	TypeLabelDefinition
 	TypeLabel
 )

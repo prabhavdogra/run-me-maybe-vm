@@ -55,6 +55,9 @@ func (l *Lexer) Lex() *Lexer {
 		} else if unicode.IsDigit(rune(input[currentIndex])) { // numeric token
 			lexedToken, currentIndex = token.GenerateNumber(input, line, currentIndex, character)
 			l.addToken(lexedToken)
+		} else if input[currentIndex] == '\'' { // character literal
+			lexedToken, currentIndex = token.GenerateChar(input, line, currentIndex, character)
+			l.addToken(lexedToken)
 		} else { // whitespace token
 			currentIndex++
 		}

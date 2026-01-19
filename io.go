@@ -35,6 +35,8 @@ func writeProgram(machine *Machine, filePath string) {
 			binary.LittleEndian.PutUint64(buf[off+8:off+16], uint64(instr.value.valueInt))
 		case LiteralFloat:
 			binary.LittleEndian.PutUint64(buf[off+8:off+16], math.Float64bits(instr.value.valueFloat))
+		case LiteralChar:
+			binary.LittleEndian.PutUint64(buf[off+8:off+16], uint64(instr.value.valueChar))
 		case LiteralNone:
 			binary.LittleEndian.PutUint64(buf[off+8:off+16], 0)
 		}

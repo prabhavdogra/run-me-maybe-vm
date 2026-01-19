@@ -20,6 +20,8 @@ func push(machine *Machine, value Literal) {
 		machine.stack = append(machine.stack, value)
 	} else if value.Type() == LiteralFloat {
 		machine.stack = append(machine.stack, value)
+	} else if value.Type() == LiteralChar {
+		machine.stack = append(machine.stack, value)
 	}
 }
 
@@ -59,6 +61,10 @@ func pushIntIns(value int64) Instruction {
 
 func pushFloatIns(value float64) Instruction {
 	return Instruction{instructionType: InstructionPush, value: FloatLiteral(value)}
+}
+
+func pushCharIns(value rune) Instruction {
+	return Instruction{instructionType: InstructionPush, value: CharLiteral(value)}
 }
 
 func popIns() Instruction {
@@ -176,9 +182,15 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 			} else if cur.Next.Value.Type == token.TypeFloat {
 				value, err := strconv.ParseFloat(cur.Next.Value.Text, 64)
 				if err != nil {
-					panic("ERROR: invalid integer value for push instruction")
+					panic("ERROR: invalid float value for push instruction")
 				}
 				instructions = append(instructions, pushFloatIns(value))
+			} else if cur.Next.Value.Type == token.TypeChar {
+				if len(cur.Next.Value.Text) == 0 {
+					panic("ERROR: empty character literal")
+				}
+				charValue := rune(cur.Next.Value.Text[0])
+				instructions = append(instructions, pushCharIns(charValue))
 			}
 			cur = cur.Next
 		case token.TypePop:
@@ -270,6 +282,9 @@ func (il InstructionList) Print() {
 		}
 		if instr.value.Type() == LiteralFloat {
 			fmt.Printf(", ValueFloat=%f", instr.value.valueFloat)
+		}
+		if instr.value.Type() == LiteralChar {
+			fmt.Printf(", ValueChar=%c", instr.value.valueChar)
 		}
 		fmt.Println()
 	}

@@ -8,12 +8,14 @@ const (
 	LiteralNone LiteralType = iota
 	LiteralInt
 	LiteralFloat
+	LiteralChar
 )
 
 type Literal struct {
 	valueType  LiteralType
 	valueInt   int64
 	valueFloat float64
+	valueChar  rune
 }
 
 func (l *Literal) Type() LiteralType {
@@ -34,11 +36,20 @@ func FloatLiteral(value float64) Literal {
 	}
 }
 
+func CharLiteral(value rune) Literal {
+	return Literal{
+		valueType: LiteralChar,
+		valueChar: value,
+	}
+}
+
 func (l Literal) String() string {
 	if l.Type() == LiteralInt {
 		return fmt.Sprintf("INT %d", l.valueInt)
 	} else if l.Type() == LiteralFloat {
 		return fmt.Sprintf("FLOAT %f", l.valueFloat)
+	} else if l.Type() == LiteralChar {
+		return fmt.Sprintf("CHAR %c", l.valueChar)
 	}
 	return "NONE"
 }
@@ -56,6 +67,8 @@ func (l Literal) Equal(other Literal) bool {
 		return l.valueInt == other.valueInt
 	case LiteralFloat:
 		return l.valueFloat == other.valueFloat
+	case LiteralChar:
+		return l.valueChar == other.valueChar
 	default:
 		return false
 	}

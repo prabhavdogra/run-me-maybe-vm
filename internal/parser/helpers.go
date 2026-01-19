@@ -37,9 +37,9 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		instructionType := tokens[0].Type
 		panic(fmt.Sprintf("ERROR: program cannot start with a %s reference", instructionType))
 	case token.TypePush, token.TypeInDup, token.TypeInSwap:
-		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat) {
+		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar) {
 			instructionType := tokens[0].Type
-			panic(fmt.Sprintf("ERROR: expected integer token after %s instruction", instructionType))
+			panic(fmt.Sprintf("ERROR: expected integer, float, or char token after %s instruction", instructionType))
 		}
 		current = current.AddNextNode(tokens[1])
 		startIndex++
@@ -68,9 +68,9 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		nextToken := tokens.PeekToken(i + 1)
 		switch curToken.Type {
 		case token.TypePush, token.TypeInDup, token.TypeInSwap:
-			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat) {
+			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar) {
 				instructionType := curToken.Type.String()
-				panic(fmt.Sprintf("ERROR: expected integer token after %s instruction", instructionType))
+				panic(fmt.Sprintf("ERROR: expected integer, float, or char token after %s instruction", instructionType))
 			}
 			current = current.AddNextNode(curToken)
 			current = current.AddNextNode(nextToken)
