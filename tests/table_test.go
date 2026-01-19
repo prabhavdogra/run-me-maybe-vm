@@ -15,13 +15,14 @@ type ProgramTestCase struct {
 }
 
 func TestPrograms(t *testing.T) {
-	cases := []ProgramTestCase{
+	cases := operatorsTest
+	cases = append(cases, []ProgramTestCase{
 		fib,
 		label,
 		label2,
 		floatPush,
-	}
-	cases = append(cases, operatorsTest...)
+		isPrime,
+	}...)
 
 	literalLineRE := regexp.MustCompile(`^\s*(INT -?\d+|FLOAT -?\d+\.?\d*|CHAR .)\s*$`)
 

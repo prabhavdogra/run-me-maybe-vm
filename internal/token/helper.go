@@ -71,12 +71,10 @@ func (tt TokenType) String() string {
 }
 
 func (t *Token) Print() {
-	fmt.Println(t.Type.String())
 	fmt.Printf(
-		"text: %s, line: %d, character: %d\n",
+		"type: %s text: %s, ",
+		t.Type.String(),
 		t.Text,
-		t.Line,
-		t.Character,
 	)
 }
 
@@ -152,7 +150,9 @@ func checkBuiltinKeywords(name string) TokenType {
 func GenerateKeyword(input string, line int64, currentIndex int, char int) (Token, int) {
 	keyword := ""
 	for len(input) > currentIndex &&
-		(unicode.IsLetter(rune(input[currentIndex])) || rune(input[currentIndex]) == ':') {
+		(unicode.IsLetter(rune(input[currentIndex])) ||
+			rune(input[currentIndex]) == ':' ||
+			rune(input[currentIndex]) == '_') {
 		keyword += string(rune(input[currentIndex]))
 		currentIndex++
 	}

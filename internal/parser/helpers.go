@@ -29,6 +29,7 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 
 	current := root
 	startIndex := 1
+	instructionNumber := int64(0)
 
 	// Validate first token doesn't violate expectations
 	nextToken := tokens.PeekToken(1)
@@ -42,6 +43,7 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			panic(fmt.Sprintf("ERROR: expected integer, float, or char token after %s instruction", instructionType))
 		}
 		current = current.AddNextNode(tokens[1])
+		instructionNumber++
 		startIndex++
 	case token.TypeJmp, token.TypeZjmp, token.TypeNzjmp:
 		if len(tokens) < 2 {
@@ -51,18 +53,18 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			panic("ERROR: expected label or integer after jump instruction at the start of the program")
 		}
 		current = current.AddNextNode(tokens[1])
+		instructionNumber++
 		startIndex++
 	case token.TypeLabelDefinition:
-		handleLabelDefination(tokens[0], labelMap)
+		handleLabelDefination(tokens[0], labelMap, instructionNumber)
 		root = &ParserList{
 			Value: token.GetNoOpToken(tokens[0].Line, tokens[0].Character),
 			Next:  nil,
 		}
+		current = root
+		instructionNumber++
 	}
 
-	// Iterate through tokens by absolute index and append to the parser list.
-	// When we encounter instructions that require an integer operand, also
-	// append that integer token and advance the index to consume it.
 	for i := startIndex; i < len(tokens); i++ {
 		curToken := tokens[i]
 		nextToken := tokens.PeekToken(i + 1)
@@ -74,6 +76,7 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			}
 			current = current.AddNextNode(curToken)
 			current = current.AddNextNode(nextToken)
+			instructionNumber++
 			i++
 		case token.TypeJmp, token.TypeZjmp, token.TypeNzjmp:
 			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeLabel) {
@@ -82,16 +85,19 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			}
 			current = current.AddNextNode(curToken)
 			current = current.AddNextNode(nextToken)
+			instructionNumber++
 			i++
 		case token.TypeLabelDefinition:
-			handleLabelDefination(curToken, labelMap)
+			handleLabelDefination(curToken, labelMap, instructionNumber)
 			current = current.AddNextNode(token.GetNoOpToken(curToken.Line, curToken.Character))
+			instructionNumber++
 		case token.TypeNoOp, token.TypePop, token.TypeDup, token.TypeSwap,
 			token.TypeAdd, token.TypeSub, token.TypeMul, token.TypeDiv,
 			token.TypeMod, token.TypeCmpe, token.TypeCmpne, token.TypeCmpg,
 			token.TypeCmpl, token.TypeCmpge, token.TypeCmple, token.TypePrint,
 			token.TypeInt, token.TypeHalt, token.TypeLabel:
 			current = current.AddNextNode(curToken)
+			instructionNumber++
 		default:
 			panic("unknown token type encountered during parsing")
 		}
@@ -112,16 +118,20 @@ func (pl *ParserList) AddNextNode(token token.Token) *ParserList {
 }
 
 func (pl *ParserList) Print() {
+	length := 0
 	for current := pl; current != nil; current = current.Next {
 		current.Value.Print()
+		length++
+		fmt.Println()
 	}
+	fmt.Println("Parser Length: ", length)
 }
 
-func handleLabelDefination(t token.Token, labelMap map[string]int64) {
+func handleLabelDefination(t token.Token, labelMap map[string]int64, instructionNum int64) {
 	if _, exists := labelMap[t.Text]; exists {
 		panic(fmt.Sprintf("ERROR: duplicate label definition found for label '%s'", t.Text))
 	}
-	labelMap[t.Text] = t.Line - 1
+	labelMap[t.Text] = instructionNum
 }
 
 func assertAndReplaceLabels(parserList *ParserList, labelMap map[string]int64) {

@@ -41,25 +41,19 @@ func (l *Lexer) Lex() *Lexer {
 	for currentIndex < len(input) {
 		var lexedToken token.Token
 
-		// Handle comments - skip everything from ; to end of line
 		if input[currentIndex] == ';' {
 			for currentIndex < len(input) && input[currentIndex] != '\n' {
 				currentIndex++
-				character++
 			}
-			continue
-		}
-
-		if input[currentIndex] == '\n' {
-			if (currentIndex == 0 && len(l.Tokens) == 0) ||
-				(currentIndex != 0 && input[currentIndex-1] == '\n') {
+			l.addToken(token.GetNoOpToken(line, character))
+		} else if input[currentIndex] == '\n' {
+			if (currentIndex == 0) || (input[currentIndex-1] == '\n') {
 				l.addToken(token.GetNoOpToken(line, character))
 			}
 			line++
 			character = 0
-		}
-
-		if unicode.IsLetter(rune(input[currentIndex])) { // keyword token
+			currentIndex++
+		} else if unicode.IsLetter(rune(input[currentIndex])) { // keyword token
 			lexedToken, currentIndex = token.GenerateKeyword(input, line, currentIndex, character)
 			l.addToken(lexedToken)
 		} else if unicode.IsDigit(rune(input[currentIndex])) { // numeric token
@@ -79,5 +73,6 @@ func (l *Lexer) Lex() *Lexer {
 func (l *Lexer) Print() {
 	for _, token := range l.Tokens {
 		token.Print()
+		fmt.Println()
 	}
 }
