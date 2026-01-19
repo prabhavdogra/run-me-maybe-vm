@@ -12,14 +12,18 @@ type InstructionList []Instruction
 
 // ---- Stack helper functions ----
 
-func push(machine *Machine, value int64) {
+func push(machine *Machine, value Literal) {
 	if len(machine.stack) >= maxStackSize {
 		panic("ERROR: stack overflow")
 	}
-	machine.stack = append(machine.stack, value)
+	if value.Type() == LiteralInt {
+		machine.stack = append(machine.stack, value)
+	} else if value.Type() == LiteralFloat {
+		machine.stack = append(machine.stack, value)
+	}
 }
 
-func pop(machine *Machine) int64 {
+func pop(machine *Machine) Literal {
 	if len(machine.stack) == 0 {
 		panic("ERROR: stack underflow")
 	}
@@ -27,7 +31,6 @@ func pop(machine *Machine) int64 {
 	machine.stack = machine.stack[:len(machine.stack)-1]
 	return value
 }
-
 func indexSwap(machine *Machine, index int64) {
 	if index < 0 || int(index) >= len(machine.stack) {
 		panic("ERROR: index out of bounds for swap")
@@ -50,8 +53,12 @@ func (machine *Machine) programSize() int {
 
 // ---- Instruction helper functions ----
 
-func pushIns(value int64) Instruction {
-	return Instruction{instructionType: InstructionPush, value: value}
+func pushIntIns(value int64) Instruction {
+	return Instruction{instructionType: InstructionPush, value: IntLiteral(value)}
+}
+
+func pushFloatIns(value float64) Instruction {
+	return Instruction{instructionType: InstructionPush, value: FloatLiteral(value)}
 }
 
 func popIns() Instruction {
@@ -63,7 +70,7 @@ func dupIns() Instruction {
 }
 
 func inDupIns(index int64) Instruction {
-	return Instruction{instructionType: InstructionInDup, value: index}
+	return Instruction{instructionType: InstructionInDup, value: IntLiteral(index)}
 }
 
 func swapIns() Instruction {
@@ -71,7 +78,7 @@ func swapIns() Instruction {
 }
 
 func inSwapIns(index int64) Instruction {
-	return Instruction{instructionType: InstructionInSwap, value: index}
+	return Instruction{instructionType: InstructionInSwap, value: IntLiteral(index)}
 }
 
 func addIns() Instruction {
@@ -123,15 +130,15 @@ func modIns() Instruction {
 }
 
 func jmpIns(target int64) Instruction {
-	return Instruction{instructionType: InstructionJmp, value: target}
+	return Instruction{instructionType: InstructionJmp, value: IntLiteral(target)}
 }
 
 func zjmpIns(target int64) Instruction {
-	return Instruction{instructionType: InstructionZjmp, value: target}
+	return Instruction{instructionType: InstructionZjmp, value: IntLiteral(target)}
 }
 
 func nzjmpIns(target int64) Instruction {
-	return Instruction{instructionType: InstructionNzjmp, value: target}
+	return Instruction{instructionType: InstructionNzjmp, value: IntLiteral(target)}
 }
 
 func haltIns() Instruction {
@@ -145,7 +152,7 @@ func noopIns() Instruction {
 func printStack(machine *Machine) {
 	fmt.Println("------ STACK")
 	for i := 0; i < len(machine.stack); i++ {
-		fmt.Printf("[%d]: %d\n", i, machine.stack[i])
+		fmt.Printf("[%d]: %s\n", i, machine.stack[i].String())
 	}
 	fmt.Println("------ END OF STACK")
 }
@@ -160,12 +167,20 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 		case token.TypeNoOp:
 			instructions = append(instructions, noopIns())
 		case token.TypePush:
-			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
-			if err != nil {
-				panic("ERROR: invalid integer value for push instruction")
+			if cur.Next.Value.Type == token.TypeInt {
+				value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
+				if err != nil {
+					panic("ERROR: invalid integer value for push instruction")
+				}
+				instructions = append(instructions, pushIntIns(value))
+			} else if cur.Next.Value.Type == token.TypeFloat {
+				value, err := strconv.ParseFloat(cur.Next.Value.Text, 64)
+				if err != nil {
+					panic("ERROR: invalid integer value for push instruction")
+				}
+				instructions = append(instructions, pushFloatIns(value))
 			}
 			cur = cur.Next
-			instructions = append(instructions, pushIns(value))
 		case token.TypePop:
 			instructions = append(instructions, popIns())
 		case token.TypeDup:
@@ -249,6 +264,13 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 
 func (il InstructionList) Print() {
 	for i, instr := range il {
-		fmt.Printf("[%d]: Type=%s, Value=%d\n", i, instr.instructionType.String(), instr.value)
+		fmt.Printf("[%d]: Type=%s", i, instr.instructionType.String())
+		if instr.value.Type() == LiteralInt {
+			fmt.Printf(", ValueInt=%d", instr.value.valueInt)
+		}
+		if instr.value.Type() == LiteralFloat {
+			fmt.Printf(", ValueFloat=%f", instr.value.valueFloat)
+		}
+		fmt.Println()
 	}
 }

@@ -53,7 +53,7 @@ func (l *Lexer) Lex() *Lexer {
 			lexedToken, currentIndex = token.GenerateKeyword(input, line, currentIndex, character)
 			l.addToken(lexedToken)
 		} else if unicode.IsDigit(rune(input[currentIndex])) { // numeric token
-			lexedToken, currentIndex = token.GenerateInt(input, line, currentIndex, character)
+			lexedToken, currentIndex = token.GenerateNumber(input, line, currentIndex, character)
 			l.addToken(lexedToken)
 		} else { // whitespace token
 			currentIndex++

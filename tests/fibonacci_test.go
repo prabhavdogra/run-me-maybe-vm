@@ -27,5 +27,5 @@ var fib = ProgramTestCase{
 	inswap 0
 
 	nzjmp 4`,
-	expected: []string{"0", "1", "1", "2", "3", "5", "8", "13", "21", "34", "55"},
+	expected: []string{"INT 0", "INT 1", "INT 1", "INT 2", "INT 3", "INT 5", "INT 8", "INT 13", "INT 21", "INT 34", "INT 55"},
 }

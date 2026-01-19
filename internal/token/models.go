@@ -28,6 +28,7 @@ const (
 	TypePrint
 	TypeHalt
 	TypeInt
+	TypeFloat
 	TypeLabelDefinition
 	TypeLabel
 )

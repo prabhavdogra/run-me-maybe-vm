@@ -55,6 +55,8 @@ func (tt TokenType) String() string {
 		return "TYPE PRINT"
 	case TypeInt:
 		return "TYPE INT"
+	case TypeFloat:
+		return "TYPE FLOAT"
 	case TypeLabelDefinition:
 		return "TYPE LABEL DEFINITION"
 	case TypeLabel:
@@ -149,7 +151,7 @@ func GenerateKeyword(input string, line int64, currentIndex int, char int) (Toke
 	keyword := ""
 	for len(input) > currentIndex &&
 		(unicode.IsLetter(rune(input[currentIndex])) || rune(input[currentIndex]) == ':') {
-		keyword += string(input[currentIndex])
+		keyword += string(rune(input[currentIndex]))
 		currentIndex++
 	}
 	tokenType := checkBuiltinKeywords(keyword)
@@ -159,20 +161,34 @@ func GenerateKeyword(input string, line int64, currentIndex int, char int) (Toke
 	return InitToken(tokenType, keyword, line, char), currentIndex
 }
 
-func GenerateInt(input string, line int64, currentIndex int, char int) (Token, int) {
+func GenerateNumber(input string, line int64, currentIndex int, char int) (Token, int) {
 	number := ""
+	for len(input) > currentIndex && unicode.IsDigit(rune(input[currentIndex])) {
+		number += string(rune(input[currentIndex]))
+		currentIndex++
+	}
+	// Integer case
+	if len(input) <= currentIndex || input[currentIndex] != '.' {
+		return InitToken(TypeInt, number, line, char), currentIndex
+	}
+	number = number + string(input[currentIndex])
+	currentIndex++
+	// Float case
 	for len(input) > currentIndex && unicode.IsDigit(rune(input[currentIndex])) {
 		number += string(input[currentIndex])
 		currentIndex++
 	}
-	return InitToken(TypeInt, number, line, char), currentIndex
+
+	return InitToken(TypeFloat, number, line, char), currentIndex
 }
 
-func (t Tokens) PeekToken(index int) *Token {
+func (t Tokens) PeekToken(index int) Token {
 	if index < 0 || index >= len(t) {
-		return nil
+		return Token{
+			Type: TypeInvalid,
+		}
 	}
-	return &t[index]
+	return t[index]
 }
 
 func GetNoOpToken(line int64, char int) Token {

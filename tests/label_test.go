@@ -33,5 +33,5 @@ var label = ProgramTestCase{
 		theend:
 		push 99
 		print`,
-	expected: []string{"12", "14", "7", "15", "99"},
+	expected: []string{"INT 12", "INT 14", "INT 7", "INT 15", "INT 99"},
 }

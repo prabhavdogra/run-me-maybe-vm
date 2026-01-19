@@ -20,7 +20,7 @@ func main() {
 		instructions.Print()
 	}
 	loadedMachine := &Machine{
-		stack:        make([]int64, 0, maxStackSize),
+		stack:        make([]Literal, 0, maxStackSize),
 		instructions: instructions,
 	}
 	loadedMachine = runInstructions(loadedMachine)

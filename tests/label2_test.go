@@ -12,5 +12,5 @@ var label2 = ProgramTestCase{
 		add
 		print
 		`,
-	expected: []string{"15"},
+	expected: []string{"INT 15"},
 }

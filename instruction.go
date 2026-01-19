@@ -98,116 +98,141 @@ func runInstructions(machine *Machine) *Machine {
 			push(machine, x)
 			push(machine, x)
 		case InstructionInDup:
-			indexDup(machine, instr.value)
+			if instr.value.Type() != LiteralInt {
+				panic("ERROR: indup requires integer arguments")
+			}
+			indexDup(machine, instr.value.valueInt)
 		case InstructionSwap:
 			a := pop(machine)
 			b := pop(machine)
 			push(machine, a)
 			push(machine, b)
 		case InstructionInSwap:
-			indexSwap(machine, instr.value)
+			if instr.value.Type() != LiteralInt {
+				panic("ERROR: inswap requires integer arguments")
+			}
+			indexSwap(machine, instr.value.valueInt)
 		case InstructionMod:
 			a := pop(machine)
 			b := pop(machine)
-			if b == 0 {
+			if a.Type() != LiteralInt || b.Type() != LiteralInt {
+				panic("ERROR: modulo requires integer operands")
+			}
+			if a.valueInt == 0 {
 				panic("ERROR: modulo by zero")
 			}
-			push(machine, b%a)
+			push(machine, IntLiteral(b.valueInt%a.valueInt))
 		case InstructionCmpe:
 			a := pop(machine)
 			b := pop(machine)
-			if a == b {
-				push(machine, 1)
+			push(machine, b)
+			push(machine, a)
+			if a.Equal(b) {
+				push(machine, IntLiteral(1))
 			} else {
-				push(machine, 0)
+				push(machine, IntLiteral(0))
 			}
 		case InstructionCmpne:
 			a := pop(machine)
 			b := pop(machine)
-			if a != b {
-				push(machine, 1)
+			push(machine, b)
+			push(machine, a)
+			if !a.Equal(b) {
+				push(machine, IntLiteral(1))
 			} else {
-				push(machine, 0)
+				push(machine, IntLiteral(0))
 			}
 		case InstructionCmpg:
 			a := pop(machine)
 			b := pop(machine)
 			push(machine, b)
 			push(machine, a)
-			if a > b {
-				push(machine, 1)
+			if a.Greater(b) {
+				push(machine, IntLiteral(1))
 			} else {
-				push(machine, 0)
+				push(machine, IntLiteral(0))
 			}
 		case InstructionCmpl:
 			a := pop(machine)
 			b := pop(machine)
 			push(machine, b)
 			push(machine, a)
-			if a < b {
-				push(machine, 1)
+			if a.Less(b) {
+				push(machine, IntLiteral(1))
 			} else {
-				push(machine, 0)
+				push(machine, IntLiteral(0))
 			}
 		case InstructionCmpge:
 			a := pop(machine)
 			b := pop(machine)
 			push(machine, b)
 			push(machine, a)
-			if a >= b {
-				push(machine, 1)
+			if a.GreaterOrEqual(b) {
+				push(machine, IntLiteral(1))
 			} else {
-				push(machine, 0)
+				push(machine, IntLiteral(0))
 			}
 		case InstructionCmple:
 			a := pop(machine)
 			b := pop(machine)
 			push(machine, b)
 			push(machine, a)
-			if a <= b {
-				push(machine, 1)
+			if a.LessOrEqual(b) {
+				push(machine, IntLiteral(1))
 			} else {
-				push(machine, 0)
+				push(machine, IntLiteral(0))
 			}
 		case InstructionAdd:
 			a := pop(machine)
 			b := pop(machine)
-			push(machine, b+a)
+			push(machine, a.Add(b))
 		case InstructionSub:
 			a := pop(machine)
 			b := pop(machine)
-			push(machine, b-a)
+			push(machine, b.Sub(a))
 		case InstructionMul:
 			a := pop(machine)
 			b := pop(machine)
-			push(machine, b*a)
+			push(machine, a.Mul(b))
 		case InstructionDiv:
 			a := pop(machine)
 			b := pop(machine)
-			if b == 0 {
-				panic("ERROR: division by zero")
-			}
-			push(machine, b/a)
+			push(machine, a.Div(b))
 		case InstructionJmp:
-			target := int(instr.value)
-			if target >= machine.programSize() {
+			if instr.value.Type() != LiteralInt {
+				panic("ERROR: jump target must be an integer")
+			}
+			target := int(instr.value.valueInt)
+			if target >= machine.programSize() || target < 0 {
 				panic("ERROR: jump target out of bounds")
 			}
 			insPtr = target - 1 // -1 because loop will increment
 		case InstructionNzjmp:
+			if instr.value.Type() != LiteralInt {
+				panic("ERROR: jump target must be an integer")
+			}
 			value := pop(machine)
-			if value != 0 {
-				target := int(instr.value)
-				if target >= machine.programSize() {
+			if value.Type() != LiteralInt {
+				panic("ERROR: nzjmp condition value must be an integer")
+			}
+			if value.valueInt != 0 {
+				target := int(instr.value.valueInt)
+				if target >= machine.programSize() || target < 0 {
 					panic("ERROR: jump target out of bounds")
 				}
 				insPtr = target - 1 // -1 because loop will increment
 			}
 		case InstructionZjmp:
 			value := pop(machine)
-			if value == 0 {
-				target := int(instr.value)
-				if target >= machine.programSize() {
+			if instr.value.Type() != LiteralInt {
+				panic("ERROR: jump target must be an integer")
+			}
+			if value.Type() != LiteralInt {
+				panic("ERROR: zjmp condition value must be an integer")
+			}
+			if value.valueInt == 0 {
+				target := int(instr.value.valueInt)
+				if target >= machine.programSize() || target < 0 {
 					panic("ERROR: jump target out of bounds")
 				}
 				insPtr = target - 1 // -1 because loop will increment

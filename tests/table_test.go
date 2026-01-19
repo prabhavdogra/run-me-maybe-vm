@@ -19,9 +19,10 @@ func TestPrograms(t *testing.T) {
 		fib,
 		label,
 		label2,
+		floatPush,
 	}
 
-	intLineRE := regexp.MustCompile(`^\s*-?\d+\s*$`)
+	literalLineRE := regexp.MustCompile(`^\s*(INT -?\d+|FLOAT -?\d+\.?\d*)\s*$`)
 
 	for _, tc := range cases {
 		tc := tc
@@ -51,21 +52,21 @@ func TestPrograms(t *testing.T) {
 				t.Fatal("program produced no output")
 			}
 
-			// collect integer-only lines (PRINT outputs)
+			// collect literal lines (PRINT outputs)
 			lines := strings.Split(out, "\n")
-			var numbers []string
+			var outputs []string
 			for _, ln := range lines {
-				if intLineRE.MatchString(ln) {
-					numbers = append(numbers, strings.TrimSpace(ln))
+				if literalLineRE.MatchString(ln) {
+					outputs = append(outputs, strings.TrimSpace(ln))
 				}
 			}
 
-			if len(numbers) < len(tc.expected) {
-				t.Fatalf("expected at least %d integer outputs, got %d; full output:\n%s", len(tc.expected), len(numbers), out)
+			if len(outputs) < len(tc.expected) {
+				t.Fatalf("expected at least %d literal outputs, got %d; full output:\n%s", len(tc.expected), len(outputs), out)
 			}
 			for i := range tc.expected {
-				if numbers[i] != tc.expected[i] {
-					t.Fatalf("mismatch at index %d: expected %s, got %s\nfull output:\n%s", i, tc.expected[i], numbers[i], out)
+				if outputs[i] != tc.expected[i] {
+					t.Fatalf("mismatch at index %d: expected %s, got %s\nfull output:\n%s", i, tc.expected[i], outputs[i], out)
 				}
 			}
 		})

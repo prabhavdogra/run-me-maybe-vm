@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"vm/internal/lexer"
 	"vm/internal/token"
+	"vm/util"
 )
 
 func Init(l *lexer.Lexer) *ParserList {
@@ -30,20 +31,23 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 	startIndex := 1
 
 	// Validate first token doesn't violate expectations
+	nextToken := tokens.PeekToken(1)
 	switch tokens[0].Type {
 	case token.TypeInt, token.TypeLabel:
 		instructionType := tokens[0].Type
 		panic(fmt.Sprintf("ERROR: program cannot start with a %s reference", instructionType))
 	case token.TypePush, token.TypeInDup, token.TypeInSwap:
-		if len(tokens) < 2 || tokens[1].Type != token.TypeInt {
+		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat) {
 			instructionType := tokens[0].Type
 			panic(fmt.Sprintf("ERROR: expected integer token after %s instruction", instructionType))
 		}
+		current = current.AddNextNode(tokens[1])
+		startIndex++
 	case token.TypeJmp, token.TypeZjmp, token.TypeNzjmp:
 		if len(tokens) < 2 {
 			panic("ERROR: expected label or integer after jump instruction at the start of the program")
 		}
-		if tokens[1].Type != token.TypeInt && tokens[1].Type != token.TypeLabel {
+		if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeLabel) {
 			panic("ERROR: expected label or integer after jump instruction at the start of the program")
 		}
 		current = current.AddNextNode(tokens[1])
@@ -60,34 +64,34 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 	// When we encounter instructions that require an integer operand, also
 	// append that integer token and advance the index to consume it.
 	for i := startIndex; i < len(tokens); i++ {
-		t := tokens[i]
-		switch t.Type {
+		curToken := tokens[i]
+		nextToken := tokens.PeekToken(i + 1)
+		switch curToken.Type {
 		case token.TypePush, token.TypeInDup, token.TypeInSwap:
-			if tokens.PeekToken(i+1).Type != token.TypeInt {
-				instructionType := t.Type.String()
+			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat) {
+				instructionType := curToken.Type.String()
 				panic(fmt.Sprintf("ERROR: expected integer token after %s instruction", instructionType))
 			}
-			current = current.AddNextNode(t)
-			current = current.AddNextNode(tokens[i+1])
+			current = current.AddNextNode(curToken)
+			current = current.AddNextNode(nextToken)
 			i++
 		case token.TypeJmp, token.TypeZjmp, token.TypeNzjmp:
-			if tokens.PeekToken(i+1).Type != token.TypeInt &&
-				tokens.PeekToken(i+1).Type != token.TypeLabel {
-				instructionType := t.Type.String()
+			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeLabel) {
+				instructionType := curToken.Type.String()
 				panic(fmt.Sprintf("ERROR: expected label token after %s instruction", instructionType))
 			}
-			current = current.AddNextNode(t)
-			current = current.AddNextNode(tokens[i+1])
+			current = current.AddNextNode(curToken)
+			current = current.AddNextNode(nextToken)
 			i++
 		case token.TypeLabelDefinition:
-			handleLabelDefination(t, labelMap)
-			current = current.AddNextNode(token.GetNoOpToken(t.Line, t.Character))
+			handleLabelDefination(curToken, labelMap)
+			current = current.AddNextNode(token.GetNoOpToken(curToken.Line, curToken.Character))
 		case token.TypeNoOp, token.TypePop, token.TypeDup, token.TypeSwap,
 			token.TypeAdd, token.TypeSub, token.TypeMul, token.TypeDiv,
 			token.TypeMod, token.TypeCmpe, token.TypeCmpne, token.TypeCmpg,
 			token.TypeCmpl, token.TypeCmpge, token.TypeCmple, token.TypePrint,
 			token.TypeInt, token.TypeHalt, token.TypeLabel:
-			current = current.AddNextNode(t)
+			current = current.AddNextNode(curToken)
 		default:
 			panic("unknown token type encountered during parsing")
 		}

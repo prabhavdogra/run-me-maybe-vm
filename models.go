@@ -1,14 +1,14 @@
 package main
 
 type Machine struct {
-	stack        []int64
+	stack        []Literal
 	instructions []Instruction
 }
 
 type Instruction struct {
 	operator        uint8
 	instructionType InstructionSet
-	value           int64
+	value           Literal
 }
 
 const maxStackSize = 1024
