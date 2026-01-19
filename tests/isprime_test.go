@@ -28,7 +28,7 @@ var isPrime = ProgramTestCase{
 			pop             ; [n, d, n]
 			pop             ; [n, d]
 
-			; Check if n % d == 0 (not prime)
+			; Check if n "%" d == 0 (not prime)
 			indup 0         ; [n, d, n]
 			indup 1         ; [n, d, n, d]
 			mod             ; [n, d, rem]

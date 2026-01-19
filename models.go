@@ -9,6 +9,7 @@ type Instruction struct {
 	operator        uint8
 	instructionType InstructionSet
 	value           Literal
+	line            int
 }
 
 const maxStackSize = 1024
