@@ -21,6 +21,7 @@ func TestPrograms(t *testing.T) {
 		label2,
 		floatPush,
 	}
+	cases = append(cases, operatorsTest...)
 
 	literalLineRE := regexp.MustCompile(`^\s*(INT -?\d+|FLOAT -?\d+\.?\d*)\s*$`)
 
