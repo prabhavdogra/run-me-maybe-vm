@@ -420,6 +420,86 @@ var floatDivTest = ProgramTestCase{
 	expected: []string{"FLOAT 5.000000"},
 }
 
+// Test char push
+var charPushTest = ProgramTestCase{
+	name: "char_push",
+	program: `push 'a'
+	print
+	halt`,
+	expected: []string{"CHAR a"},
+}
+
+// Test multiple char push
+var charMultipleTest = ProgramTestCase{
+	name: "char_multiple",
+	program: `push 'H'
+	push 'i'
+	print
+	print
+	halt`,
+	expected: []string{"CHAR i", "CHAR H"},
+}
+
+// Test char with numbers
+var charNumberTest = ProgramTestCase{
+	name: "char_number",
+	program: `push '5'
+	push '9'
+	print
+	print
+	halt`,
+	expected: []string{"CHAR 9", "CHAR 5"},
+}
+
+// Test char equality (true)
+var charEqualTestTrue = ProgramTestCase{
+	name: "char_equal_true",
+	program: `push 'x'
+	push 'x'
+	cmpe
+	print
+	print
+	print
+	halt`,
+	expected: []string{"INT 1", "CHAR x", "CHAR x"},
+}
+
+// Test char equality (false)
+var charEqualTestFalse = ProgramTestCase{
+	name: "char_equal_false",
+	program: `push 'a'
+	push 'b'
+	cmpe
+	print
+	print
+	print
+	halt`,
+	expected: []string{"INT 0", "CHAR b", "CHAR a"},
+}
+
+// Test char dup
+var charDupTest = ProgramTestCase{
+	name: "char_dup",
+	program: `push 'Z'
+	dup
+	print
+	print
+	halt`,
+	expected: []string{"CHAR Z", "CHAR Z"},
+}
+
+// Test char swap
+var charSwapTest = ProgramTestCase{
+	name: "char_swap",
+	program: `push 'A'
+	push 'B'
+	swap
+	print
+	print
+	halt`,
+	expected: []string{"CHAR A", "CHAR B"},
+}
+
 var operatorsTest = []ProgramTestCase{
 	// Arithmetic operations
 	addTest,
@@ -466,4 +546,13 @@ var operatorsTest = []ProgramTestCase{
 	floatSubTest,
 	floatMulTest,
 	floatDivTest,
+
+	// Char operations
+	charPushTest,
+	charMultipleTest,
+	charNumberTest,
+	charEqualTestTrue,
+	charEqualTestFalse,
+	charDupTest,
+	charSwapTest,
 }
