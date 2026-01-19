@@ -121,7 +121,7 @@ func handleLabelDefination(t token.Token, labelMap map[string]int64) {
 	if _, exists := labelMap[t.Text]; exists {
 		panic(fmt.Sprintf("ERROR: duplicate label definition found for label '%s'", t.Text))
 	}
-	labelMap[t.Text] = t.Line
+	labelMap[t.Text] = t.Line - 1
 }
 
 func assertAndReplaceLabels(parserList *ParserList, labelMap map[string]int64) {
