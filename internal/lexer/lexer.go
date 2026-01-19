@@ -40,6 +40,16 @@ func (l *Lexer) Lex() *Lexer {
 
 	for currentIndex < len(input) {
 		var lexedToken token.Token
+
+		// Handle comments - skip everything from ; to end of line
+		if input[currentIndex] == ';' {
+			for currentIndex < len(input) && input[currentIndex] != '\n' {
+				currentIndex++
+				character++
+			}
+			continue
+		}
+
 		if input[currentIndex] == '\n' {
 			if (currentIndex == 0 && len(l.Tokens) == 0) ||
 				(currentIndex != 0 && input[currentIndex-1] == '\n') {

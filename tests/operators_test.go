@@ -500,6 +500,32 @@ var charSwapTest = ProgramTestCase{
 	expected: []string{"CHAR A", "CHAR B"},
 }
 
+// Test comments
+var commentTest = ProgramTestCase{
+	name: "comments",
+	program: `; This is a comment
+	push 10 ; push ten
+	push 5  ; push five
+	; Another comment line
+	add     ; add them
+	print   ; print result
+	halt    ; done`,
+	expected: []string{"INT 15"},
+}
+
+// Test comment only lines
+var commentOnlyTest = ProgramTestCase{
+	name: "comment_only_lines",
+	program: `; Comment at start
+	; Another comment
+	push 42
+	; Mid-program comment
+	print
+	; Final comment
+	halt`,
+	expected: []string{"INT 42"},
+}
+
 var operatorsTest = []ProgramTestCase{
 	// Arithmetic operations
 	addTest,
@@ -555,4 +581,8 @@ var operatorsTest = []ProgramTestCase{
 	charEqualTestFalse,
 	charDupTest,
 	charSwapTest,
+
+	// Comment tests
+	commentTest,
+	commentOnlyTest,
 }
