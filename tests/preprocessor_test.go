@@ -128,6 +128,6 @@ var PreprocessorTests = []ProgramTestCase{
 		additionalFiles: map[string]string{
 			"test2.tash": `@def X 5`,
 		},
-		expectedError: "duplicate macro definition found for macro ''",
+		expectedError: "duplicate macro definition found for macro 'X'",
 	},
 }
