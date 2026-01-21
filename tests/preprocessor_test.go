@@ -105,4 +105,11 @@ var PreprocessorTests = []ProgramTestCase{
 		},
 		expected: []string{"INT 100", "INT 2", "INT 1", "INT 0", "INT 60", "INT 2", "INT 1", "INT 0"},
 	},
+	{
+		name: "macro instruction @def",
+		program: `@def PUSHTWO "push 2"
+				PUSHTWO
+				print`,
+		expected: []string{"INT 2"},
+	},
 }
