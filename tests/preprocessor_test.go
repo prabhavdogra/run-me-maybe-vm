@@ -70,4 +70,39 @@ var PreprocessorTests = []ProgramTestCase{
 		},
 		expected: []string{"INT 12"},
 	},
+	{
+		name: "macro single @imp",
+		program: `@imp "stddefs.tash"
+				@imp "linuxsyscalls.tash"
+				@def N 100
+				push N
+				print
+
+				push STDIN
+				push STDOUT
+				push STDERR
+				print
+				print
+				print
+
+				; syscall numbers
+				push SYS_READ
+				push SYS_WRITE
+				push SYS_OPEN
+				push SYS_EXIT
+				print
+				print
+				print
+				print`,
+		additionalFiles: map[string]string{
+			"stddefs.tash": `@def STDERR 2
+						@def STDOUT 1
+						@def STDIN 0`,
+			"linuxsyscalls.tash": `@def SYS_READ 0
+						@def SYS_WRITE 1
+						@def SYS_OPEN 2
+						@def SYS_EXIT 60`,
+		},
+		expected: []string{"INT 100", "INT 2", "INT 1", "INT 0", "INT 60", "INT 2", "INT 1", "INT 0"},
+	},
 }
