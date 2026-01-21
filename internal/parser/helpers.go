@@ -35,22 +35,20 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 	nextToken := tokens.PeekToken(1)
 	switch tokens[0].Type {
 	case token.TypeInt, token.TypeLabel:
-		instructionType := tokens[0].Type
-		panic(fmt.Sprintf("ERROR: program cannot start with a %s reference", instructionType))
+		panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("program cannot start with a %s reference", tokens[0].Type)))
 	case token.TypePush, token.TypeInDup, token.TypeInSwap:
 		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar) {
-			instructionType := tokens[0].Type
-			panic(fmt.Sprintf("ERROR: expected integer, float, or char token after %s instruction", instructionType))
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected integer, float, or char value after '%s' instruction, but found %s '%s'", tokens[0].Type, nextToken.Type, nextToken.Text)))
 		}
 		current = current.AddNextNode(tokens[1])
 		instructionNumber++
 		startIndex++
 	case token.TypeJmp, token.TypeZjmp, token.TypeNzjmp:
 		if len(tokens) < 2 {
-			panic("ERROR: expected label or integer after jump instruction at the start of the program")
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error("expected label or integer after jump instruction at the start of the program"))
 		}
 		if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeLabel) {
-			panic("ERROR: expected label or integer after jump instruction at the start of the program")
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error("expected label or integer after jump instruction at the start of the program"))
 		}
 		current = current.AddNextNode(tokens[1])
 		instructionNumber++
@@ -72,8 +70,7 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		switch curToken.Type {
 		case token.TypePush, token.TypeInDup, token.TypeInSwap:
 			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar) {
-				instructionType := curToken.Type.String()
-				panic(fmt.Sprintf("ERROR: expected integer, float, or char token after %s instruction", instructionType))
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected integer, float, or char value after '%s' instruction, but found %s '%s'", curToken.Type, nextToken.Type, nextToken.Text)))
 			}
 			current = current.AddNextNode(curToken)
 			current = current.AddNextNode(nextToken)
@@ -81,8 +78,7 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			i++
 		case token.TypeJmp, token.TypeZjmp, token.TypeNzjmp:
 			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeLabel) {
-				instructionType := curToken.Type.String()
-				panic(fmt.Sprintf("ERROR: expected label token after %s instruction", instructionType))
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected label after '%s' instruction, but found %s '%s'", curToken.Type, nextToken.Type, nextToken.Text)))
 			}
 			current = current.AddNextNode(curToken)
 			current = current.AddNextNode(nextToken)
@@ -101,7 +97,7 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			current = current.AddNextNode(curToken)
 			instructionNumber++
 		default:
-			panic("unknown token type encountered during parsing")
+			panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error("unknown token type encountered during parsing"))
 		}
 	}
 
@@ -131,7 +127,7 @@ func (pl *ParserList) Print() {
 
 func handleLabelDefination(t token.Token, labelMap map[string]int64, instructionNum int64) {
 	if _, exists := labelMap[t.Text]; exists {
-		panic(fmt.Sprintf("ERROR: duplicate label definition found for label '%s'", t.Text))
+		panic(token.TokenContext{Line: t.Line, Character: t.Character, FileName: t.FileName}.Error(fmt.Sprintf("duplicate label definition found for label '%s'", t.Text)))
 	}
 	labelMap[t.Text] = instructionNum
 }
@@ -143,9 +139,9 @@ func assertAndReplaceLabels(parserList *ParserList, labelMap map[string]int64) {
 			label := cur.Value.Text
 			lineNum, exists := labelMap[label]
 			if !exists {
-				panic(fmt.Sprintf("ERROR: undefined label reference found for label '%s'", label))
+				panic(token.TokenContext{Line: cur.Value.Line, Character: cur.Value.Character, FileName: cur.Value.FileName}.Error(fmt.Sprintf("undefined label reference found for label '%s'", label)))
 			}
-			// Replace label token with integer token representing the line number
+			// Replace label token with integer token representing the instruction number
 			cur.Value.Type = token.TypeInt
 			cur.Value.Text = fmt.Sprintf("%d", lineNum)
 		}

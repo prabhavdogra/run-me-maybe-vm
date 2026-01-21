@@ -112,4 +112,22 @@ var PreprocessorTests = []ProgramTestCase{
 				print`,
 		expected: []string{"INT 2"},
 	},
+	{
+		name: "macro missing def @imp (error)",
+		program: `@imp "test2.tash"
+					print`,
+		additionalFiles: map[string]string{
+			"test2.tash": `push N`,
+		},
+		expectedError: "expected integer, float, or char value after 'push' instruction, but found label 'N'",
+	},
+	{
+		name: "duplicate @def (error)",
+		program: `@imp "test2.tash"
+					@def X 10`,
+		additionalFiles: map[string]string{
+			"test2.tash": `@def X 5`,
+		},
+		expectedError: "duplicate macro definition found for macro ''",
+	},
 }

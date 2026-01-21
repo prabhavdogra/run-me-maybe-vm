@@ -94,6 +94,9 @@ func (l *Lexer) processDef(ctx *token.TokenContext, input string, currentIndex i
 		val += string(input[currentIndex])
 		currentIndex++
 	}
+	if _, exists := l.Macros[key]; exists {
+		panic(ctx.Error(fmt.Sprintf("duplicate macro definition found for macro '%s'", key)))
+	}
 	l.Macros[key] = strings.TrimSpace(val)
 	return currentIndex
 }

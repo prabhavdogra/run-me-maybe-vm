@@ -10,63 +10,63 @@ type Tokens []Token
 func (tt TokenType) String() string {
 	switch tt {
 	case TypeNoOp:
-		return "TYPE NOP"
+		return "noop"
 	case TypePush:
-		return "TYPE PUSH"
+		return "push"
 	case TypePop:
-		return "TYPE POP"
+		return "pop"
 	case TypeDup:
-		return "TYPE DUP"
+		return "dup"
 	case TypeInDup:
-		return "TYPE INDUP"
+		return "indup"
 	case TypeSwap:
-		return "TYPE SWAP"
+		return "swap"
 	case TypeInSwap:
-		return "TYPE INSWAP"
+		return "inswap"
 	case TypeAdd:
-		return "TYPE ADD"
+		return "add"
 	case TypeSub:
-		return "TYPE SUB"
+		return "sub"
 	case TypeMul:
-		return "TYPE MUL"
+		return "mul"
 	case TypeDiv:
-		return "TYPE DIV"
+		return "div"
 	case TypeMod:
-		return "TYPE MOD"
+		return "mod"
 	case TypeCmpe:
-		return "TYPE CMPE"
+		return "cmpe"
 	case TypeCmpne:
-		return "TYPE CMPNE"
+		return "cmpne"
 	case TypeCmpg:
-		return "TYPE CMPG"
+		return "cmpg"
 	case TypeCmpl:
-		return "TYPE CMPL"
+		return "cmpl"
 	case TypeCmpge:
-		return "TYPE CMPGE"
+		return "cmpge"
 	case TypeCmple:
-		return "TYPE CMPLE"
+		return "cmple"
 	case TypeJmp:
-		return "TYPE JMP"
+		return "jmp"
 	case TypeZjmp:
-		return "TYPE ZJMP"
+		return "zjmp"
 	case TypeNzjmp:
-		return "TYPE NZJMP"
+		return "nzjmp"
 	case TypePrint:
-		return "TYPE PRINT"
+		return "print"
 	case TypeInt:
-		return "TYPE INT"
+		return "int"
 	case TypeFloat:
-		return "TYPE FLOAT"
+		return "float"
 	case TypeChar:
-		return "TYPE CHAR"
+		return "char"
 	case TypeLabelDefinition:
-		return "TYPE LABEL DEFINITION"
+		return "label definition"
 	case TypeLabel:
-		return "TYPE LABEL"
+		return "label"
 	case TypeHalt:
-		return "TYPE HALT"
+		return "halt"
 	default:
-		return "TYPE INVALID"
+		return "invalid"
 	}
 }
 

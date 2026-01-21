@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,6 +15,7 @@ type ProgramTestCase struct {
 	program         string
 	expected        []string
 	additionalFiles map[string]string // Optional: for @imp tests, filename -> content
+	expectedError   string            // Optional: for error case tests
 }
 
 func TestPrograms(t *testing.T) {
@@ -32,6 +34,21 @@ func TestPrograms(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			// Catch panics if an error is expected
+			defer func() {
+				if r := recover(); r != nil {
+					if tc.expectedError == "" {
+						t.Fatalf("unexpected panic in test %s: %v", tc.name, r)
+					}
+					errStr := fmt.Sprint(r)
+					if !strings.Contains(errStr, tc.expectedError) {
+						t.Fatalf("expected error containing %q, got %q", tc.expectedError, errStr)
+					}
+				} else if tc.expectedError != "" {
+					t.Fatalf("expected error containing %q, but program succeeded", tc.expectedError)
+				}
+			}()
+
 			// If test has additional files (for @imp), create a temp directory
 			// Otherwise, use a single temp file (legacy behavior)
 			if tc.additionalFiles != nil {
@@ -66,7 +83,9 @@ func TestPrograms(t *testing.T) {
 				cmd.Dir = vmModuleRoot
 				outBytes, err := cmd.CombinedOutput()
 				if err != nil {
-					t.Fatalf("program failed: %v\noutput:\n%s", err, string(outBytes))
+					// If we expect an error, this is fine, the recover() block will handle it
+					// However, go run exits with non-zero on panic, so we panic here to trigger recover
+					panic(string(outBytes))
 				}
 
 				out := strings.TrimSpace(string(outBytes))
@@ -111,7 +130,8 @@ func TestPrograms(t *testing.T) {
 			cmd := exec.Command("go", "run", "..", tmp.Name())
 			outBytes, err := cmd.CombinedOutput()
 			if err != nil {
-				t.Fatalf("program failed: %v\noutput:\n%s", err, string(outBytes))
+				// If we expect an error, this is fine, the recover() block will handle it
+				panic(string(outBytes))
 			}
 
 			out := strings.TrimSpace(string(outBytes))
