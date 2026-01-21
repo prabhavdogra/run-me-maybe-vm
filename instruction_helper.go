@@ -10,6 +10,18 @@ import (
 
 type InstructionList []Instruction
 
+// InstructionContext contains metadata for instruction creation
+type InstructionContext struct {
+	Line      int
+	FileName  string
+	Character int // Reserved for future use
+}
+
+// Error formats an error message with file and line context
+func (ctx InstructionContext) Error(message string) string {
+	return fmt.Sprintf("ERROR on line %d (%s): %s", ctx.Line, ctx.FileName, message)
+}
+
 // ---- Stack helper functions ----
 
 func push(machine *Machine, value Literal) {
@@ -55,104 +67,104 @@ func (machine *Machine) programSize() int {
 
 // ---- Instruction helper functions ----
 
-func pushIntIns(value int64, line int) Instruction {
-	return Instruction{instructionType: InstructionPush, value: IntLiteral(value), line: line}
+func pushIntIns(value int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionPush, value: IntLiteral(value), line: ctx.Line, fileName: ctx.FileName}
 }
 
-func pushFloatIns(value float64, line int) Instruction {
-	return Instruction{instructionType: InstructionPush, value: FloatLiteral(value), line: line}
+func pushFloatIns(value float64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionPush, value: FloatLiteral(value), line: ctx.Line, fileName: ctx.FileName}
 }
 
-func pushCharIns(value rune, line int) Instruction {
-	return Instruction{instructionType: InstructionPush, value: CharLiteral(value), line: line}
+func pushCharIns(value rune, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionPush, value: CharLiteral(value), line: ctx.Line, fileName: ctx.FileName}
 }
 
-func popIns(line int) Instruction {
-	return Instruction{instructionType: InstructionPop, line: line}
+func popIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionPop, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func dupIns(line int) Instruction {
-	return Instruction{instructionType: InstructionDup, line: line}
+func dupIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionDup, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func inDupIns(index int64, line int) Instruction {
-	return Instruction{instructionType: InstructionInDup, value: IntLiteral(index), line: line}
+func inDupIns(index int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionInDup, value: IntLiteral(index), line: ctx.Line, fileName: ctx.FileName}
 }
 
-func swapIns(line int) Instruction {
-	return Instruction{instructionType: InstructionSwap, line: line}
+func swapIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionSwap, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func inSwapIns(index int64, line int) Instruction {
-	return Instruction{instructionType: InstructionInSwap, value: IntLiteral(index), line: line}
+func inSwapIns(index int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionInSwap, value: IntLiteral(index), line: ctx.Line, fileName: ctx.FileName}
 }
 
-func addIns(line int) Instruction {
-	return Instruction{instructionType: InstructionAdd, line: line}
+func addIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionAdd, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func subIns(line int) Instruction {
-	return Instruction{instructionType: InstructionSub, line: line}
+func subIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionSub, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func mulIns(line int) Instruction {
-	return Instruction{instructionType: InstructionMul, line: line}
+func mulIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionMul, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func divIns(line int) Instruction {
-	return Instruction{instructionType: InstructionDiv, line: line}
+func divIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionDiv, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func printIns(line int) Instruction {
-	return Instruction{instructionType: InstructionPrint, line: line}
+func printIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionPrint, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func cmpeIns(line int) Instruction {
-	return Instruction{instructionType: InstructionCmpe, line: line}
+func cmpeIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionCmpe, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func cmpneIns(line int) Instruction {
-	return Instruction{instructionType: InstructionCmpne, line: line}
+func cmpneIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionCmpne, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func cmpgIns(line int) Instruction {
-	return Instruction{instructionType: InstructionCmpg, line: line}
+func cmpgIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionCmpg, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func cmplIns(line int) Instruction {
-	return Instruction{instructionType: InstructionCmpl, line: line}
+func cmplIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionCmpl, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func cmpgeIns(line int) Instruction {
-	return Instruction{instructionType: InstructionCmpge, line: line}
+func cmpgeIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionCmpge, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func cmpleIns(line int) Instruction {
-	return Instruction{instructionType: InstructionCmple, line: line}
+func cmpleIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionCmple, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func modIns(line int) Instruction {
-	return Instruction{instructionType: InstructionMod, line: line}
+func modIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionMod, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func jmpIns(target int64, line int) Instruction {
-	return Instruction{instructionType: InstructionJmp, value: IntLiteral(target), line: line}
+func jmpIns(target int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionJmp, value: IntLiteral(target), line: ctx.Line, fileName: ctx.FileName}
 }
 
-func zjmpIns(target int64, line int) Instruction {
-	return Instruction{instructionType: InstructionZjmp, value: IntLiteral(target), line: line}
+func zjmpIns(target int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionZjmp, value: IntLiteral(target), line: ctx.Line, fileName: ctx.FileName}
 }
 
-func nzjmpIns(target int64, line int) Instruction {
-	return Instruction{instructionType: InstructionNzjmp, value: IntLiteral(target), line: line}
+func nzjmpIns(target int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionNzjmp, value: IntLiteral(target), line: ctx.Line, fileName: ctx.FileName}
 }
 
-func haltIns(line int) Instruction {
-	return Instruction{instructionType: InstructionHalt, line: line}
+func haltIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionHalt, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func noopIns(line int) Instruction {
-	return Instruction{instructionType: InstructionNoOp, line: line}
+func noopIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionNoOp, line: ctx.Line, fileName: ctx.FileName}
 }
 
 func printStack(machine *Machine) {
@@ -167,108 +179,112 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 	instructions := []Instruction{}
 	cur := parsedTokens
 	for cur != nil {
-		line := int(cur.Value.Line)
+		ctx := InstructionContext{
+			Line:     int(cur.Value.Line),
+			FileName: cur.Value.FileName,
+		}
+
 		switch cur.Value.Type {
 		case token.TypeInvalid:
-			panic(fmt.Sprintf("ERROR on line %d: invalid token encountered during instruction generation", line))
+			panic(ctx.Error("invalid token encountered during instruction generation"))
 		case token.TypeNoOp:
-			instructions = append(instructions, noopIns(line))
+			instructions = append(instructions, noopIns(ctx))
 		case token.TypePush:
 			if cur.Next.Value.Type == token.TypeInt {
 				value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 				if err != nil {
-					panic(fmt.Sprintf("ERROR on line %d: invalid integer value for push instruction", line))
+					panic(ctx.Error("invalid integer value for push instruction"))
 				}
-				instructions = append(instructions, pushIntIns(value, line))
+				instructions = append(instructions, pushIntIns(value, ctx))
 			} else if cur.Next.Value.Type == token.TypeFloat {
 				value, err := strconv.ParseFloat(cur.Next.Value.Text, 64)
 				if err != nil {
-					panic(fmt.Sprintf("ERROR on line %d: invalid float value for push instruction", line))
+					panic(ctx.Error("invalid float value for push instruction"))
 				}
-				instructions = append(instructions, pushFloatIns(value, line))
+				instructions = append(instructions, pushFloatIns(value, ctx))
 			} else if cur.Next.Value.Type == token.TypeChar {
 				if len(cur.Next.Value.Text) == 0 {
-					panic(fmt.Sprintf("ERROR on line %d: empty character literal", line))
+					panic(ctx.Error("empty character literal"))
 				}
 				charValue := rune(cur.Next.Value.Text[0])
-				instructions = append(instructions, pushCharIns(charValue, line))
+				instructions = append(instructions, pushCharIns(charValue, ctx))
 			}
 			cur = cur.Next
 		case token.TypePop:
-			instructions = append(instructions, popIns(line))
+			instructions = append(instructions, popIns(ctx))
 		case token.TypeDup:
-			instructions = append(instructions, dupIns(line))
+			instructions = append(instructions, dupIns(ctx))
 		case token.TypeInDup:
 			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
-				panic(fmt.Sprintf("ERROR on line %d: invalid integer value for indup instruction", line))
+				panic(ctx.Error("invalid integer value for indup instruction"))
 			}
 			cur = cur.Next
-			instructions = append(instructions, inDupIns(value, line))
+			instructions = append(instructions, inDupIns(value, ctx))
 		case token.TypeSwap:
-			instructions = append(instructions, swapIns(line))
+			instructions = append(instructions, swapIns(ctx))
 		case token.TypeInSwap:
 			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
-				panic(fmt.Sprintf("ERROR on line %d: invalid integer value for inswap instruction", line))
+				panic(ctx.Error("invalid integer value for inswap instruction"))
 			}
 			cur = cur.Next
-			instructions = append(instructions, inSwapIns(value, line))
+			instructions = append(instructions, inSwapIns(value, ctx))
 		case token.TypeAdd:
-			instructions = append(instructions, addIns(line))
+			instructions = append(instructions, addIns(ctx))
 		case token.TypeSub:
-			instructions = append(instructions, subIns(line))
+			instructions = append(instructions, subIns(ctx))
 		case token.TypeMul:
-			instructions = append(instructions, mulIns(line))
+			instructions = append(instructions, mulIns(ctx))
 		case token.TypeDiv:
-			instructions = append(instructions, divIns(line))
+			instructions = append(instructions, divIns(ctx))
 		case token.TypeCmpe:
-			instructions = append(instructions, cmpeIns(line))
+			instructions = append(instructions, cmpeIns(ctx))
 		case token.TypeCmpne:
-			instructions = append(instructions, cmpneIns(line))
+			instructions = append(instructions, cmpneIns(ctx))
 		case token.TypeCmpg:
-			instructions = append(instructions, cmpgIns(line))
+			instructions = append(instructions, cmpgIns(ctx))
 		case token.TypeCmpl:
-			instructions = append(instructions, cmplIns(line))
+			instructions = append(instructions, cmplIns(ctx))
 		case token.TypeCmpge:
-			instructions = append(instructions, cmpgeIns(line))
+			instructions = append(instructions, cmpgeIns(ctx))
 		case token.TypeCmple:
-			instructions = append(instructions, cmpleIns(line))
+			instructions = append(instructions, cmpleIns(ctx))
 		case token.TypeMod:
-			instructions = append(instructions, modIns(line))
+			instructions = append(instructions, modIns(ctx))
 		case token.TypeJmp:
 			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
-				panic(fmt.Sprintf("ERROR on line %d: invalid integer value for jmp instruction", line))
+				panic(ctx.Error("invalid integer value for jmp instruction"))
 			}
 			cur = cur.Next
-			instructions = append(instructions, jmpIns(value, line))
+			instructions = append(instructions, jmpIns(value, ctx))
 		case token.TypeZjmp:
 			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
-				panic(fmt.Sprintf("ERROR on line %d: invalid integer value for zjmp instruction", line))
+				panic(ctx.Error("invalid integer value for zjmp instruction"))
 			}
 			cur = cur.Next
-			instructions = append(instructions, zjmpIns(value, line))
+			instructions = append(instructions, zjmpIns(value, ctx))
 		case token.TypeNzjmp:
 			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
-				panic(fmt.Sprintf("ERROR on line %d: invalid integer value for nzjmp instruction", line))
+				panic(ctx.Error("invalid integer value for nzjmp instruction"))
 			}
 			cur = cur.Next
-			instructions = append(instructions, nzjmpIns(value, line))
+			instructions = append(instructions, nzjmpIns(value, ctx))
 		case token.TypePrint:
-			instructions = append(instructions, printIns(line))
+			instructions = append(instructions, printIns(ctx))
 		case token.TypeInt:
-			panic(fmt.Sprintf("ERROR on line %d: unexpected standalone integer token encountered during instruction generation", line))
+			panic(ctx.Error("unexpected standalone integer token encountered during instruction generation"))
 		case token.TypeLabelDefinition:
-			panic(fmt.Sprintf("ERROR on line %d: unexpected label definition token encountered during instruction generation", line))
+			panic(ctx.Error("unexpected label definition token encountered during instruction generation"))
 		case token.TypeLabel:
-			panic(fmt.Sprintf("ERROR on line %d: unexpected label token encountered during instruction generation", line))
+			panic(ctx.Error("unexpected label token encountered during instruction generation"))
 		case token.TypeHalt:
-			instructions = append(instructions, haltIns(line))
+			instructions = append(instructions, haltIns(ctx))
 		default:
-			panic(fmt.Sprintf("ERROR on line %d: unknown token type encountered during instruction generation", line))
+			panic(ctx.Error("unknown token type encountered during instruction generation"))
 		}
 		cur = cur.Next
 	}

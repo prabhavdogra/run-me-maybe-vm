@@ -10,6 +10,7 @@ type Instruction struct {
 	instructionType InstructionSet
 	value           Literal
 	line            int
+	fileName        string
 }
 
 const maxStackSize = 1024

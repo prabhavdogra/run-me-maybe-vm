@@ -2,7 +2,8 @@ package tests
 
 var fib = ProgramTestCase{
 	name: "fibonacci",
-	program: `push 10
+	program: `@def N 10
+	push N
 	push 1
 	push 1
 	push 0

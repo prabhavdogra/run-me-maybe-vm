@@ -1,5 +1,19 @@
 package token
 
+import "fmt"
+
+// TokenContext contains metadata for token creation
+type TokenContext struct {
+	Line      int64
+	Character int
+	FileName  string
+}
+
+// Error formats an error message with file and line context
+func (ctx TokenContext) Error(message string) string {
+	return fmt.Sprintf("ERROR (%s:%d): %s", ctx.FileName, ctx.Line, message)
+}
+
 type TokenType uint8
 
 const (
@@ -39,4 +53,5 @@ type Token struct {
 	Text      string
 	Line      int64
 	Character int
+	FileName  string
 }

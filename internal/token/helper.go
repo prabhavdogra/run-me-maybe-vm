@@ -85,12 +85,13 @@ func checkLabelType(label string) TokenType {
 	return TypeLabel
 }
 
-func InitToken(tokenType TokenType, text string, line int64, char int) Token {
+func InitToken(tokenType TokenType, text string, ctx TokenContext) Token {
 	return Token{
 		Type:      tokenType,
 		Text:      text,
-		Line:      line,
-		Character: char,
+		Line:      ctx.Line,
+		Character: ctx.Character,
+		FileName:  ctx.FileName,
 	}
 }
 
@@ -147,7 +148,7 @@ func checkBuiltinKeywords(name string) TokenType {
 	}
 }
 
-func GenerateKeyword(input string, line int64, currentIndex int, char int) (Token, int) {
+func GetWord(input string, currentIndex int) (string, int) {
 	keyword := ""
 	for len(input) > currentIndex &&
 		(unicode.IsLetter(rune(input[currentIndex])) ||
@@ -156,14 +157,22 @@ func GenerateKeyword(input string, line int64, currentIndex int, char int) (Toke
 		keyword += string(rune(input[currentIndex]))
 		currentIndex++
 	}
+	return keyword, currentIndex
+}
+
+func GenerateKeyword(input string, currentIndex int, ctx TokenContext, macros map[string]string) (Token, string, int) {
+	keyword, updatedIndex := GetWord(input, currentIndex)
+	if val, ok := macros[keyword]; ok {
+		return Token{}, val, updatedIndex
+	}
 	tokenType := checkBuiltinKeywords(keyword)
 	if tokenType == TypeLabelDefinition {
 		keyword = keyword[:len(keyword)-1]
 	}
-	return InitToken(tokenType, keyword, line, char), currentIndex
+	return InitToken(tokenType, keyword, ctx), "", updatedIndex
 }
 
-func GenerateNumber(input string, line int64, currentIndex int, char int) (Token, int) {
+func GenerateNumber(input string, currentIndex int, ctx TokenContext) (Token, int) {
 	number := ""
 	for len(input) > currentIndex && unicode.IsDigit(rune(input[currentIndex])) {
 		number += string(rune(input[currentIndex]))
@@ -171,7 +180,7 @@ func GenerateNumber(input string, line int64, currentIndex int, char int) (Token
 	}
 	// Integer case
 	if len(input) <= currentIndex || input[currentIndex] != '.' {
-		return InitToken(TypeInt, number, line, char), currentIndex
+		return InitToken(TypeInt, number, ctx), currentIndex
 	}
 	number = number + string(input[currentIndex])
 	currentIndex++
@@ -181,26 +190,26 @@ func GenerateNumber(input string, line int64, currentIndex int, char int) (Token
 		currentIndex++
 	}
 
-	return InitToken(TypeFloat, number, line, char), currentIndex
+	return InitToken(TypeFloat, number, ctx), currentIndex
 }
 
-func GenerateChar(input string, line int64, currentIndex int, char int) (Token, int) {
+func GenerateChar(input string, currentIndex int, ctx TokenContext) (Token, int) {
 	currentIndex++ // skip opening '
 
 	if currentIndex >= len(input) {
-		panic(fmt.Sprintf("ERROR: unterminated character literal at line %d", line))
+		panic(fmt.Sprintf("ERROR: unterminated character literal at line %d", ctx.Line))
 	}
 
 	charValue := input[currentIndex]
 	currentIndex++ // skip the character
 
 	if currentIndex >= len(input) || input[currentIndex] != '\'' {
-		panic(fmt.Sprintf("ERROR: unterminated character literal at line %d", line))
+		panic(fmt.Sprintf("ERROR: unterminated character literal at line %d", ctx.Line))
 	}
 
 	currentIndex++ // skip closing '
 
-	return InitToken(TypeChar, string(charValue), line, char), currentIndex
+	return InitToken(TypeChar, string(charValue), ctx), currentIndex
 }
 
 func (t Tokens) PeekToken(index int) Token {
@@ -212,6 +221,6 @@ func (t Tokens) PeekToken(index int) Token {
 	return t[index]
 }
 
-func GetNoOpToken(line int64, char int) Token {
-	return InitToken(TypeNoOp, "noop", line, char)
+func GetNoOpToken(ctx TokenContext) Token {
+	return InitToken(TypeNoOp, "noop", ctx)
 }

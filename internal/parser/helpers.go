@@ -57,8 +57,9 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		startIndex++
 	case token.TypeLabelDefinition:
 		handleLabelDefination(tokens[0], labelMap, instructionNumber)
+		ctx := token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}
 		root = &ParserList{
-			Value: token.GetNoOpToken(tokens[0].Line, tokens[0].Character),
+			Value: token.GetNoOpToken(ctx),
 			Next:  nil,
 		}
 		current = root
@@ -89,7 +90,8 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			i++
 		case token.TypeLabelDefinition:
 			handleLabelDefination(curToken, labelMap, instructionNumber)
-			current = current.AddNextNode(token.GetNoOpToken(curToken.Line, curToken.Character))
+			ctx := token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}
+			current = current.AddNextNode(token.GetNoOpToken(ctx))
 			instructionNumber++
 		case token.TypeNoOp, token.TypePop, token.TypeDup, token.TypeSwap,
 			token.TypeAdd, token.TypeSub, token.TypeMul, token.TypeDiv,
