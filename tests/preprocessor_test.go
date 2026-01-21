@@ -107,7 +107,7 @@ var PreprocessorTests = []ProgramTestCase{
 	},
 	{
 		name: "macro instruction @def",
-		program: `@def PUSHTWO "push 2"
+		program: `@def PUSHTWO push 2
 				PUSHTWO
 				print`,
 		expected: []string{"INT 2"},
@@ -119,7 +119,7 @@ var PreprocessorTests = []ProgramTestCase{
 		additionalFiles: map[string]string{
 			"test2.tash": `push N`,
 		},
-		expectedError: "expected integer, float, or char value after 'push' instruction, but found label 'N'",
+		expectedError: "expected integer, float, char, or string value after 'push' instruction, but found label 'N'",
 	},
 	{
 		name: "duplicate @def (error)",

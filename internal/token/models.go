@@ -44,6 +44,7 @@ const (
 	TypeInt
 	TypeFloat
 	TypeChar
+	TypeString
 	TypeLabelDefinition
 	TypeLabel
 )

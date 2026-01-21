@@ -152,6 +152,9 @@ func (l *Lexer) lexContent(input string, fileName string) {
 		} else if input[currentIndex] == '\'' { // character literal
 			lexedToken, currentIndex = token.GenerateChar(input, currentIndex, ctx)
 			l.addToken(lexedToken)
+		} else if input[currentIndex] == '"' { // string literal
+			lexedToken, currentIndex = token.GenerateString(input, currentIndex, ctx)
+			l.addToken(lexedToken)
 		} else { // whitespace token
 			currentIndex++
 		}

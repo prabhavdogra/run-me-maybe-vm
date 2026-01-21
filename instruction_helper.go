@@ -34,6 +34,8 @@ func push(machine *Machine, value Literal) {
 		machine.stack = append(machine.stack, value)
 	} else if value.Type() == LiteralChar {
 		machine.stack = append(machine.stack, value)
+	} else if value.Type() == LiteralString {
+		machine.stack = append(machine.stack, value)
 	}
 }
 
@@ -77,6 +79,10 @@ func pushFloatIns(value float64, ctx InstructionContext) Instruction {
 
 func pushCharIns(value rune, ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionPush, value: CharLiteral(value), line: ctx.Line, fileName: ctx.FileName}
+}
+
+func pushStringIns(value string, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionPush, value: StringLiteral(value), line: ctx.Line, fileName: ctx.FileName}
 }
 
 func popIns(ctx InstructionContext) Instruction {
@@ -208,6 +214,8 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 				}
 				charValue := rune(cur.Next.Value.Text[0])
 				instructions = append(instructions, pushCharIns(charValue, ctx))
+			} else if cur.Next.Value.Type == token.TypeString {
+				instructions = append(instructions, pushStringIns(cur.Next.Value.Text, ctx))
 			}
 			cur = cur.Next
 		case token.TypePop:
@@ -302,6 +310,9 @@ func (il InstructionList) Print() {
 		}
 		if instr.value.Type() == LiteralChar {
 			fmt.Printf(", ValueChar=%c", instr.value.valueChar)
+		}
+		if instr.value.Type() == LiteralString {
+			fmt.Printf(", ValueString=%s", instr.value.valueString)
 		}
 		fmt.Println()
 	}

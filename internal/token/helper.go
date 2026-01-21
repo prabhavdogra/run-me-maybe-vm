@@ -59,6 +59,8 @@ func (tt TokenType) String() string {
 		return "float"
 	case TypeChar:
 		return "char"
+	case TypeString:
+		return "string"
 	case TypeLabelDefinition:
 		return "label definition"
 	case TypeLabel:
@@ -210,6 +212,45 @@ func GenerateChar(input string, currentIndex int, ctx TokenContext) (Token, int)
 	currentIndex++ // skip closing '
 
 	return InitToken(TypeChar, string(charValue), ctx), currentIndex
+}
+
+func GenerateString(input string, currentIndex int, ctx TokenContext) (Token, int) {
+	currentIndex++ // skip opening "
+	if currentIndex >= len(input) {
+		panic(ctx.Error("unterminated string literal"))
+	}
+
+	var strValue string
+	for currentIndex < len(input) && input[currentIndex] != '"' {
+		if input[currentIndex] == '\\' { // escape character
+			currentIndex++ // skip backslash
+			if currentIndex >= len(input) {
+				panic(ctx.Error("unterminated string literal"))
+			}
+			switch input[currentIndex] {
+			case 'n':
+				strValue += "\n"
+			case 't':
+				strValue += "\t"
+			case '"':
+				strValue += "\""
+			case '\\':
+				strValue += "\\"
+			default:
+				panic(ctx.Error(fmt.Sprintf("unknown escape character: \\%c", input[currentIndex])))
+			}
+		} else {
+			strValue += string(input[currentIndex])
+		}
+		currentIndex++
+	}
+
+	if currentIndex >= len(input) {
+		panic(ctx.Error("unterminated string literal"))
+	}
+
+	currentIndex++ // skip closing "
+	return InitToken(TypeString, strValue, ctx), currentIndex
 }
 
 func (t Tokens) PeekToken(index int) Token {

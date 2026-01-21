@@ -36,9 +36,16 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 	switch tokens[0].Type {
 	case token.TypeInt, token.TypeLabel:
 		panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("program cannot start with a %s reference", tokens[0].Type)))
-	case token.TypePush, token.TypeInDup, token.TypeInSwap:
-		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar) {
-			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected integer, float, or char value after '%s' instruction, but found %s '%s'", tokens[0].Type, nextToken.Type, nextToken.Text)))
+	case token.TypePush:
+		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar, token.TypeString) {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected integer, float, char, or string value after '%s' instruction, but found %s '%s'", tokens[0].Type, nextToken.Type, nextToken.Text)))
+		}
+		current = current.AddNextNode(tokens[1])
+		instructionNumber++
+		startIndex++
+	case token.TypeInDup, token.TypeInSwap:
+		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt) {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected integer value after '%s' instruction, but found %s '%s'", tokens[0].Type, nextToken.Type, nextToken.Text)))
 		}
 		current = current.AddNextNode(tokens[1])
 		instructionNumber++
@@ -68,9 +75,17 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		curToken := tokens[i]
 		nextToken := tokens.PeekToken(i + 1)
 		switch curToken.Type {
-		case token.TypePush, token.TypeInDup, token.TypeInSwap:
-			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar) {
-				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected integer, float, or char value after '%s' instruction, but found %s '%s'", curToken.Type, nextToken.Type, nextToken.Text)))
+		case token.TypePush:
+			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar, token.TypeString) {
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected integer, float, char, or string value after '%s' instruction, but found %s '%s'", curToken.Type, nextToken.Type, nextToken.Text)))
+			}
+			current = current.AddNextNode(curToken)
+			current = current.AddNextNode(nextToken)
+			instructionNumber++
+			i++
+		case token.TypeInDup, token.TypeInSwap:
+			if util.NotOneOf(nextToken.Type, token.TypeInt) {
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected integer value after '%s' instruction, but found %s '%s'", curToken.Type, nextToken.Type, nextToken.Text)))
 			}
 			current = current.AddNextNode(curToken)
 			current = current.AddNextNode(nextToken)

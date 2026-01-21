@@ -28,8 +28,9 @@ func TestPrograms(t *testing.T) {
 		isPrime,
 	}...)
 	cases = append(cases, PreprocessorTests...)
+	cases = append(cases, stringTests...)
 
-	literalLineRE := regexp.MustCompile(`^\s*(INT -?\d+|FLOAT -?\d+\.?\d*|CHAR .)\s*$`)
+	literalLineRE := regexp.MustCompile(`.+`)
 
 	for _, tc := range cases {
 		tc := tc
