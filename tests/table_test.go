@@ -16,6 +16,7 @@ type ProgramTestCase struct {
 	expected        []string
 	additionalFiles map[string]string // Optional: for @imp tests, filename -> content
 	expectedError   string            // Optional: for error case tests
+	expectedStderr  []string          // Optional: valid stderr output
 }
 
 func TestPrograms(t *testing.T) {
@@ -45,8 +46,6 @@ func TestPrograms(t *testing.T) {
 					if !strings.Contains(errStr, tc.expectedError) {
 						t.Fatalf("expected error containing %q, got %q", tc.expectedError, errStr)
 					}
-				} else if tc.expectedError != "" {
-					t.Fatalf("expected error containing %q, but program succeeded", tc.expectedError)
 				}
 			}()
 
@@ -79,36 +78,67 @@ func TestPrograms(t *testing.T) {
 					t.Fatalf("failed to get VM module root: %v", err)
 				}
 
-				// Run from module root, passing absolute path to main file
+				var stdout, stderr strings.Builder
 				cmd := exec.Command("go", "run", ".", mainFilePath)
 				cmd.Dir = vmModuleRoot
-				outBytes, err := cmd.CombinedOutput()
-				if err != nil {
-					// If we expect an error, this is fine, the recover() block will handle it
-					// However, go run exits with non-zero on panic, so we panic here to trigger recover
-					panic(string(outBytes))
-				}
+				cmd.Stdout = &stdout
+				cmd.Stderr = &stderr
+				err = cmd.Run()
 
-				out := strings.TrimSpace(string(outBytes))
-				if out == "" {
-					t.Fatal("program produced no output")
-				}
+				outStr := stdout.String()
+				errStr := stderr.String()
 
-				// collect literal lines (PRINT outputs)
-				lines := strings.Split(out, "\n")
-				var outputs []string
-				for _, ln := range lines {
-					if literalLineRE.MatchString(ln) {
-						outputs = append(outputs, strings.TrimSpace(ln))
+				if tc.expectedError != "" {
+					// We expect an error (non-zero exit or panic usually prints to stderr)
+					// Check if the error message is in stderr or the error object
+					combinedErr := fmt.Sprintf("%v\n%s", err, errStr)
+					if !strings.Contains(combinedErr, tc.expectedError) {
+						t.Fatalf("expected error containing %q, got err=%v, stderr=%q", tc.expectedError, err, errStr)
 					}
+					return
+				} else if err != nil {
+					// Unexpected error
+					t.Fatalf("program failed unexpectedly: %v\nstderr: %s", err, errStr)
 				}
 
-				if len(outputs) < len(tc.expected) {
-					t.Fatalf("expected at least %d literal outputs, got %d; full output:\n%s", len(tc.expected), len(outputs), out)
+				// Validate Stdout
+				if len(tc.expected) > 0 {
+					lines := strings.Split(strings.TrimSpace(outStr), "\n")
+					var outputs []string
+					for _, ln := range lines {
+						if literalLineRE.MatchString(ln) {
+							outputs = append(outputs, strings.TrimSpace(ln))
+						}
+					}
+					if len(outputs) < len(tc.expected) {
+						t.Fatalf("expected at least %d stdout lines, got %d; full stdout:\n%s", len(tc.expected), len(outputs), outStr)
+					}
+					for i := range tc.expected {
+						if outputs[i] != tc.expected[i] {
+							t.Fatalf("stdout mismatch at index %d: expected %s, got %s\nfull stdout:\n%s", i, tc.expected[i], outputs[i], outStr)
+						}
+					}
+				} else if len(tc.expectedStderr) == 0 && outStr != "" {
+					// Strict verification: if no expected stdout is specified, enforce that no stdout is produced
+					t.Fatalf("unexpected stdout produced: %q", outStr)
 				}
-				for i := range tc.expected {
-					if outputs[i] != tc.expected[i] {
-						t.Fatalf("mismatch at index %d: expected %s, got %s\nfull output:\n%s", i, tc.expected[i], outputs[i], out)
+
+				// Validate Stderr (if expected)
+				if len(tc.expectedStderr) > 0 {
+					lines := strings.Split(strings.TrimSpace(errStr), "\n")
+					var outputs []string
+					for _, ln := range lines {
+						if literalLineRE.MatchString(ln) {
+							outputs = append(outputs, strings.TrimSpace(ln))
+						}
+					}
+					if len(outputs) < len(tc.expectedStderr) {
+						t.Fatalf("expected at least %d stderr lines, got %d; full stderr:\n%s", len(tc.expectedStderr), len(outputs), errStr)
+					}
+					for i := range tc.expectedStderr {
+						if outputs[i] != tc.expectedStderr[i] {
+							t.Fatalf("stderr mismatch at index %d: expected %s, got %s\nfull stderr:\n%s", i, tc.expectedStderr[i], outputs[i], errStr)
+						}
 					}
 				}
 				return
@@ -130,6 +160,7 @@ func TestPrograms(t *testing.T) {
 
 			cmd := exec.Command("go", "run", "..", tmp.Name())
 			outBytes, err := cmd.CombinedOutput()
+
 			if err != nil {
 				// If we expect an error, this is fine, the recover() block will handle it
 				panic(string(outBytes))

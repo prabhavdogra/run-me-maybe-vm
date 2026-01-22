@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type InstructionSet uint8
 
@@ -27,6 +30,7 @@ const (
 	InstructionNzjmp
 	InstructionJmp
 	InstructionPrint
+	InstructionWrite
 	InstructionHalt
 )
 
@@ -48,6 +52,8 @@ func (i InstructionSet) String() string {
 		return "DIV"
 	case InstructionPrint:
 		return "PRINT"
+	case InstructionWrite:
+		return "WRITE"
 	case InstructionDup:
 		return "DUP"
 	case InstructionInDup:
@@ -240,6 +246,27 @@ func runInstructions(machine *Machine) *Machine {
 		case InstructionPrint:
 			value := pop(machine)
 			fmt.Println(value)
+		case InstructionWrite:
+			fd := instr.value
+			length := instr.length
+			if fd.Type() != LiteralInt {
+				panic(instr.Error("write fd must be integer"))
+			}
+			s := ""
+			for i := 0; i < length; i++ {
+				val := pop(machine)
+				if val.Type() != LiteralChar {
+					panic(instr.Error("write expects characters on stack"))
+				}
+				s = string(val.valueChar) + s
+			}
+			if fd.valueInt == 1 {
+				fmt.Fprint(os.Stdout, s)
+			} else if fd.valueInt == 2 {
+				fmt.Fprint(os.Stderr, s)
+			} else {
+				panic(instr.Error("unknown file descriptor"))
+			}
 		case InstructionHalt:
 			insPtr = machine.programSize()
 		default:

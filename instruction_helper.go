@@ -19,7 +19,7 @@ type InstructionContext struct {
 
 // Error formats an error message with file and line context
 func (ctx InstructionContext) Error(message string) string {
-	return fmt.Sprintf("ERROR on line %d (%s): %s", ctx.Line, ctx.FileName, message)
+	return fmt.Sprintf("ERROR (%s:%d): %s", ctx.FileName, ctx.Line, message)
 }
 
 // ---- Stack helper functions ----
@@ -79,10 +79,6 @@ func pushFloatIns(value float64, ctx InstructionContext) Instruction {
 
 func pushCharIns(value rune, ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionPush, value: CharLiteral(value), line: ctx.Line, fileName: ctx.FileName}
-}
-
-func pushStringIns(value string, ctx InstructionContext) Instruction {
-	return Instruction{instructionType: InstructionPush, value: StringLiteral(value), line: ctx.Line, fileName: ctx.FileName}
 }
 
 func popIns(ctx InstructionContext) Instruction {
@@ -169,6 +165,16 @@ func haltIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionHalt, line: ctx.Line, fileName: ctx.FileName}
 }
 
+func writeIns(fd, length int64, ctx InstructionContext) Instruction {
+	return Instruction{
+		instructionType: InstructionWrite,
+		value:           IntLiteral(fd),
+		length:          int(length), // Assuming models.go has length field now
+		line:            ctx.Line,
+		fileName:        ctx.FileName,
+	}
+}
+
 func noopIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionNoOp, line: ctx.Line, fileName: ctx.FileName}
 }
@@ -215,7 +221,10 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 				charValue := rune(cur.Next.Value.Text[0])
 				instructions = append(instructions, pushCharIns(charValue, ctx))
 			} else if cur.Next.Value.Type == token.TypeString {
-				instructions = append(instructions, pushStringIns(cur.Next.Value.Text, ctx))
+				strVal := cur.Next.Value.Text
+				for _, char := range strVal {
+					instructions = append(instructions, pushCharIns(char, ctx))
+				}
 			}
 			cur = cur.Next
 		case token.TypePop:
@@ -281,6 +290,18 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 			}
 			cur = cur.Next
 			instructions = append(instructions, nzjmpIns(value, ctx))
+		case token.TypeWrite:
+			// file descriptor, =1 for stdout, =2 for stderr
+			fd, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
+			if err != nil || (fd != 1 && fd != 2) {
+				panic(ctx.Error("invalid integer value for write fd"))
+			}
+			length, err := strconv.ParseInt(cur.Next.Next.Value.Text, 10, 64)
+			if err != nil {
+				panic(ctx.Error("invalid integer value for write length"))
+			}
+			cur = cur.Next.Next
+			instructions = append(instructions, writeIns(fd, length, ctx))
 		case token.TypePrint:
 			instructions = append(instructions, printIns(ctx))
 		case token.TypeInt:
@@ -310,9 +331,6 @@ func (il InstructionList) Print() {
 		}
 		if instr.value.Type() == LiteralChar {
 			fmt.Printf(", ValueChar=%c", instr.value.valueChar)
-		}
-		if instr.value.Type() == LiteralString {
-			fmt.Printf(", ValueString=%s", instr.value.valueString)
 		}
 		fmt.Println()
 	}

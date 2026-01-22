@@ -53,6 +53,8 @@ func (tt TokenType) String() string {
 		return "nzjmp"
 	case TypePrint:
 		return "print"
+	case TypeWrite:
+		return "write"
 	case TypeInt:
 		return "int"
 	case TypeFloat:
@@ -143,6 +145,8 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypeNzjmp
 	case "print":
 		return TypePrint
+	case "write":
+		return TypeWrite
 	case "halt":
 		return TypeHalt
 	default:

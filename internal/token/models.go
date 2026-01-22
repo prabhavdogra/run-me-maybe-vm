@@ -40,6 +40,7 @@ const (
 	TypeZjmp
 	TypeNzjmp
 	TypePrint
+	TypeWrite
 	TypeHalt
 	TypeInt
 	TypeFloat

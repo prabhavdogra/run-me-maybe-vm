@@ -13,11 +13,10 @@ const (
 )
 
 type Literal struct {
-	valueType   LiteralType
-	valueInt    int64
-	valueFloat  float64
-	valueChar   rune
-	valueString string
+	valueType  LiteralType
+	valueInt   int64
+	valueFloat float64
+	valueChar  rune
 }
 
 func (l *Literal) Type() LiteralType {
@@ -45,13 +44,6 @@ func CharLiteral(value rune) Literal {
 	}
 }
 
-func StringLiteral(value string) Literal {
-	return Literal{
-		valueType:   LiteralString,
-		valueString: value,
-	}
-}
-
 func (l Literal) String() string {
 	if l.Type() == LiteralInt {
 		return fmt.Sprintf("INT %d", l.valueInt)
@@ -59,8 +51,6 @@ func (l Literal) String() string {
 		return fmt.Sprintf("FLOAT %f", l.valueFloat)
 	} else if l.Type() == LiteralChar {
 		return fmt.Sprintf("CHAR %c", l.valueChar)
-	} else if l.Type() == LiteralString {
-		return l.valueString
 	}
 	return "NONE"
 }
@@ -80,8 +70,6 @@ func (l Literal) Equal(other Literal) bool {
 		return l.valueFloat == other.valueFloat
 	case LiteralChar:
 		return l.valueChar == other.valueChar
-	case LiteralString:
-		return l.valueString == other.valueString
 	default:
 		return false
 	}

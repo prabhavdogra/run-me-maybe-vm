@@ -12,6 +12,8 @@ A lightweight, stack-based virtual machine written in Go, featuring a custom ass
 - **Flexible Instruction Set**: Arithmetic, stack manipulation, control flow, and comparison.
 - **Label Support**: Use labels for jump targets instead of hardcoded instruction pointers.
 
+> **Note on Strings**: String literals (e.g., `"hello"`) are pushed onto the stack as a sequence of individual characters. Use `write` to output them.
+
 ## Quick Start
 
 ### Prerequisites
@@ -39,6 +41,7 @@ go test -v ./...
 | :--- | :--- |
 | `push <val>` | Push a literal value (int, float, char) onto the stack. |
 | `pop` | Remove the top value from the stack. |
+| `write <fd> <len>` | Pop `len` characters and write to file descriptor (1=stdout, 2=stderr). |
 | `dup` | Duplicate the top stack value. |
 | `indup <idx>` | Duplicate the value at the given stack index to the top. |
 | `swap` | Swap the top two stack values. |
@@ -48,7 +51,7 @@ go test -v ./...
 | `jmp <label/ptr>` | Unconditional jump. |
 | `zjmp <label/ptr>` | Jump if top of stack is 0 (pops condition). |
 | `nzjmp <label/ptr>` | Jump if top of stack is NOT 0 (pops condition). |
-| `print` | Pop and print the top value. |
+| `print` | Pop and print the top value (int, char, float). |
 | `halt` | Stop execution. |
 | `noop` | No operation. |
 
