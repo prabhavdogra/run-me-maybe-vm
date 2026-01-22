@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 type LiteralType uint8
 
@@ -190,5 +193,25 @@ func (l Literal) Div(other Literal) Literal {
 		return FloatLiteral(l.valueFloat / other.valueFloat)
 	default:
 		panic("ERROR: \"div\" not supported for this type")
+	}
+}
+
+func (l Literal) Mod(other Literal) Literal {
+	if l.Type() != other.Type() {
+		panic("ERROR: \"mod\" requires operands of same type")
+	}
+	switch l.Type() {
+	case LiteralInt:
+		if other.valueInt == 0 {
+			panic("ERROR: modulo by zero")
+		}
+		return IntLiteral(l.valueInt % other.valueInt)
+	case LiteralFloat:
+		if other.valueFloat == 0.0 {
+			panic("ERROR: modulo by zero")
+		}
+		return FloatLiteral(math.Mod(l.valueFloat, other.valueFloat))
+	default:
+		panic("ERROR: \"mod\" not supported for this type")
 	}
 }

@@ -409,6 +409,17 @@ var floatMulTest = ProgramTestCase{
 	expected: []string{"FLOAT 10.000000"},
 }
 
+// Test float modulo
+var floatModTest = ProgramTestCase{
+	name: "float_modulo",
+	program: `push 10.5
+	push 3.0
+	mod
+	print
+	halt`,
+	expected: []string{"FLOAT 1.500000"},
+}
+
 // Test float division
 var floatDivTest = ProgramTestCase{
 	name: "float_division",
@@ -532,6 +543,7 @@ var operatorsTest = []ProgramTestCase{
 	subTest,
 	mulTest,
 	divTest,
+	floatModTest,
 	modTest,
 
 	// Comparison operations

@@ -121,13 +121,7 @@ func runInstructions(machine *Machine) *Machine {
 		case InstructionMod:
 			a := pop(machine)
 			b := pop(machine)
-			if a.Type() != LiteralInt || b.Type() != LiteralInt {
-				panic("ERROR: modulo requires integer operands")
-			}
-			if a.valueInt == 0 {
-				panic("ERROR: modulo by zero")
-			}
-			push(machine, IntLiteral(b.valueInt%a.valueInt))
+			push(machine, b.Mod(a))
 		case InstructionCmpe:
 			a := pop(machine)
 			b := pop(machine)
