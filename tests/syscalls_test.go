@@ -13,7 +13,14 @@ var stddefs = map[string]string{
 	@def close native 3
 	@def free native 4
 	@def malloc native 5
-	@def exit native 6`,
+	@def exit native 6
+
+	@def RONLY 0
+	@def WONLY 1
+	@def RDWR 2
+	@def CREAT 64
+	@def EXCL 128
+	`,
 }
 
 // 1. Basic Write (Native 1)
@@ -147,7 +154,10 @@ var fileOpsTest = ProgramTestCase{
 		; Stack: ptr
 		dup             ; Keep ptr for 2nd open (Read)
 		push 1          ; len of filename "A"
-		open            ; open(ptr, len) -> pushes FD (should be 3)
+		push CREAT      ; 64
+		push RDWR       ; 2
+		add             ; flags (66)
+		open            ; open(flags, 1, ptr) -> pushes FD (should be 3)
 		pop             ; Discard FD (assume 3 for simplicity)
 
 		; 3. Write "Hello" to FD 3
@@ -163,6 +173,7 @@ var fileOpsTest = ProgramTestCase{
 		; 5. Open file "A" (Read)
 		; Stack: ptr
 		push 1          ; len
+		push RONLY      ; flags (0)
 		open            ; -> FD (should be 3 again)
 		pop             ; Discard FD
 

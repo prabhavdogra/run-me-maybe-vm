@@ -275,6 +275,31 @@ func runInstructions(machine *Machine) *Machine {
 }
 
 func nativeOpen(machine *Machine, instr Instruction) {
+	// Pop flags
+	flagsVal := pop(machine)
+	if flagsVal.Type() != LiteralInt {
+		panic(instr.Error("open flags must be integer"))
+	}
+	flags := int(flagsVal.valueInt)
+
+	// Translate VM flags to OS flags
+	// VM: RONLY=0, WONLY=1, RDWR=2, CREAT=64, EXCL=128
+	osFlags := 0
+	if flags&0x3 == 0 {
+		osFlags |= os.O_RDONLY
+	} else if flags&0x3 == 1 {
+		osFlags |= os.O_WRONLY
+	} else if flags&0x3 == 2 {
+		osFlags |= os.O_RDWR
+	}
+
+	if flags&64 != 0 {
+		osFlags |= os.O_CREATE
+	}
+	if flags&128 != 0 {
+		osFlags |= os.O_EXCL
+	}
+
 	// Pop filename length
 	lenVal := pop(machine)
 	if lenVal.Type() != LiteralInt {
@@ -306,7 +331,7 @@ func nativeOpen(machine *Machine, instr Instruction) {
 	}
 
 	// Open the file
-	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(filename, osFlags, 0644)
 	if err != nil {
 		panic(instr.Error(fmt.Sprintf("failed to open file %s: %v", filename, err)))
 	}
