@@ -192,6 +192,10 @@ func GenerateKeyword(input string, currentIndex int, ctx TokenContext, macros ma
 
 func GenerateNumber(input string, currentIndex int, ctx TokenContext) (Token, int) {
 	number := ""
+	if len(input) > currentIndex && input[currentIndex] == '-' {
+		number += "-"
+		currentIndex++
+	}
 	for len(input) > currentIndex && unicode.IsDigit(rune(input[currentIndex])) {
 		number += string(rune(input[currentIndex]))
 		currentIndex++

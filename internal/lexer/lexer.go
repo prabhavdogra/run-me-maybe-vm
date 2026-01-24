@@ -146,7 +146,7 @@ func (l *Lexer) lexContent(input string, fileName string, startLine int64) {
 			} else {
 				l.addToken(lexedToken)
 			}
-		} else if unicode.IsDigit(rune(input[currentIndex])) { // numeric token
+		} else if unicode.IsDigit(rune(input[currentIndex])) || input[currentIndex] == '-' { // numeric token
 			lexedToken, currentIndex = token.GenerateNumber(input, currentIndex, ctx)
 			l.addToken(lexedToken)
 		} else if input[currentIndex] == '\'' { // character literal

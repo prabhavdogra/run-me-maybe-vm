@@ -35,6 +35,7 @@ func TestPrograms(t *testing.T) {
 	cases = append(cases, syscallTests...)
 	cases = append(cases, LineNumberTests...)
 	cases = append(cases, FizzBuzzTest)
+	cases = append(cases, NegativeTest)
 
 	literalLineRE := regexp.MustCompile(`.+`)
 
