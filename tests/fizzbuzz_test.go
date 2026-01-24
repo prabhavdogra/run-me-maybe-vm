@@ -3,22 +3,25 @@ package tests
 var FizzBuzzTest = ProgramTestCase{
 	name: "fizzbuzz",
 	program: `@imp "stddefs.wm"
-			@def N 100 
-			jmp main
-			push_str "Fizz"
-			push_str "Buzz"
-			push_str "\n"
+			@def N 100
 
+			jmp main
+			push_str "Fizz"      ; String table[0]
+			push_str "Buzz"      ; String table[1]
+			push_str "\n"        ; String table[2]
+
+			; Handles multiples of 3: prints "Fizz" and increments flag
 			handle_three:
 			get_str 0
 			push STDOUT
 			write
-			inswap 0
+			inswap 0             ; Swap counter (stack[0]) with top (flag)
 			push 1
-			add
-			inswap 0
+			add                  ; Increment flag
+			inswap 0             ; Swap back
 			jmp three_continue
 
+			; Handles multiples of 5: prints "Buzz" and increments flag
 			handle_five:
 			get_str 1
 			push STDOUT
@@ -29,6 +32,7 @@ var FizzBuzzTest = ProgramTestCase{
 			inswap 0
 			jmp five_continue
 
+			; Handles non-Fizz/Buzz numbers: prints the number itself
 			handle_number:
 			dup
 			int_to_str
@@ -40,37 +44,41 @@ var FizzBuzzTest = ProgramTestCase{
 			jmp number_continue
 
 			main:
-			push 1
+			push 1               ; Initialize counter
 
 			loop:
-			push 0
-			inswap 0
+			push 0               ; Initialize flag (0 = no Fizz/Buzz printed yet)
+			inswap 0             ; Swap to get stack: [flag, counter]
 
+			; Check if divisible by 3
 			dup
 			push 3
 			mod
-			zjmp handle_three
-
+			zjmp handle_three    ; Jump if counter % 3 == 0
 			three_continue:
+
+			; Check if divisible by 5
 			dup
 			push 5
 			mod
-			zjmp handle_five
+			zjmp handle_five     ; Jump if counter % 5 == 0
 			five_continue:
 
-			inswap 0
-			zjmp handle_number 
-			get_str 2
+
+
+			inswap 0             ; Swap to get flag on top
+			zjmp handle_number   ; If flag==0, print number
+			get_str 2            ; Otherwise print newline (Fizz/Buzz was printed)
 			push STDOUT
 			write
-
 			number_continue:
+
 			push 1
-			add
+			add                  ; Increment counter
 
 			push N 
-			cmpl
-			nzjmp end 
+			cmpl                 ; Check if counter < N
+			nzjmp end            ; Exit if counter >= N
 			pop
 
 
@@ -78,7 +86,8 @@ var FizzBuzzTest = ProgramTestCase{
 
 			end:
 			push 0
-			exit`,
+			exit
+`,
 	expected: []string{
 		"1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz",
 		"11", "Fizz", "13", "14", "FizzBuzz", "16", "17", "Fizz", "19", "Buzz",
