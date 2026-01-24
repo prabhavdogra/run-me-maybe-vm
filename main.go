@@ -20,13 +20,17 @@ func main() {
 	if args.DebugMode {
 		instructions.Print()
 	}
+	// preprocess strings into Heap
+	stringTable, heap, heapPtr := populateStringTable(parsedTokens)
 	loadedMachine := &Machine{
 		instructions:    instructions,
 		stack:           make([]Literal, 0, maxStackSize),
-		heap:            make(map[int64][]Literal),
+		heap:            heap,
+		heapPtr:         heapPtr,
 		input:           os.Stdin,
 		output:          os.Stdout,
 		fileDescriptors: make(map[int64]*os.File),
+		stringTable:     stringTable,
 	}
 	loadedMachine = runInstructions(loadedMachine)
 	if debugMode {

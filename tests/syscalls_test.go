@@ -28,11 +28,10 @@ var stddefs = map[string]string{
 var writeTest = ProgramTestCase{
 	name: "syscall_write",
 	program: `@imp "stddefs.wm"
-		push "hello"  ; Push characters 'h', 'e', 'l', 'l', 'o'
+		push_str "hello"
+		get_str 0     ; Pushes ptr to "hello"
 		push STDOUT   ; Push File Descriptor (fd) 1 (Stdout)
-		push 5        ; Push Length of string
-		write         ; Execute write(fd, len), pops len, fd, then 5 chars
-		halt`,
+		write         ; Execute write(fd, ptr)`,
 	expected:        []string{"hello"},
 	additionalFiles: stddefs,
 }
@@ -42,9 +41,9 @@ var writeTest = ProgramTestCase{
 var writeStderrTest = ProgramTestCase{
 	name: "syscall_write_stderr",
 	program: `@imp "stddefs.wm"
-		push "error"
+		push_str "error"
+		get_str 0
 		push 2        ; Push File Descriptor (fd) 2 (Stderr)
-		push 5
 		write
 		halt`,
 	expectedStderr:  []string{"error"},
@@ -161,10 +160,10 @@ var fileOpsTest = ProgramTestCase{
 		pop             ; Discard FD (assume 3 for simplicity)
 
 		; 3. Write "Hello" to FD 3
-		push "Hello"    ; Pushes 'H', 'e', 'l', 'l', 'o'
+		push_str "Hello"
+		get_str 0       ; ptr to "Hello" (Index 0)
 		push 3          ; FD
-		push 5          ; Len
-		write           ; write(3, 5, "Hello")
+		write           ; write(3, ptr)
 
 		; 4. Close FD 3
 		push 3

@@ -14,6 +14,7 @@ type Machine struct {
 	input           io.Reader
 	output          io.Writer
 	fileDescriptors map[int64]*os.File
+	stringTable     []int64
 }
 
 type Instruction struct {

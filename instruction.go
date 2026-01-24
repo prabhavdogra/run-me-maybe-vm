@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"vm/internal/parser"
+	"vm/internal/token"
 )
 
 type InstructionSet uint8
@@ -11,6 +13,7 @@ type InstructionSet uint8
 const (
 	InstructionNoOp InstructionSet = iota
 	InstructionPush
+	InstructionGetStr
 	InstructionPop
 	InstructionDup
 	InstructionInDup
@@ -35,12 +38,43 @@ const (
 	InstructionHalt
 )
 
+func populateStringTable(parsedTokens *parser.ParserList) ([]int64, map[int64][]Literal, int64) {
+	stringTable := []int64{}
+	heap := make(map[int64][]Literal)
+	heapPtr := int64(0)
+
+	cur := parsedTokens
+	for cur != nil {
+		if cur.Value.Type == token.TypePushStr {
+			if cur.Next == nil || cur.Next.Value.Type != token.TypeString {
+				panic("expected string after push_str") // Should be caught by parser
+			}
+			strVal := cur.Next.Value.Text
+
+			// Malloc string (len + 1 for null terminator)
+			ptr := heapPtr
+			heap[ptr] = make([]Literal, len(strVal)+1)
+			for i, char := range strVal {
+				heap[ptr][i] = CharLiteral(char)
+			}
+			heap[ptr][len(strVal)] = CharLiteral(0) // Null terminator
+			heapPtr++
+
+			stringTable = append(stringTable, ptr)
+		}
+		cur = cur.Next
+	}
+	return stringTable, heap, heapPtr
+}
+
 func (i InstructionSet) String() string {
 	switch i {
 	case InstructionNoOp:
 		return "NOOP"
 	case InstructionPush:
 		return "PUSH"
+	case InstructionGetStr:
+		return "GET_STR"
 	case InstructionPop:
 		return "POP"
 	case InstructionAdd:
@@ -98,6 +132,13 @@ func runInstructions(machine *Machine) *Machine {
 			// do nothing
 		case InstructionPush:
 			push(machine, instr.value)
+		case InstructionGetStr:
+			idx := int(instr.value.valueInt)
+			if idx < 0 || idx >= len(machine.stringTable) {
+				panic(instr.Error("string index out of bounds"))
+			}
+			ptr := machine.stringTable[idx]
+			push(machine, IntLiteral(ptr))
 		case InstructionPop:
 			pop(machine)
 		case InstructionDup:
@@ -249,18 +290,25 @@ func runInstructions(machine *Machine) *Machine {
 
 			switch syscallID.valueInt {
 			case 0:
+				// open(flags, len, ptr)
 				nativeOpen(machine, instr)
 			case 1:
+				// write(len, fd, char...)
 				nativeWrite(machine, instr)
 			case 2:
+				// read(ptr, len, fd)
 				nativeRead(machine, instr)
 			case 3:
+				// close(fd)
 				nativeClose(machine, instr)
 			case 4:
+				// free(ptr)
 				nativeFree(machine, instr)
 			case 5:
+				// malloc(size)
 				nativeMalloc(machine, instr)
 			case 6:
+				// exit(code)
 				nativeExit(machine, instr)
 			default:
 				panic(instr.Error(fmt.Sprintf("unknown native syscall ID: %d", syscallID.valueInt)))
@@ -274,6 +322,7 @@ func runInstructions(machine *Machine) *Machine {
 	return machine
 }
 
+// Open a file
 func nativeOpen(machine *Machine, instr Instruction) {
 	// Pop flags
 	flagsVal := pop(machine)
@@ -353,44 +402,52 @@ func nativeOpen(machine *Machine, instr Instruction) {
 	push(machine, IntLiteral(fd))
 }
 
+// Write to a file descriptor
 func nativeWrite(machine *Machine, instr Instruction) {
-	lenVal := pop(machine)
-	if lenVal.Type() != LiteralInt {
-		panic(instr.Error("write length must be integer"))
-	}
-	length := int(lenVal.valueInt)
-
-	fdVal := pop(machine)
-	if fdVal.Type() != LiteralInt {
+	// Try to pop fd first (top of stack)
+	// Usage 1: push_str "hello"; get_str 0; push 1; native 1 -> Stack: [ptr, fd]
+	// Usage 2: push char; push char; push len; push fd; native 1 -> Stack: [..., char, char, len, fd] ??
+	fd := pop(machine) // FD
+	if fd.Type() != LiteralInt {
 		panic(instr.Error("write fd must be integer"))
 	}
-	fd := int64(fdVal.valueInt)
+
+	ptr := pop(machine) // Ptr
+	if ptr.Type() != LiteralInt {
+		panic(instr.Error("write string pointer must be integer"))
+	}
 
 	var writer io.Writer
-	if fd == 1 {
+	if fd.valueInt == 1 {
 		writer = machine.output
-	} else if fd == 2 {
+	} else if fd.valueInt == 2 {
 		writer = os.Stderr
 	} else {
-		if file, ok := machine.fileDescriptors[fd]; ok {
+		if file, ok := machine.fileDescriptors[int64(fd.valueInt)]; ok {
 			writer = file
 		} else {
-			panic(instr.Error(fmt.Sprintf("unknown file descriptor %d", fd)))
+			panic(instr.Error(fmt.Sprintf("unknown file descriptor %d", fd.valueInt)))
 		}
 	}
 
-	s := ""
-	for i := 0; i < length; i++ {
-		val := pop(machine)
-		if val.Type() != LiteralChar {
-			panic(instr.Error("write expects characters on stack"))
+	if buffer, ok := machine.heap[int64(ptr.valueInt)]; ok {
+		s := ""
+		for _, charLit := range buffer {
+			if charLit.Type() != LiteralChar {
+				continue
+			}
+			if charLit.valueChar == 0 {
+				break
+			}
+			s += string(charLit.valueChar)
 		}
-		s = string(val.valueChar) + s
+		fmt.Fprint(writer, s)
+	} else {
+		panic(instr.Error("segmentation fault: invalid heap pointer"))
 	}
-
-	fmt.Fprint(writer, s)
 }
 
+// Read from a file descriptor into a buffer
 func nativeRead(machine *Machine, instr Instruction) {
 	// Arguments: [..., fd, len, ptr] (Top is ptr)
 	ptrVal := pop(machine)
@@ -444,6 +501,7 @@ func nativeRead(machine *Machine, instr Instruction) {
 	}
 }
 
+// Close a file descriptor
 func nativeClose(machine *Machine, instr Instruction) {
 	// Pop file descriptor ID
 	fdVal := pop(machine)
@@ -470,8 +528,8 @@ func nativeClose(machine *Machine, instr Instruction) {
 	delete(machine.fileDescriptors, fd)
 }
 
+// Free a heap pointer
 func nativeFree(machine *Machine, instr Instruction) {
-
 	// Pop ptr
 	ptrVal := pop(machine)
 	if ptrVal.Type() != LiteralInt {

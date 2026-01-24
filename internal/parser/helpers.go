@@ -43,6 +43,20 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		current = current.AddNextNode(tokens[1])
 		instructionNumber++
 		startIndex++
+	case token.TypePushStr:
+		if len(tokens) < 2 || nextToken.Type != token.TypeString {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected string value after 'push_str' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
+		}
+		current = current.AddNextNode(tokens[1])
+		// push_str does not increment instructionNumber as it's a data directive
+		startIndex++
+	case token.TypeGetStr:
+		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt) {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected integer value (index) after 'get_str' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
+		}
+		current = current.AddNextNode(tokens[1])
+		instructionNumber++
+		startIndex++
 	case token.TypeInDup, token.TypeInSwap:
 		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt) {
 			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected integer value after '%s' instruction, but found %s '%s'", tokens[0].Type, nextToken.Type, nextToken.Text)))
@@ -93,6 +107,21 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			} else {
 				instructionNumber++
 			}
+			i++
+		case token.TypePushStr:
+			if nextToken.Type != token.TypeString {
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected string value after 'push_str' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
+			}
+			current = current.AddNextNode(curToken)
+			current = current.AddNextNode(nextToken)
+			i++
+		case token.TypeGetStr:
+			if util.NotOneOf(nextToken.Type, token.TypeInt) {
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected integer value (index) after 'get_str' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
+			}
+			current = current.AddNextNode(curToken)
+			current = current.AddNextNode(nextToken)
+			instructionNumber++
 			i++
 		case token.TypeInDup, token.TypeInSwap:
 			if util.NotOneOf(nextToken.Type, token.TypeInt) {

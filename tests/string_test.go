@@ -3,9 +3,9 @@ package tests
 // Test basic string push and write
 var stringPushTest = ProgramTestCase{
 	name: "string_push",
-	program: `push "Hello, World!"
+	program: `push_str "Hello, World!"
+		get_str 0
 		push 1
-		push 13
 		native 1
 		halt`,
 	expected: []string{"Hello, World!"},
@@ -14,19 +14,19 @@ var stringPushTest = ProgramTestCase{
 // Test string with escape sequences
 var stringEscapeTest = ProgramTestCase{
 	name: "string_escape",
-	program: `push "Line 1\nLine 2\tTabbed"
+	program: `push_str "Line 1\nLine 2\tTabbed"
+		get_str 0
 		push 1
-		push 20
 		native 1
 		halt`,
-	expected: []string{"Line 1\nLine 2\tTabbed"},
+	expected: []string{"Line 1", "Line 2\tTabbed"},
 }
 
 var stringEscapeTestMultiLine = ProgramTestCase{
 	name: "string_escape_multiline",
-	program: `push "Line 1\nLine 2"
+	program: `push_str "Line 1\nLine 2"
+		get_str 0
 		push 1
-		push 13
 		native 1
 		halt`,
 	expected: []string{"Line 1", "Line 2"},
@@ -38,11 +38,11 @@ var stringDupTest = ProgramTestCase{
 	name: "string_dup",
 	program: `push "hi"
 		dup
-		push 1
-		push 3
-		native 1
+		print
+		print
+		print
 		halt`,
-	expected: []string{"hii"},
+	expected: []string{"CHAR i", "CHAR i", "CHAR h"},
 }
 
 // Test string swap (char level)
@@ -51,11 +51,10 @@ var stringSwapTest = ProgramTestCase{
 	name: "string_swap",
 	program: `push "hi"
 		swap
-		push 1
-		push 2
-		native 1
+		print
+		print
 		halt`,
-	expected: []string{"ih"},
+	expected: []string{"CHAR h", "CHAR i"},
 }
 
 // Test string char equality
@@ -81,9 +80,9 @@ var stringPrintLastCharTest = ProgramTestCase{
 // Test write to stderr (fd 2) -> Verified via expectedStderr
 var stringWriteStderrTest = ProgramTestCase{
 	name: "string_write_stderr",
-	program: `push "error_msg"
+	program: `push_str "error_msg"
+		get_str 0
 		push 2
-		push 9
 		native 1
 		halt`,
 	expected:       []string{},            // Stdout should be empty
@@ -94,8 +93,9 @@ var stringWriteStderrTest = ProgramTestCase{
 // Test error: write with invalid file descriptor type
 var stringWriteInvalidFDTypeTest = ProgramTestCase{
 	name: "write_invalid_fd_type",
-	program: `push 1.5
-		push 1
+	program: `push_str "test"
+		get_str 0
+		push 1.5
 		native 1
 		halt`,
 	expectedError: "write fd must be integer",
@@ -103,35 +103,34 @@ var stringWriteInvalidFDTypeTest = ProgramTestCase{
 
 // Test error: write with invalid file descriptor value (3) (Runtime check in instruction_helper during generation or instruction.go)
 // Wait, the instruction_helper.go actually validates this during generation phase!
-// Test error: write length must be integer
-var stringWriteInvalidLengthTypeTest = ProgramTestCase{
-	name: "write_invalid_length_type",
-	program: `push 1
-		push 1.5
+// Test error: write string pointer must be integer
+var stringWriteInvalidPointerTypeTest = ProgramTestCase{
+	name: "write_invalid_pointer_type",
+	program: `push 1.5
+		push 1
 		native 1
 		halt`,
-	expectedError: "write length must be integer",
+	expectedError: "write string pointer must be integer",
 }
 
 // Test error: write expects characters on stack (found Int) (Runtime error)
-// Test error: write expects characters on stack (found Int) (Runtime error)
-var stringWriteInvalidStackTest = ProgramTestCase{
-	name: "write_invalid_stack_content",
-	program: `push 123
-		push 1
+// Test error: write with invalid heap pointer (segmentation fault)
+var stringWriteInvalidHeapPointerTest = ProgramTestCase{
+	name: "write_invalid_heap_pointer",
+	program: `push 999
 		push 1
 		native 1
 		halt`,
-	expectedError: "write expects characters on stack",
+	expectedError: "segmentation fault",
 }
 
 // Test macro import and usage with write
 var stringMacroImportTest = ProgramTestCase{
 	name: "string_macro_import",
 	program: `@imp "stddefs.wm"
-		push "Hello, world!\n"
+		push_str "Hello, world!\n"
+		get_str 0
 		push STDOUT
-		push 14
 		write
 		halt`,
 	additionalFiles: map[string]string{
@@ -142,26 +141,32 @@ var stringMacroImportTest = ProgramTestCase{
 
 var stringLengthTest = ProgramTestCase{
 	name: "string_length",
-	program: `push 0
-		push "hello world"
-		push 0
+	program: `push 0             ; Sentinel 0 at bottom of stack
+		push "hello world" ; Push characters
+		push 0             ; Initial length accumulator
 		jmp length_loop
 
 		length_loop:
-			indup 1
+			swap           ; Swap accumulator and next character: [..., char, acc] -> [..., acc, char]
+			dup            ; Check if char is 0 (sentinel)
 			push 0
 			cmpe
 			nzjmp length_done
-			swap
-			pop
+			pop            ; Clean up cmpe result (0)
+			pop            ; Clean up operand (0)
+			pop            ; Clean up operand (char)
+			
+			; At this point stack is [..., acc]
+			; We popped the char, so we consumed it.
 			push 1
-			add
+			add            ; Increment accumulator
 			jmp length_loop
 
 		length_done:
-			swap
-			pop
-			push 11
+			pop            ; Clean up cmpe operand (0)
+			pop            ; Clean up cmpe operand (0)
+			pop            ; Clean up stack sentinel (0)
+			push 11        ; Expected length
 			cmpe
 			print
 			halt`,
@@ -170,6 +175,7 @@ var stringLengthTest = ProgramTestCase{
 
 var stringTests = []ProgramTestCase{
 	stringPushTest,
+	stringEscapeTest,
 	stringEscapeTestMultiLine,
 	stringDupTest,
 	stringSwapTest,
@@ -177,7 +183,8 @@ var stringTests = []ProgramTestCase{
 	stringPrintLastCharTest,
 	stringWriteStderrTest,
 	stringWriteInvalidFDTypeTest,
-	stringWriteInvalidLengthTypeTest,
-	stringWriteInvalidStackTest,
+	stringWriteInvalidPointerTypeTest,
+	stringWriteInvalidHeapPointerTest,
 	stringMacroImportTest,
+	stringLengthTest,
 }

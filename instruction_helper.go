@@ -101,6 +101,10 @@ func inSwapIns(index int64, ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionInSwap, value: IntLiteral(index), line: ctx.Line, fileName: ctx.FileName}
 }
 
+func getStrIns(index int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionGetStr, value: IntLiteral(index), line: ctx.Line, fileName: ctx.FileName}
+}
+
 func addIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionAdd, line: ctx.Line, fileName: ctx.FileName}
 }
@@ -298,6 +302,15 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 			instructions = append(instructions, nativeIns(id, ctx))
 		case token.TypePrint:
 			instructions = append(instructions, printIns(ctx))
+		case token.TypePushStr:
+			cur = cur.Next
+		case token.TypeGetStr:
+			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
+			if err != nil {
+				panic(ctx.Error("invalid integer value for get_str instruction"))
+			}
+			cur = cur.Next
+			instructions = append(instructions, getStrIns(value, ctx))
 		case token.TypeInt:
 			panic(ctx.Error("unexpected standalone integer token encountered during instruction generation"))
 		case token.TypeLabelDefinition:

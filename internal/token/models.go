@@ -20,6 +20,8 @@ const (
 	TypeInvalid TokenType = iota
 	TypeNoOp
 	TypePush
+	TypePushStr
+	TypeGetStr
 	TypePop
 	TypeDup
 	TypeInDup
@@ -42,6 +44,7 @@ const (
 	TypePrint
 	TypeNative
 	TypeHalt
+	TypeIntToStr
 	TypeInt
 	TypeFloat
 	TypeChar
