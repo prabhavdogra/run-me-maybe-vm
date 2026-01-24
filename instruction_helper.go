@@ -24,43 +24,47 @@ func (ctx InstructionContext) Error(message string) string {
 
 // ---- Stack helper functions ----
 
-func push(machine *Machine, value Literal) {
-	if len(machine.stack) >= maxStackSize {
-		panic("ERROR: stack overflow")
+func push(ctx *RuntimeContext, value Literal) {
+	if len(ctx.stack) >= maxStackSize {
+		panic(ctx.CurrentInstruction.Error("stack overflow"))
 	}
 	if value.Type() == LiteralInt {
-		machine.stack = append(machine.stack, value)
+		ctx.stack = append(ctx.stack, value)
 	} else if value.Type() == LiteralFloat {
-		machine.stack = append(machine.stack, value)
+		ctx.stack = append(ctx.stack, value)
 	} else if value.Type() == LiteralChar {
-		machine.stack = append(machine.stack, value)
+		ctx.stack = append(ctx.stack, value)
 	} else if value.Type() == LiteralString {
-		machine.stack = append(machine.stack, value)
+		ctx.stack = append(ctx.stack, value)
 	}
 }
 
-func pop(machine *Machine) Literal {
-	if len(machine.stack) == 0 {
-		panic("ERROR: stack underflow")
+func pop(ctx *RuntimeContext) Literal {
+	if len(ctx.stack) == 0 {
+		panic(ctx.CurrentInstruction.Error("stack underflow"))
 	}
-	value := machine.stack[len(machine.stack)-1]
-	machine.stack = machine.stack[:len(machine.stack)-1]
+	value := ctx.stack[len(ctx.stack)-1]
+	ctx.stack = ctx.stack[:len(ctx.stack)-1]
 	return value
 }
-func indexSwap(machine *Machine, index int64) {
-	if index < 0 || int(index) >= len(machine.stack) {
-		panic("ERROR: index out of bounds for swap")
+func indexSwap(ctx *RuntimeContext, index int64) {
+	if index < 0 || int(index) >= len(ctx.stack) {
+		panic(ctx.CurrentInstruction.Error("index out of bounds for swap"))
 	}
-	tempValue := machine.stack[index]
-	machine.stack[index] = pop(machine)
-	push(machine, tempValue)
+	targetIdx := int(index)
+	topIdx := len(ctx.stack) - 1
+
+	temp := ctx.stack[targetIdx]
+	ctx.stack[targetIdx] = ctx.stack[topIdx]
+	ctx.stack[topIdx] = temp
 }
 
-func indexDup(machine *Machine, index int64) {
-	if index < 0 || int(index) >= len(machine.stack) {
-		panic("ERROR: index out of bounds for swap")
+func indexDup(ctx *RuntimeContext, index int64) {
+	if index < 0 || int(index) >= len(ctx.stack) {
+		panic(ctx.CurrentInstruction.Error("index out of bounds for dup"))
 	}
-	push(machine, machine.stack[index])
+	targetIdx := int(index)
+	push(ctx, ctx.stack[targetIdx])
 }
 
 func (machine *Machine) programSize() int {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 type Machine struct {
@@ -17,6 +18,11 @@ type Machine struct {
 	stringTable     []int64
 }
 
+type RuntimeContext struct {
+	*Machine
+	CurrentInstruction Instruction
+}
+
 type Instruction struct {
 	operator        uint8
 	instructionType InstructionSet
@@ -27,7 +33,7 @@ type Instruction struct {
 }
 
 func (i Instruction) Error(message string) string {
-	return fmt.Sprintf("ERROR (%s:%d): %s", i.fileName, i.line, message)
+	return fmt.Sprintf("ERROR (%s:%d): %s", filepath.Base(i.fileName), i.line, message)
 }
 
 const maxStackSize = 1024

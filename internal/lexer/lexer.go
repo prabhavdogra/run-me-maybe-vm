@@ -38,7 +38,7 @@ func (l *Lexer) processFile(fileName string) {
 	if err != nil {
 		panic(fmt.Errorf("could not open file %s:  %w", fileName, err))
 	}
-	l.lexContent(string(data), fileName)
+	l.lexContent(string(data), fileName, 1)
 }
 
 func (l *Lexer) processImport(ctx *token.TokenContext, input string, currentIndex int) int {
@@ -101,9 +101,9 @@ func (l *Lexer) processDef(ctx *token.TokenContext, input string, currentIndex i
 	return currentIndex
 }
 
-func (l *Lexer) lexContent(input string, fileName string) {
+func (l *Lexer) lexContent(input string, fileName string, startLine int64) {
 	currentIndex := 0
-	line := int64(1)
+	line := startLine
 	character := 1
 
 	for currentIndex < len(input) {
@@ -142,7 +142,7 @@ func (l *Lexer) lexContent(input string, fileName string) {
 			var macroVal string
 			lexedToken, macroVal, currentIndex = token.GenerateKeyword(input, currentIndex, ctx, l.Macros)
 			if macroVal != "" {
-				l.lexContent(macroVal, fileName)
+				l.lexContent(macroVal, fileName, line)
 			} else {
 				l.addToken(lexedToken)
 			}

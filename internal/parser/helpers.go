@@ -148,10 +148,10 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			instructionNumber++
 			i++
 		case token.TypeLabelDefinition:
-			handleLabelDefination(curToken, labelMap, instructionNumber)
 			ctx := token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}
 			current = current.AddNextNode(token.GetNoOpToken(ctx))
 			instructionNumber++
+			handleLabelDefination(curToken, labelMap, instructionNumber)
 		case token.TypeNoOp, token.TypePop, token.TypeDup, token.TypeSwap,
 			token.TypeAdd, token.TypeSub, token.TypeMul, token.TypeDiv,
 			token.TypeMod, token.TypeCmpe, token.TypeCmpne, token.TypeCmpg,

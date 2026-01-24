@@ -128,121 +128,126 @@ func (i InstructionSet) String() string {
 }
 
 func runInstructions(machine *Machine) *Machine {
+	ctx := &RuntimeContext{Machine: machine}
 	for insPtr := 0; insPtr < len(machine.instructions); insPtr++ {
 		instr := machine.instructions[insPtr]
+		ctx.CurrentInstruction = instr
+		if debugMode {
+			fmt.Fprintf(os.Stderr, "Line %d: %v, Stack: %+v\n", instr.line, instr.instructionType, ctx.stack)
+		}
 		switch instr.instructionType {
 		case InstructionNoOp:
 			// do nothing
 		case InstructionPush:
-			push(machine, instr.value)
+			push(ctx, instr.value)
 		case InstructionGetStr:
 			idx := int(instr.value.valueInt)
 			if idx < 0 || idx >= len(machine.stringTable) {
-				panic(instr.Error("string index out of bounds"))
+				panic(ctx.CurrentInstruction.Error("string index out of bounds"))
 			}
 			ptr := machine.stringTable[idx]
-			push(machine, IntLiteral(ptr))
+			push(ctx, IntLiteral(ptr))
 		case InstructionPop:
-			pop(machine)
+			pop(ctx)
 		case InstructionDup:
-			x := pop(machine)
-			push(machine, x)
-			push(machine, x)
+			x := pop(ctx)
+			push(ctx, x)
+			push(ctx, x)
 		case InstructionInDup:
 			if instr.value.Type() != LiteralInt {
 				panic("ERROR: indup requires integer arguments")
 			}
-			indexDup(machine, instr.value.valueInt)
+			indexDup(ctx, instr.value.valueInt)
 		case InstructionSwap:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, a)
-			push(machine, b)
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, a)
+			push(ctx, b)
 		case InstructionInSwap:
 			if instr.value.Type() != LiteralInt {
 				panic("ERROR: inswap requires integer arguments")
 			}
-			indexSwap(machine, instr.value.valueInt)
+			indexSwap(ctx, instr.value.valueInt)
 		case InstructionMod:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, b.Mod(a))
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, b.Mod(a))
 		case InstructionCmpe:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, b)
-			push(machine, a)
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, b)
+			push(ctx, a)
 			if a.Equal(b) {
-				push(machine, IntLiteral(1))
+				push(ctx, IntLiteral(1))
 			} else {
-				push(machine, IntLiteral(0))
+				push(ctx, IntLiteral(0))
 			}
 		case InstructionCmpne:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, b)
-			push(machine, a)
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, b)
+			push(ctx, a)
 			if !a.Equal(b) {
-				push(machine, IntLiteral(1))
+				push(ctx, IntLiteral(1))
 			} else {
-				push(machine, IntLiteral(0))
+				push(ctx, IntLiteral(0))
 			}
 		case InstructionCmpg:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, b)
-			push(machine, a)
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, b)
+			push(ctx, a)
 			if a.Greater(b) {
-				push(machine, IntLiteral(1))
+				push(ctx, IntLiteral(1))
 			} else {
-				push(machine, IntLiteral(0))
+				push(ctx, IntLiteral(0))
 			}
 		case InstructionCmpl:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, b)
-			push(machine, a)
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, b)
+			push(ctx, a)
 			if a.Less(b) {
-				push(machine, IntLiteral(1))
+				push(ctx, IntLiteral(1))
 			} else {
-				push(machine, IntLiteral(0))
+				push(ctx, IntLiteral(0))
 			}
 		case InstructionCmpge:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, b)
-			push(machine, a)
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, b)
+			push(ctx, a)
 			if a.GreaterOrEqual(b) {
-				push(machine, IntLiteral(1))
+				push(ctx, IntLiteral(1))
 			} else {
-				push(machine, IntLiteral(0))
+				push(ctx, IntLiteral(0))
 			}
 		case InstructionCmple:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, b)
-			push(machine, a)
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, b)
+			push(ctx, a)
 			if a.LessOrEqual(b) {
-				push(machine, IntLiteral(1))
+				push(ctx, IntLiteral(1))
 			} else {
-				push(machine, IntLiteral(0))
+				push(ctx, IntLiteral(0))
 			}
 		case InstructionAdd:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, a.Add(b))
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, a.Add(b))
 		case InstructionSub:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, b.Sub(a))
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, b.Sub(a))
 		case InstructionMul:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, a.Mul(b))
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, a.Mul(b))
 		case InstructionDiv:
-			a := pop(machine)
-			b := pop(machine)
-			push(machine, a.Div(b))
+			a := pop(ctx)
+			b := pop(ctx)
+			push(ctx, a.Div(b))
 		case InstructionJmp:
 			if instr.value.Type() != LiteralInt {
 				panic("ERROR: jump target must be an integer")
@@ -256,7 +261,7 @@ func runInstructions(machine *Machine) *Machine {
 			if instr.value.Type() != LiteralInt {
 				panic("ERROR: jump target must be an integer")
 			}
-			value := pop(machine)
+			value := pop(ctx)
 			if value.Type() != LiteralInt {
 				panic("ERROR: nzjmp condition value must be an integer")
 			}
@@ -268,7 +273,7 @@ func runInstructions(machine *Machine) *Machine {
 				insPtr = target - 1 // -1 because loop will increment
 			}
 		case InstructionZjmp:
-			value := pop(machine)
+			value := pop(ctx)
 			if instr.value.Type() != LiteralInt {
 				panic("ERROR: jump target must be an integer")
 			}
@@ -283,45 +288,45 @@ func runInstructions(machine *Machine) *Machine {
 				insPtr = target - 1 // -1 because loop will increment
 			}
 		case InstructionPrint:
-			value := pop(machine)
+			value := pop(ctx)
 			fmt.Println(value)
 		case InstructionNative:
 			syscallID := instr.value
 			if syscallID.Type() != LiteralInt {
-				panic(instr.Error("native syscall ID must be integer"))
+				panic(ctx.CurrentInstruction.Error("native syscall ID must be integer"))
 			}
 
 			switch syscallID.valueInt {
 			case 0:
 				// open(flags, len, ptr)
-				nativeOpen(machine, instr)
+				nativeOpen(ctx)
 			case 1:
 				// write(len, fd, char...)
-				nativeWrite(machine, instr)
+				nativeWrite(ctx)
 			case 2:
 				// read(ptr, len, fd)
-				nativeRead(machine, instr)
+				nativeRead(ctx)
 			case 3:
 				// close(fd)
-				nativeClose(machine, instr)
+				nativeClose(ctx)
 			case 4:
 				// free(ptr)
-				nativeFree(machine, instr)
+				nativeFree(ctx)
 			case 5:
 				// malloc(size)
-				nativeMalloc(machine, instr)
+				nativeMalloc(ctx)
 			case 6:
 				// exit(code)
-				nativeExit(machine, instr)
+				nativeExit(ctx)
 			default:
-				panic(instr.Error(fmt.Sprintf("unknown native syscall ID: %d", syscallID.valueInt)))
+				panic(ctx.CurrentInstruction.Error(fmt.Sprintf("unknown native syscall ID: %d", syscallID.valueInt)))
 			}
 		case InstructionHalt:
 			insPtr = machine.programSize()
 		case InstructionIntToStr:
-			value := pop(machine)
+			value := pop(ctx)
 			if value.Type() != LiteralInt {
-				panic(instr.Error("int_to_str expects an integer"))
+				panic(ctx.CurrentInstruction.Error("int_to_str expects an integer"))
 			}
 			s := fmt.Sprintf("%d", value.valueInt)
 			ptr := machine.heapPtr
@@ -331,7 +336,7 @@ func runInstructions(machine *Machine) *Machine {
 			}
 			machine.heap[ptr][len(s)] = CharLiteral(0) // Null terminator
 			machine.heapPtr++
-			push(machine, IntLiteral(ptr))
+			push(ctx, IntLiteral(ptr))
 		default:
 			panic("ERROR: unknown instruction")
 		}
@@ -340,11 +345,11 @@ func runInstructions(machine *Machine) *Machine {
 }
 
 // Open a file
-func nativeOpen(machine *Machine, instr Instruction) {
+func nativeOpen(ctx *RuntimeContext) {
 	// Pop flags
-	flagsVal := pop(machine)
+	flagsVal := pop(ctx)
 	if flagsVal.Type() != LiteralInt {
-		panic(instr.Error("open flags must be integer"))
+		panic(ctx.CurrentInstruction.Error("open flags must be integer"))
 	}
 	flags := int(flagsVal.valueInt)
 
@@ -367,31 +372,31 @@ func nativeOpen(machine *Machine, instr Instruction) {
 	}
 
 	// Pop filename length
-	lenVal := pop(machine)
+	lenVal := pop(ctx)
 	if lenVal.Type() != LiteralInt {
-		panic(instr.Error("open filename length must be integer"))
+		panic(ctx.CurrentInstruction.Error("open filename length must be integer"))
 	}
 	length := int(lenVal.valueInt)
 
 	// Pop filename pointer
-	ptrVal := pop(machine)
+	ptrVal := pop(ctx)
 	if ptrVal.Type() != LiteralInt {
-		panic(instr.Error("open filename pointer must be integer"))
+		panic(ctx.CurrentInstruction.Error("open filename pointer must be integer"))
 	}
 	ptr := ptrVal.valueInt
 
 	// Read filename from heap
-	if _, ok := machine.heap[ptr]; !ok {
-		panic(instr.Error("segmentation fault: invalid heap pointer for filename"))
+	if _, ok := ctx.heap[ptr]; !ok {
+		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid heap pointer for filename"))
 	}
-	if length > len(machine.heap[ptr]) {
-		panic(instr.Error("buffer overflow: filename length exceeds allocated size"))
+	if length > len(ctx.heap[ptr]) {
+		panic(ctx.CurrentInstruction.Error("buffer overflow: filename length exceeds allocated size"))
 	}
-	filenameChars := machine.heap[ptr][:length]
+	filenameChars := ctx.heap[ptr][:length]
 	filename := ""
 	for _, charLit := range filenameChars {
 		if charLit.Type() != LiteralChar {
-			panic(instr.Error("filename must be a string of characters"))
+			panic(ctx.CurrentInstruction.Error("filename must be a string of characters"))
 		}
 		filename += string(charLit.valueChar)
 	}
@@ -399,7 +404,7 @@ func nativeOpen(machine *Machine, instr Instruction) {
 	// Open the file
 	file, err := os.OpenFile(filename, osFlags, 0644)
 	if err != nil {
-		panic(instr.Error(fmt.Sprintf("failed to open file %s: %v", filename, err)))
+		panic(ctx.CurrentInstruction.Error(fmt.Sprintf("failed to open file %s: %v", filename, err)))
 	}
 
 	// 0: Standard Input (stdin)
@@ -409,45 +414,45 @@ func nativeOpen(machine *Machine, instr Instruction) {
 	// Find lowest available file descriptor
 	fd := int64(3)
 	for {
-		if _, ok := machine.fileDescriptors[fd]; !ok {
+		if _, ok := ctx.fileDescriptors[fd]; !ok {
 			break
 		}
 		fd++
 	}
 
-	machine.fileDescriptors[fd] = file
-	push(machine, IntLiteral(fd))
+	ctx.fileDescriptors[fd] = file
+	push(ctx, IntLiteral(fd))
 }
 
 // Write to a file descriptor
-func nativeWrite(machine *Machine, instr Instruction) {
+func nativeWrite(ctx *RuntimeContext) {
 	// Try to pop fd first (top of stack)
 	// Usage 1: push_str "hello"; get_str 0; push 1; native 1 -> Stack: [ptr, fd]
 	// Usage 2: push char; push char; push len; push fd; native 1 -> Stack: [..., char, char, len, fd] ??
-	fd := pop(machine) // FD
+	fd := pop(ctx) // FD
 	if fd.Type() != LiteralInt {
-		panic(instr.Error("write fd must be integer"))
+		panic(ctx.CurrentInstruction.Error("write fd must be integer"))
 	}
 
-	ptr := pop(machine) // Ptr
+	ptr := pop(ctx) // Ptr
 	if ptr.Type() != LiteralInt {
-		panic(instr.Error("write string pointer must be integer"))
+		panic(ctx.CurrentInstruction.Error("write string pointer must be integer"))
 	}
 
 	var writer io.Writer
 	if fd.valueInt == 1 {
-		writer = machine.output
+		writer = ctx.output
 	} else if fd.valueInt == 2 {
 		writer = os.Stderr
 	} else {
-		if file, ok := machine.fileDescriptors[int64(fd.valueInt)]; ok {
+		if file, ok := ctx.fileDescriptors[int64(fd.valueInt)]; ok {
 			writer = file
 		} else {
-			panic(instr.Error(fmt.Sprintf("unknown file descriptor %d", fd.valueInt)))
+			panic(ctx.CurrentInstruction.Error(fmt.Sprintf("unknown file descriptor %d", fd.valueInt)))
 		}
 	}
 
-	if buffer, ok := machine.heap[int64(ptr.valueInt)]; ok {
+	if buffer, ok := ctx.heap[int64(ptr.valueInt)]; ok {
 		s := ""
 		for _, charLit := range buffer {
 			if charLit.Type() != LiteralChar {
@@ -460,128 +465,128 @@ func nativeWrite(machine *Machine, instr Instruction) {
 		}
 		fmt.Fprint(writer, s)
 	} else {
-		panic(instr.Error("segmentation fault: invalid heap pointer"))
+		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid heap pointer"))
 	}
 }
 
 // Read from a file descriptor into a buffer
-func nativeRead(machine *Machine, instr Instruction) {
+func nativeRead(ctx *RuntimeContext) {
 	// Arguments: [..., fd, len, ptr] (Top is ptr)
-	ptrVal := pop(machine)
+	ptrVal := pop(ctx)
 	if ptrVal.Type() != LiteralInt {
-		panic(instr.Error("read buffer pointer must be integer"))
+		panic(ctx.CurrentInstruction.Error("read buffer pointer must be integer"))
 	}
 	ptr := ptrVal.valueInt
 
-	lenVal := pop(machine)
+	lenVal := pop(ctx)
 	if lenVal.Type() != LiteralInt {
-		panic(instr.Error("read length must be integer"))
+		panic(ctx.CurrentInstruction.Error("read length must be integer"))
 	}
 	length := int(lenVal.valueInt)
 
-	fdVal := pop(machine)
+	fdVal := pop(ctx)
 	if fdVal.Type() != LiteralInt {
-		panic(instr.Error("read fd must be integer"))
+		panic(ctx.CurrentInstruction.Error("read fd must be integer"))
 	}
 	fd := int64(fdVal.valueInt)
 
 	var reader io.Reader
 	if fd == 0 {
-		reader = machine.input
+		reader = ctx.input
 	} else {
-		if file, ok := machine.fileDescriptors[fd]; ok {
+		if file, ok := ctx.fileDescriptors[fd]; ok {
 			reader = file
 		} else {
-			panic(instr.Error(fmt.Sprintf("read error: invalid file descriptor %d", fd)))
+			panic(ctx.CurrentInstruction.Error(fmt.Sprintf("read error: invalid file descriptor %d", fd)))
 		}
 	}
 
 	// Validate Heap Pointer
-	if _, ok := machine.heap[ptr]; !ok {
-		panic(instr.Error("segmentation fault: invalid heap pointer"))
+	if _, ok := ctx.heap[ptr]; !ok {
+		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid heap pointer"))
 	}
 	// Validate Size against allocation
-	if length > len(machine.heap[ptr]) {
-		panic(instr.Error("buffer overflow: read length exceeds allocated size"))
+	if length > len(ctx.heap[ptr]) {
+		panic(ctx.CurrentInstruction.Error("buffer overflow: read length exceeds allocated size"))
 	}
 
 	// Read from Input
 	buf := make([]byte, length)
 	_, err := reader.Read(buf)
 	if err != nil && err != io.EOF {
-		panic(instr.Error(fmt.Sprintf("read error: %v", err)))
+		panic(ctx.CurrentInstruction.Error(fmt.Sprintf("read error: %v", err)))
 	}
 
 	// Store in Heap
 	for i, b := range buf {
-		machine.heap[ptr][i] = CharLiteral(rune(b))
+		ctx.heap[ptr][i] = CharLiteral(rune(b))
 	}
 }
 
 // Close a file descriptor
-func nativeClose(machine *Machine, instr Instruction) {
+func nativeClose(ctx *RuntimeContext) {
 	// Pop file descriptor ID
-	fdVal := pop(machine)
+	fdVal := pop(ctx)
 	if fdVal.Type() != LiteralInt {
-		panic(instr.Error("close file descriptor must be integer"))
+		panic(ctx.CurrentInstruction.Error("close file descriptor must be integer"))
 	}
 	fd := int64(fdVal.valueInt)
 
 	// Check if it's a valid custom file descriptor
 	if fd < 3 { // 0, 1, 2 are stdin, stdout, stderr - cannot close
-		panic(instr.Error(fmt.Sprintf("cannot close standard file descriptor %d", fd)))
+		panic(ctx.CurrentInstruction.Error(fmt.Sprintf("cannot close standard file descriptor %d", fd)))
 	}
 
-	file, ok := machine.fileDescriptors[fd]
+	file, ok := ctx.fileDescriptors[fd]
 	if !ok {
-		panic(instr.Error(fmt.Sprintf("invalid file descriptor %d", fd)))
+		panic(ctx.CurrentInstruction.Error(fmt.Sprintf("invalid file descriptor %d", fd)))
 	}
 
 	err := file.Close()
 	if err != nil {
-		panic(instr.Error(fmt.Sprintf("failed to close file %d: %v", fd, err)))
+		panic(ctx.CurrentInstruction.Error(fmt.Sprintf("failed to close file %d: %v", fd, err)))
 	}
 
-	delete(machine.fileDescriptors, fd)
+	delete(ctx.fileDescriptors, fd)
 }
 
 // Free a heap pointer
-func nativeFree(machine *Machine, instr Instruction) {
+func nativeFree(ctx *RuntimeContext) {
 	// Pop ptr
-	ptrVal := pop(machine)
+	ptrVal := pop(ctx)
 	if ptrVal.Type() != LiteralInt {
-		panic(instr.Error("free pointer must be integer"))
+		panic(ctx.CurrentInstruction.Error("free pointer must be integer"))
 	}
 	ptr := ptrVal.valueInt
 
-	if _, ok := machine.heap[ptr]; !ok {
-		panic(instr.Error("double free or invalid heap pointer"))
+	if _, ok := ctx.heap[ptr]; !ok {
+		panic(ctx.CurrentInstruction.Error("double free or invalid heap pointer"))
 	}
-	delete(machine.heap, ptr)
+	delete(ctx.heap, ptr)
 }
 
-func nativeMalloc(machine *Machine, instr Instruction) {
+func nativeMalloc(ctx *RuntimeContext) {
 	// Pop size
-	sizeVal := pop(machine)
+	sizeVal := pop(ctx)
 	if sizeVal.Type() != LiteralInt {
-		panic(instr.Error("malloc size must be integer"))
+		panic(ctx.CurrentInstruction.Error("malloc size must be integer"))
 	}
 	size := int(sizeVal.valueInt)
 
 	// Allocate
-	ptr := machine.heapPtr
-	machine.heap[ptr] = make([]Literal, size)
-	machine.heapPtr++
+	ptr := ctx.heapPtr
+	ctx.heap[ptr] = make([]Literal, size)
+	ctx.heapPtr++
 
 	// Push Pointer
-	push(machine, IntLiteral(ptr))
+	push(ctx, IntLiteral(ptr))
 }
 
-func nativeExit(machine *Machine, instr Instruction) {
+func nativeExit(ctx *RuntimeContext) {
 	// Pop exit code
-	codeVal := pop(machine)
+	codeVal := pop(ctx)
 	if codeVal.Type() != LiteralInt {
-		panic(instr.Error("exit code must be integer"))
+		panic(ctx.CurrentInstruction.Error("exit code must be integer"))
 	}
 	code := int(codeVal.valueInt)
 	os.Exit(code)

@@ -1,5 +1,5 @@
 program:
-	go run . "test.wm"
+	go run . "program.wm"
 
 program2:
 	go run . "test2.wm"
@@ -11,7 +11,7 @@ debug:
 	go run . "test.wm" --debug
 
 test:
-	go test -v ./... | grep -i fail || true
+	go test -v ./... -timeout=30s | grep -i fail || true
 
 run_test:
-	go test -v ./...
+	go test -v ./... -timeout=30s
