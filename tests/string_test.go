@@ -140,6 +140,34 @@ var stringMacroImportTest = ProgramTestCase{
 	expected: []string{"Hello, world!"},
 }
 
+var stringLengthTest = ProgramTestCase{
+	name: "string_length",
+	program: `push 0
+		push "hello world"
+		push 0
+		jmp length_loop
+
+		length_loop:
+			indup 1
+			push 0
+			cmpe
+			nzjmp length_done
+			swap
+			pop
+			push 1
+			add
+			jmp length_loop
+
+		length_done:
+			swap
+			pop
+			push 11
+			cmpe
+			print
+			halt`,
+	expected: []string{"INT 1"},
+}
+
 var stringTests = []ProgramTestCase{
 	stringPushTest,
 	stringEscapeTestMultiLine,

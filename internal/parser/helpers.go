@@ -88,7 +88,11 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			}
 			current = current.AddNextNode(curToken)
 			current = current.AddNextNode(nextToken)
-			instructionNumber++
+			if nextToken.Type == token.TypeString {
+				instructionNumber += int64(len(nextToken.Text))
+			} else {
+				instructionNumber++
+			}
 			i++
 		case token.TypeInDup, token.TypeInSwap:
 			if util.NotOneOf(nextToken.Type, token.TypeInt) {
