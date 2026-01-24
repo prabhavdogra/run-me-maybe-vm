@@ -62,7 +62,7 @@ All native syscalls are invoked via `native <ID>`. Arguments are popped from the
 | ID | Name | Arguments (Stack Top -> Bottom) | Returns (Pushes) | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `0` | `open` | `len`, `ptr` | `fd` | Opens file at path `ptr` (length `len`). Returns new File Descriptor. |
-| `1` | `write` | `char...`, `len`, `fd` | - | Writes `len` characters to `fd`. Supports `1` (Stdout), `2` (Stderr). |
+| `1` | `write` | `len`, `fd`, `char...` | - | Writes `len` characters to `fd`. Supports `1` (Stdout), `2` (Stderr). |
 | `2` | `read` | `ptr`, `len`, `fd` | - | Reads `len` bytes from `fd` into heap buffer at `ptr`. Supports `0` (Signin). |
 | `3` | `close` | `fd` | - | Closes the file descriptor `fd`. |
 | `4` | `free` | `ptr` | - | Frees heap memory allocated at `ptr`. |
