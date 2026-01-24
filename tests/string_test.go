@@ -1,5 +1,34 @@
 package tests
 
+var explanatoryTest = ProgramTestCase{
+	name: "string_test2",
+	program: `@imp "stddefs.wm"
+		push_str "hello\n"
+		push_str "world\n"
+		get_str 1     ; Pushes ptr to "hello"
+		push STDOUT   ; Push File Descriptor (fd) 1 (Stdout)
+		write         ; Execute write(fd, ptr)`,
+	expected: []string{"world"},
+	additionalFiles: map[string]string{
+		"stddefs.wm": `@def STDOUT 1
+		@def STDIN 0
+		@def open native 0
+		@def write native 1
+		@def read native 2
+		@def close native 3
+		@def free native 4
+		@def malloc native 5
+		@def exit native 6
+
+		@def RONLY 0
+		@def WONLY 1
+		@def RDWR 2
+		@def CREAT 64
+		@def EXCL 128
+		`,
+	},
+}
+
 // Test basic string push and write
 var stringPushTest = ProgramTestCase{
 	name: "string_push",
@@ -174,6 +203,7 @@ var stringLengthTest = ProgramTestCase{
 }
 
 var stringTests = []ProgramTestCase{
+	explanatoryTest,
 	stringPushTest,
 	stringEscapeTest,
 	stringEscapeTestMultiLine,

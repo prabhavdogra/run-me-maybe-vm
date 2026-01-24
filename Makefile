@@ -11,4 +11,7 @@ debug:
 	go run . "test.wm" --debug
 
 test:
+	go test -v ./... | grep fail
+
+run_test:
 	go test -v ./...

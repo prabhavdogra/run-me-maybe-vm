@@ -55,7 +55,7 @@ go test -v ./...
 | `halt` | Stop execution. |
 | `noop` | No operation. |
 | `push_str <string>` | (Directive) Allocates string in heap and adds to string table. Does not execute at runtime. |
-| `get_str <index>` | Push the pointer to the string at `index` in the string table onto the stack. |
+| `get_str <index>` | Push the pointer to the string at `index` in the string table onto the stack. Index corresponds to the order of `push_str`. |
 
 ## Native Syscalls
 
@@ -64,7 +64,7 @@ All native syscalls are invoked via `native <ID>`. Arguments are popped from the
 | ID | Name | Arguments (Stack Top -> Bottom) | Returns (Pushes) | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `0` | `open` | `flags`, `len`, `ptr` | `fd` | Opens file at path `ptr` (length `len`) with `flags`. Returns new File Descriptor. |
-| `1` | `write` | `len`, `fd`, `char...` | - | Writes `len` characters to `fd`. Supports `1` (Stdout), `2` (Stderr). |
+| `1` | `write` | `fd`, `ptr` | - | Writes null-terminated string at `ptr` to `fd`. Supports `1` (Stdout), `2` (Stderr). |
 | `2` | `read` | `ptr`, `len`, `fd` | - | Reads `len` bytes from `fd` into heap buffer at `ptr`. Supports `0` (Signin). |
 | `3` | `close` | `fd` | - | Closes the file descriptor `fd`. |
 | `4` | `free` | `ptr` | - | Frees heap memory allocated at `ptr`. |
