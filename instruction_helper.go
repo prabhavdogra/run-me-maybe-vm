@@ -178,6 +178,10 @@ func nativeIns(id int64, ctx InstructionContext) Instruction {
 	}
 }
 
+func intToStrIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionIntToStr, line: ctx.Line, fileName: ctx.FileName}
+}
+
 func noopIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionNoOp, line: ctx.Line, fileName: ctx.FileName}
 }
@@ -319,6 +323,8 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 			panic(ctx.Error("unexpected label token encountered during instruction generation"))
 		case token.TypeHalt:
 			instructions = append(instructions, haltIns(ctx))
+		case token.TypeIntToStr:
+			instructions = append(instructions, intToStrIns(ctx))
 		default:
 			panic(ctx.Error("unknown token type encountered during instruction generation"))
 		}

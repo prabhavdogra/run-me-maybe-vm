@@ -2,26 +2,7 @@ package tests
 
 import "os"
 
-// Common macro definitions
-// Defines macros for Syscall IDs and standard file descriptors for readability within tests.
-var stddefs = map[string]string{
-	"stddefs.wm": `@def STDOUT 1
-	@def STDIN 0
-	@def open native 0
-	@def write native 1
-	@def read native 2
-	@def close native 3
-	@def free native 4
-	@def malloc native 5
-	@def exit native 6
-
-	@def RONLY 0
-	@def WONLY 1
-	@def RDWR 2
-	@def CREAT 64
-	@def EXCL 128
-	`,
-}
+// Common macro definitions are now in common.go (StdDefs)
 
 // 1. Basic Write (Native 1)
 // Verifies that 'write' correctly outputs a string from the stack to Stdout (ID 1).
@@ -33,7 +14,7 @@ var writeTest = ProgramTestCase{
 		push STDOUT   ; Push File Descriptor (fd) 1 (Stdout)
 		write         ; Execute write(fd, ptr)`,
 	expected:        []string{"hello"},
-	additionalFiles: stddefs,
+	additionalFiles: StdDefs,
 }
 
 // 2. Write to Stderr (Native 1)
@@ -47,7 +28,7 @@ var writeStderrTest = ProgramTestCase{
 		write
 		halt`,
 	expectedStderr:  []string{"error"},
-	additionalFiles: stddefs,
+	additionalFiles: StdDefs,
 }
 
 // 3. Buffer Lifecycle (Malloc -> Read -> Free)
@@ -73,7 +54,7 @@ var echoLifecycleTest = ProgramTestCase{
 		halt`,
 	input:           "hello",    // Injected Stdout for 'read'
 	expected:        []string{}, // Logic verification (no crash) is sufficient
-	additionalFiles: stddefs,
+	additionalFiles: StdDefs,
 }
 
 // 4. Double Free Error (Native 4)
@@ -88,7 +69,7 @@ var doubleFreeTest = ProgramTestCase{
 		free        ; Free again (Expect Error: double free)
 		halt`,
 	expectedError:   "double free",
-	additionalFiles: stddefs,
+	additionalFiles: StdDefs,
 }
 
 // 5. Read Overflow Error (Native 2)
@@ -105,7 +86,7 @@ var readOverflowTest = ProgramTestCase{
 		halt`,
 	input:           "hello",
 	expectedError:   "buffer overflow",
-	additionalFiles: stddefs,
+	additionalFiles: StdDefs,
 }
 
 // 6. Invalid Pointer (Native 4)
@@ -117,7 +98,7 @@ var invalidFreeTest = ProgramTestCase{
 		free        ; Expect Error: invalid heap pointer
 		halt`,
 	expectedError:   "invalid heap pointer",
-	additionalFiles: stddefs,
+	additionalFiles: StdDefs,
 }
 
 // 7. Explicit Exit (Native 5)
@@ -129,7 +110,7 @@ var exitTest = ProgramTestCase{
 		exit
 		`,
 	expectedError:   "exit status 69",
-	additionalFiles: stddefs,
+	additionalFiles: StdDefs,
 }
 
 // 8. File Operations (Open -> Read -> Close)
@@ -189,7 +170,7 @@ var fileOpsTest = ProgramTestCase{
 		close
 		halt`,
 	input:           "A",
-	additionalFiles: stddefs,
+	additionalFiles: StdDefs,
 	expected:        []string{},
 	cleanup: func() {
 		os.Remove("../A")

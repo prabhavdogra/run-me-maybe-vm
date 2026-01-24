@@ -36,6 +36,7 @@ const (
 	InstructionPrint
 	InstructionNative
 	InstructionHalt
+	InstructionIntToStr
 )
 
 func populateStringTable(parsedTokens *parser.ParserList) ([]int64, map[int64][]Literal, int64) {
@@ -119,6 +120,8 @@ func (i InstructionSet) String() string {
 		return "MOD"
 	case InstructionHalt:
 		return "HALT"
+	case InstructionIntToStr:
+		return "INT_TO_STR"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
@@ -315,6 +318,20 @@ func runInstructions(machine *Machine) *Machine {
 			}
 		case InstructionHalt:
 			insPtr = machine.programSize()
+		case InstructionIntToStr:
+			value := pop(machine)
+			if value.Type() != LiteralInt {
+				panic(instr.Error("int_to_str expects an integer"))
+			}
+			s := fmt.Sprintf("%d", value.valueInt)
+			ptr := machine.heapPtr
+			machine.heap[ptr] = make([]Literal, len(s)+1)
+			for i, char := range s {
+				machine.heap[ptr][i] = CharLiteral(char)
+			}
+			machine.heap[ptr][len(s)] = CharLiteral(0) // Null terminator
+			machine.heapPtr++
+			push(machine, IntLiteral(ptr))
 		default:
 			panic("ERROR: unknown instruction")
 		}

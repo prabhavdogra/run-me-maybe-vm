@@ -8,25 +8,8 @@ var explanatoryTest = ProgramTestCase{
 		get_str 1     ; Pushes ptr to "hello"
 		push STDOUT   ; Push File Descriptor (fd) 1 (Stdout)
 		write         ; Execute write(fd, ptr)`,
-	expected: []string{"world"},
-	additionalFiles: map[string]string{
-		"stddefs.wm": `@def STDOUT 1
-		@def STDIN 0
-		@def open native 0
-		@def write native 1
-		@def read native 2
-		@def close native 3
-		@def free native 4
-		@def malloc native 5
-		@def exit native 6
-
-		@def RONLY 0
-		@def WONLY 1
-		@def RDWR 2
-		@def CREAT 64
-		@def EXCL 128
-		`,
-	},
+	expected:        []string{"world"},
+	additionalFiles: StdDefs,
 }
 
 // Test basic string push and write
@@ -162,10 +145,8 @@ var stringMacroImportTest = ProgramTestCase{
 		push STDOUT
 		write
 		halt`,
-	additionalFiles: map[string]string{
-		"stddefs.wm": "@def STDOUT 1\n@def write native 1",
-	},
-	expected: []string{"Hello, world!"},
+	additionalFiles: StdDefs,
+	expected:        []string{"Hello, world!"},
 }
 
 var stringLengthTest = ProgramTestCase{
@@ -202,6 +183,88 @@ var stringLengthTest = ProgramTestCase{
 	expected: []string{"INT 1"},
 }
 
+var intToStrTest = ProgramTestCase{
+	name: "int_to_str",
+	program: `@imp "stddefs.wm"
+		push 12345
+		int_to_str
+		push STDOUT
+		write
+		halt`,
+	expected:        []string{"12345"},
+	additionalFiles: StdDefs,
+}
+
+var testFibTest = ProgramTestCase{
+	name: "t_fib",
+	program: `@imp "stddefs.wm"
+	@def N 30 
+
+	push_str "\n"
+	push_str "# of iterations "
+
+	push N 
+	push 1
+	push 1
+	push 0
+
+	loop:
+	inswap 0
+	dup
+	push 0
+	cmpe
+	nzjmp end
+	pop
+	inswap 0
+
+	indup 2
+	inswap 1
+	pop
+	dup
+	inswap 2
+	pop
+	indup 1
+	indup 2
+	add
+	swap
+
+	int_to_str
+	push STDOUT
+	write
+
+
+	inswap 0
+	push 1
+	sub
+	inswap 0
+
+	get_str 0
+	push STDOUT
+	write
+
+	jmp loop 
+
+	end:
+
+	push N
+	get_str 1
+	push STDOUT
+	write
+	int_to_str
+	push STDOUT
+	write
+
+	get_str 0
+	push STDOUT
+	write`,
+	expected: []string{
+		"0", "1", "1", "2", "3", "5", "8", "13", "21", "34", "55", "89", "144", "233", "377",
+		"610", "987", "1597", "2584", "4181", "6765", "10946", "17711", "28657", "46368", "75025",
+		"121393", "196418", "317811", "514229", "# of iterations 30",
+	},
+	additionalFiles: StdDefs,
+}
+
 var stringTests = []ProgramTestCase{
 	explanatoryTest,
 	stringPushTest,
@@ -217,4 +280,6 @@ var stringTests = []ProgramTestCase{
 	stringWriteInvalidHeapPointerTest,
 	stringMacroImportTest,
 	stringLengthTest,
+	intToStrTest,
+	testFibTest,
 }
