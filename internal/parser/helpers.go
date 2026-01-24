@@ -50,14 +50,13 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		current = current.AddNextNode(tokens[1])
 		instructionNumber++
 		startIndex++
-	case token.TypeWrite:
-		if len(tokens) < 3 || nextToken.Type != token.TypeInt || tokens.PeekToken(2).Type != token.TypeInt {
-			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error("expected two integer values (fd, length) after 'write' instruction"))
+	case token.TypeNative:
+		if len(tokens) < 2 || nextToken.Type != token.TypeInt {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error("expected integer value (function ID) after 'native' instruction"))
 		}
 		current = current.AddNextNode(tokens[1])
-		current = current.AddNextNode(tokens[2])
 		instructionNumber++
-		startIndex += 2
+		startIndex++
 	case token.TypeJmp, token.TypeZjmp, token.TypeNzjmp:
 		if len(tokens) < 2 {
 			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error("expected label or integer after jump instruction at the start of the program"))
@@ -99,19 +98,14 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			current = current.AddNextNode(nextToken)
 			instructionNumber++
 			i++
-		case token.TypeWrite:
+		case token.TypeNative:
 			if util.NotOneOf(nextToken.Type, token.TypeInt) {
-				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error("expected integer value (fd) after 'write' instruction"))
-			}
-			nextNextToken := tokens.PeekToken(i + 2)
-			if util.NotOneOf(nextNextToken.Type, token.TypeInt) {
-				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error("expected integer value (length) as second argument for 'write' instruction"))
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error("expected integer value (function ID) after 'native' instruction"))
 			}
 			current = current.AddNextNode(curToken)
 			current = current.AddNextNode(nextToken)
-			current = current.AddNextNode(nextNextToken)
 			instructionNumber++
-			i += 2
+			i++
 		case token.TypeJmp, token.TypeZjmp, token.TypeNzjmp:
 			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeLabel) {
 				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected label after '%s' instruction, but found %s '%s'", curToken.Type, nextToken.Type, nextToken.Text)))

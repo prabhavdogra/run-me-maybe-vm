@@ -165,11 +165,10 @@ func haltIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionHalt, line: ctx.Line, fileName: ctx.FileName}
 }
 
-func writeIns(fd, length int64, ctx InstructionContext) Instruction {
+func nativeIns(id int64, ctx InstructionContext) Instruction {
 	return Instruction{
-		instructionType: InstructionWrite,
-		value:           IntLiteral(fd),
-		length:          int(length), // Assuming models.go has length field now
+		instructionType: InstructionNative,
+		value:           IntLiteral(id),
 		line:            ctx.Line,
 		fileName:        ctx.FileName,
 	}
@@ -290,18 +289,13 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 			}
 			cur = cur.Next
 			instructions = append(instructions, nzjmpIns(value, ctx))
-		case token.TypeWrite:
-			// file descriptor, =1 for stdout, =2 for stderr
-			fd, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
-			if err != nil || (fd != 1 && fd != 2) {
-				panic(ctx.Error("invalid integer value for write fd"))
-			}
-			length, err := strconv.ParseInt(cur.Next.Next.Value.Text, 10, 64)
+		case token.TypeNative:
+			id, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
-				panic(ctx.Error("invalid integer value for write length"))
+				panic(ctx.Error("invalid integer value for native function ID"))
 			}
-			cur = cur.Next.Next
-			instructions = append(instructions, writeIns(fd, length, ctx))
+			cur = cur.Next
+			instructions = append(instructions, nativeIns(id, ctx))
 		case token.TypePrint:
 			instructions = append(instructions, printIns(ctx))
 		case token.TypeInt:

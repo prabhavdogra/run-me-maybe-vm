@@ -30,7 +30,7 @@ const (
 	InstructionNzjmp
 	InstructionJmp
 	InstructionPrint
-	InstructionWrite
+	InstructionNative
 	InstructionHalt
 )
 
@@ -52,8 +52,8 @@ func (i InstructionSet) String() string {
 		return "DIV"
 	case InstructionPrint:
 		return "PRINT"
-	case InstructionWrite:
-		return "WRITE"
+	case InstructionNative:
+		return "NATIVE"
 	case InstructionDup:
 		return "DUP"
 	case InstructionInDup:
@@ -240,26 +240,17 @@ func runInstructions(machine *Machine) *Machine {
 		case InstructionPrint:
 			value := pop(machine)
 			fmt.Println(value)
-		case InstructionWrite:
-			fd := instr.value
-			length := instr.length
-			if fd.Type() != LiteralInt {
-				panic(instr.Error("write fd must be integer"))
+		case InstructionNative:
+			syscallID := instr.value
+			if syscallID.Type() != LiteralInt {
+				panic(instr.Error("native syscall ID must be integer"))
 			}
-			s := ""
-			for i := 0; i < length; i++ {
-				val := pop(machine)
-				if val.Type() != LiteralChar {
-					panic(instr.Error("write expects characters on stack"))
-				}
-				s = string(val.valueChar) + s
-			}
-			if fd.valueInt == 1 {
-				fmt.Fprint(os.Stdout, s)
-			} else if fd.valueInt == 2 {
-				fmt.Fprint(os.Stderr, s)
-			} else {
-				panic(instr.Error("unknown file descriptor"))
+
+			switch syscallID.valueInt {
+			case 1:
+				nativeWrite(machine, instr)
+			default:
+				panic(instr.Error(fmt.Sprintf("unknown native syscall ID: %d", syscallID.valueInt)))
 			}
 		case InstructionHalt:
 			insPtr = machine.programSize()
@@ -268,4 +259,41 @@ func runInstructions(machine *Machine) *Machine {
 		}
 	}
 	return machine
+}
+
+func nativeWrite(machine *Machine, instr Instruction) {
+	// Arguments are on stack: [..., fd, length] (Top is length)
+	// Pop length
+	lenVal := pop(machine)
+	if lenVal.Type() != LiteralInt {
+		panic(instr.Error("write length must be integer"))
+	}
+	length := int(lenVal.valueInt)
+
+	// Pop fd
+	fdVal := pop(machine)
+	if fdVal.Type() != LiteralInt {
+		panic(instr.Error("write fd must be integer"))
+	}
+	fd := int(fdVal.valueInt)
+
+	if fd != 1 && fd != 2 {
+		panic(instr.Error("unknown file descriptor"))
+	}
+
+	// Pop string characters
+	s := ""
+	for i := 0; i < length; i++ {
+		val := pop(machine)
+		if val.Type() != LiteralChar {
+			panic(instr.Error("write expects characters on stack"))
+		}
+		s = string(val.valueChar) + s
+	}
+
+	if fd == 1 {
+		fmt.Fprint(os.Stdout, s)
+	} else {
+		fmt.Fprint(os.Stderr, s)
+	}
 }

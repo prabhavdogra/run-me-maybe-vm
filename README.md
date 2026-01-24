@@ -12,7 +12,7 @@ A lightweight, stack-based virtual machine written in Go, featuring a custom ass
 - **Flexible Instruction Set**: Arithmetic, stack manipulation, control flow, and comparison.
 - **Label Support**: Use labels for jump targets instead of hardcoded instruction pointers.
 
-> **Note on Strings**: String literals (e.g., `"hello"`) are pushed onto the stack as a sequence of individual characters. Use `write` to output them.
+> **Note on Strings**: String literals (e.g., `"hello"`) are pushed onto the stack as a sequence of individual characters. Use `native 1` (write) to output them.
 
 ## Quick Start
 
@@ -41,7 +41,7 @@ go test -v ./...
 | :--- | :--- |
 | `push <val>` | Push a literal value (int, float, char) onto the stack. |
 | `pop` | Remove the top value from the stack. |
-| `write <fd> <len>` | Pop `len` characters and write to file descriptor (1=stdout, 2=stderr). |
+| `native <ID>` | Execute native syscall by ID. ID 1 = write (pops len (len of character to be printed), pops fd (1 for STDOUT, 2 for STDERR), writes chars). |
 | `dup` | Duplicate the top stack value. |
 | `indup <idx>` | Duplicate the value at the given stack index to the top. |
 | `swap` | Swap the top two stack values. |
