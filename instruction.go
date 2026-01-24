@@ -248,14 +248,20 @@ func runInstructions(machine *Machine) *Machine {
 			}
 
 			switch syscallID.valueInt {
+			case 0:
+				nativeOpen(machine, instr)
 			case 1:
 				nativeWrite(machine, instr)
 			case 2:
 				nativeRead(machine, instr)
 			case 3:
-				nativeMalloc(machine, instr)
+				nativeClose(machine, instr)
 			case 4:
 				nativeFree(machine, instr)
+			case 5:
+				nativeMalloc(machine, instr)
+			case 6:
+				nativeExit(machine, instr)
 			default:
 				panic(instr.Error(fmt.Sprintf("unknown native syscall ID: %d", syscallID.valueInt)))
 			}
@@ -268,8 +274,61 @@ func runInstructions(machine *Machine) *Machine {
 	return machine
 }
 
-func nativeWrite(machine *Machine, instr Instruction) {
+func nativeOpen(machine *Machine, instr Instruction) {
+	// Pop filename length
+	lenVal := pop(machine)
+	if lenVal.Type() != LiteralInt {
+		panic(instr.Error("open filename length must be integer"))
+	}
+	length := int(lenVal.valueInt)
 
+	// Pop filename pointer
+	ptrVal := pop(machine)
+	if ptrVal.Type() != LiteralInt {
+		panic(instr.Error("open filename pointer must be integer"))
+	}
+	ptr := ptrVal.valueInt
+
+	// Read filename from heap
+	if _, ok := machine.heap[ptr]; !ok {
+		panic(instr.Error("segmentation fault: invalid heap pointer for filename"))
+	}
+	if length > len(machine.heap[ptr]) {
+		panic(instr.Error("buffer overflow: filename length exceeds allocated size"))
+	}
+	filenameChars := machine.heap[ptr][:length]
+	filename := ""
+	for _, charLit := range filenameChars {
+		if charLit.Type() != LiteralChar {
+			panic(instr.Error("filename must be a string of characters"))
+		}
+		filename += string(charLit.valueChar)
+	}
+
+	// Open the file
+	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		panic(instr.Error(fmt.Sprintf("failed to open file %s: %v", filename, err)))
+	}
+
+	// 0: Standard Input (stdin)
+	// 1: Standard Output (stdout)
+	// 2: Standard Error (stderr)
+
+	// Find lowest available file descriptor
+	fd := int64(3)
+	for {
+		if _, ok := machine.fileDescriptors[fd]; !ok {
+			break
+		}
+		fd++
+	}
+
+	machine.fileDescriptors[fd] = file
+	push(machine, IntLiteral(fd))
+}
+
+func nativeWrite(machine *Machine, instr Instruction) {
 	lenVal := pop(machine)
 	if lenVal.Type() != LiteralInt {
 		panic(instr.Error("write length must be integer"))
@@ -280,10 +339,19 @@ func nativeWrite(machine *Machine, instr Instruction) {
 	if fdVal.Type() != LiteralInt {
 		panic(instr.Error("write fd must be integer"))
 	}
-	fd := int(fdVal.valueInt)
+	fd := int64(fdVal.valueInt)
 
-	if fd != 1 && fd != 2 {
-		panic(instr.Error("unknown file descriptor"))
+	var writer io.Writer
+	if fd == 1 {
+		writer = machine.output
+	} else if fd == 2 {
+		writer = os.Stderr
+	} else {
+		if file, ok := machine.fileDescriptors[fd]; ok {
+			writer = file
+		} else {
+			panic(instr.Error(fmt.Sprintf("unknown file descriptor %d", fd)))
+		}
 	}
 
 	s := ""
@@ -295,11 +363,7 @@ func nativeWrite(machine *Machine, instr Instruction) {
 		s = string(val.valueChar) + s
 	}
 
-	if fd == 1 {
-		fmt.Fprint(machine.output, s)
-	} else {
-		fmt.Fprint(os.Stderr, s)
-	}
+	fmt.Fprint(writer, s)
 }
 
 func nativeRead(machine *Machine, instr Instruction) {
@@ -320,7 +384,18 @@ func nativeRead(machine *Machine, instr Instruction) {
 	if fdVal.Type() != LiteralInt {
 		panic(instr.Error("read fd must be integer"))
 	}
-	// fd := int(fdVal.valueInt) // Currently checking 0 for Stdin
+	fd := int64(fdVal.valueInt)
+
+	var reader io.Reader
+	if fd == 0 {
+		reader = machine.input
+	} else {
+		if file, ok := machine.fileDescriptors[fd]; ok {
+			reader = file
+		} else {
+			panic(instr.Error(fmt.Sprintf("read error: invalid file descriptor %d", fd)))
+		}
+	}
 
 	// Validate Heap Pointer
 	if _, ok := machine.heap[ptr]; !ok {
@@ -333,19 +408,56 @@ func nativeRead(machine *Machine, instr Instruction) {
 
 	// Read from Input
 	buf := make([]byte, length)
-	_, err := machine.input.Read(buf)
+	_, err := reader.Read(buf)
 	if err != nil && err != io.EOF {
 		panic(instr.Error(fmt.Sprintf("read error: %v", err)))
 	}
 
 	// Store in Heap
-	// Assuming we overwrite the 'length' bytes in the heap buffer?
-	// Or append? C read overwrites.
 	for i, b := range buf {
 		machine.heap[ptr][i] = CharLiteral(rune(b))
 	}
-	// Push number of bytes read? Standard read returns n.
-	// For now, void return or push len? CobbCoding implementation might void.
+}
+
+func nativeClose(machine *Machine, instr Instruction) {
+	// Pop file descriptor ID
+	fdVal := pop(machine)
+	if fdVal.Type() != LiteralInt {
+		panic(instr.Error("close file descriptor must be integer"))
+	}
+	fd := int64(fdVal.valueInt)
+
+	// Check if it's a valid custom file descriptor
+	if fd < 3 { // 0, 1, 2 are stdin, stdout, stderr - cannot close
+		panic(instr.Error(fmt.Sprintf("cannot close standard file descriptor %d", fd)))
+	}
+
+	file, ok := machine.fileDescriptors[fd]
+	if !ok {
+		panic(instr.Error(fmt.Sprintf("invalid file descriptor %d", fd)))
+	}
+
+	err := file.Close()
+	if err != nil {
+		panic(instr.Error(fmt.Sprintf("failed to close file %d: %v", fd, err)))
+	}
+
+	delete(machine.fileDescriptors, fd)
+}
+
+func nativeFree(machine *Machine, instr Instruction) {
+
+	// Pop ptr
+	ptrVal := pop(machine)
+	if ptrVal.Type() != LiteralInt {
+		panic(instr.Error("free pointer must be integer"))
+	}
+	ptr := ptrVal.valueInt
+
+	if _, ok := machine.heap[ptr]; !ok {
+		panic(instr.Error("double free or invalid heap pointer"))
+	}
+	delete(machine.heap, ptr)
 }
 
 func nativeMalloc(machine *Machine, instr Instruction) {
@@ -365,17 +477,12 @@ func nativeMalloc(machine *Machine, instr Instruction) {
 	push(machine, IntLiteral(ptr))
 }
 
-func nativeFree(machine *Machine, instr Instruction) {
-
-	// Pop ptr
-	ptrVal := pop(machine)
-	if ptrVal.Type() != LiteralInt {
-		panic(instr.Error("free pointer must be integer"))
+func nativeExit(machine *Machine, instr Instruction) {
+	// Pop exit code
+	codeVal := pop(machine)
+	if codeVal.Type() != LiteralInt {
+		panic(instr.Error("exit code must be integer"))
 	}
-	ptr := ptrVal.valueInt
-
-	if _, ok := machine.heap[ptr]; !ok {
-		panic(instr.Error("double free or invalid heap pointer"))
-	}
-	delete(machine.heap, ptr)
+	code := int(codeVal.valueInt)
+	os.Exit(code)
 }

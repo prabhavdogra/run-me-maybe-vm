@@ -21,11 +21,12 @@ func main() {
 		instructions.Print()
 	}
 	loadedMachine := &Machine{
-		instructions: instructions,
-		stack:        make([]Literal, 0, maxStackSize),
-		heap:         make(map[int64][]Literal),
-		input:        os.Stdin,
-		output:       os.Stdout,
+		instructions:    instructions,
+		stack:           make([]Literal, 0, maxStackSize),
+		heap:            make(map[int64][]Literal),
+		input:           os.Stdin,
+		output:          os.Stdout,
+		fileDescriptors: make(map[int64]*os.File),
 	}
 	loadedMachine = runInstructions(loadedMachine)
 	if debugMode {

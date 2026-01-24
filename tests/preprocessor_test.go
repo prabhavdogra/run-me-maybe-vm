@@ -72,8 +72,8 @@ var PreprocessorTests = []ProgramTestCase{
 	},
 	{
 		name: "macro single @imp",
-		program: `@imp "stddefs.tash"
-				@imp "linuxsyscalls.tash"
+		program: `@imp "stddefs.wm"
+				@imp "linuxsyscalls.wm"
 				@def N 100
 				push N
 				print
@@ -95,10 +95,10 @@ var PreprocessorTests = []ProgramTestCase{
 				print
 				print`,
 		additionalFiles: map[string]string{
-			"stddefs.tash": `@def STDERR 2
+			"stddefs.wm": `@def STDERR 2
 						@def STDOUT 1
 						@def STDIN 0`,
-			"linuxsyscalls.tash": `@def SYS_READ 0
+			"linuxsyscalls.wm": `@def SYS_READ 0
 						@def SYS_WRITE 1
 						@def SYS_OPEN 2
 						@def SYS_EXIT 60`,
@@ -114,19 +114,19 @@ var PreprocessorTests = []ProgramTestCase{
 	},
 	{
 		name: "macro missing def @imp (error)",
-		program: `@imp "test2.tash"
+		program: `@imp "test2.wm"
 					print`,
 		additionalFiles: map[string]string{
-			"test2.tash": `push N`,
+			"test2.wm": `push N`,
 		},
 		expectedError: "expected integer, float, char, or string value after 'push' instruction, but found label 'N'",
 	},
 	{
 		name: "duplicate @def (error)",
-		program: `@imp "test2.tash"
+		program: `@imp "test2.wm"
 					@def X 10`,
 		additionalFiles: map[string]string{
-			"test2.tash": `@def X 5`,
+			"test2.wm": `@def X 5`,
 		},
 		expectedError: "duplicate macro definition found for macro 'X'",
 	},

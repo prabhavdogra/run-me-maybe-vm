@@ -18,6 +18,7 @@ type ProgramTestCase struct {
 	input           string            // Optional: stdin for the program
 	expectedError   string            // Optional: for error case tests
 	expectedStderr  []string          // Optional: valid stderr output
+	cleanup         func()            // Optional: cleanup function to run after test
 }
 
 func TestPrograms(t *testing.T) {
@@ -40,6 +41,9 @@ func TestPrograms(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Catch panics if an error is expected
 			defer func() {
+				if tc.cleanup != nil {
+					tc.cleanup()
+				}
 				if r := recover(); r != nil {
 					if tc.expectedError == "" {
 						t.Fatalf("unexpected panic in test %s: %v", tc.name, r)

@@ -1,21 +1,26 @@
 package tests
 
+import "os"
+
 // Common macro definitions
 // Defines macros for Syscall IDs and standard file descriptors for readability within tests.
 var stddefs = map[string]string{
-	"stddefs.tash": `@def STDOUT 1
+	"stddefs.wm": `@def STDOUT 1
 	@def STDIN 0
+	@def open native 0
 	@def write native 1
 	@def read native 2
-	@def malloc native 3
-	@def free native 4`,
+	@def close native 3
+	@def free native 4
+	@def malloc native 5
+	@def exit native 6`,
 }
 
 // 1. Basic Write (Native 1)
 // Verifies that 'write' correctly outputs a string from the stack to Stdout (ID 1).
 var writeTest = ProgramTestCase{
 	name: "syscall_write",
-	program: `@imp "stddefs.tash"
+	program: `@imp "stddefs.wm"
 		push "hello"  ; Push characters 'h', 'e', 'l', 'l', 'o'
 		push STDOUT   ; Push File Descriptor (fd) 1 (Stdout)
 		push 5        ; Push Length of string
@@ -29,7 +34,7 @@ var writeTest = ProgramTestCase{
 // Verifies that 'write' can target Stderr (ID 2), which is captured separately in tests.
 var writeStderrTest = ProgramTestCase{
 	name: "syscall_write_stderr",
-	program: `@imp "stddefs.tash"
+	program: `@imp "stddefs.wm"
 		push "error"
 		push 2        ; Push File Descriptor (fd) 2 (Stderr)
 		push 5
@@ -46,7 +51,7 @@ var writeStderrTest = ProgramTestCase{
 // 3. Deallocation (free) of the buffer.
 var echoLifecycleTest = ProgramTestCase{
 	name: "syscall_echo_lifecycle",
-	program: `@imp "stddefs.tash"
+	program: `@imp "stddefs.wm"
 		; Allocate 5 bytes on Heap
 		push 5
 		malloc      ; Pops size 5, Pushes Heap Pointer (ptr)
@@ -69,7 +74,7 @@ var echoLifecycleTest = ProgramTestCase{
 // Verifies that attempting to free the same pointer twice causes a crash (safety check).
 var doubleFreeTest = ProgramTestCase{
 	name: "syscall_error_double_free",
-	program: `@imp "stddefs.tash"
+	program: `@imp "stddefs.wm"
 		push 10
 		malloc      ; Alloc ptr
 		dup         ; Dup ptr
@@ -84,7 +89,7 @@ var doubleFreeTest = ProgramTestCase{
 // Verifies that 'read' prevents writing more bytes than explicitly allocated (Heap Safety).
 var readOverflowTest = ProgramTestCase{
 	name: "syscall_error_read_overflow",
-	program: `@imp "stddefs.tash"
+	program: `@imp "stddefs.wm"
 		push 2
 		malloc      ; Allocate size 2
 		
@@ -101,12 +106,84 @@ var readOverflowTest = ProgramTestCase{
 // Verifies that 'free' prevents freeing arbitrary integers that are not valid heap pointers.
 var invalidFreeTest = ProgramTestCase{
 	name: "syscall_error_invalid_free",
-	program: `@imp "stddefs.tash"
+	program: `@imp "stddefs.wm"
 		push 99999  ; Random integer
 		free        ; Expect Error: invalid heap pointer
 		halt`,
 	expectedError:   "invalid heap pointer",
 	additionalFiles: stddefs,
+}
+
+// 7. Explicit Exit (Native 5)
+// Verifies that 'exit(code)' terminates the program with the specified status code.
+var exitTest = ProgramTestCase{
+	name: "syscall_exit_explicit",
+	program: `@imp "stddefs.wm"
+		push 69     ; Exit Code
+		exit
+		`,
+	expectedError:   "exit status 69",
+	additionalFiles: stddefs,
+}
+
+// 8. File Operations (Open -> Read -> Close)
+// Verifies that we can open a file, read from it, and close it.
+var fileOpsTest = ProgramTestCase{
+	name: "syscall_file_ops",
+	program: `@imp "stddefs.wm"
+		; 1. Read filename "A" from Stdin into Heap
+		push 1          ; Size 1
+		malloc          ; -> ptr
+		dup             ; Keep ptr for open
+		dup             ; Keep ptr for read
+		push 1          ; len
+		push STDIN
+		inswap 2        ; Swap ptr and STDIN to get [ptr, 1, 0] -> Top: ptr, 1, 0. Oops.
+		                ; My inswap analysis: [ptr, 1, 0]. Swap 0(Top) and ptr(2). -> [0, 1, ptr].
+		                ; Top: ptr. Next: 1. Next: 0. Correct.
+		read            ; read(0, 1, ptr) -> reads "A"
+		
+		; 2. Open file "A" (Create)
+		; Stack: ptr
+		dup             ; Keep ptr for 2nd open (Read)
+		push 1          ; len of filename "A"
+		open            ; open(ptr, len) -> pushes FD (should be 3)
+		pop             ; Discard FD (assume 3 for simplicity)
+
+		; 3. Write "Hello" to FD 3
+		push "Hello"    ; Pushes 'H', 'e', 'l', 'l', 'o'
+		push 3          ; FD
+		push 5          ; Len
+		write           ; write(3, 5, "Hello")
+
+		; 4. Close FD 3
+		push 3
+		close
+
+		; 5. Open file "A" (Read)
+		; Stack: ptr
+		push 1          ; len
+		open            ; -> FD (should be 3 again)
+		pop             ; Discard FD
+
+		; 6. Read from FD 3
+		push 5          ; Size to read "Hello"
+		malloc          ; -> bufPtr
+		push 5          ; len
+		push 3          ; FD
+		inswap 1        ; Align: 3, 5, bufPtr (Stack size 4. Index 1 is bufPtr)
+		read            ; read(3, 5, bufPtr)
+		
+		; 7. Close FD 3
+		push 3
+		close
+		halt`,
+	input:           "A",
+	additionalFiles: stddefs,
+	expected:        []string{},
+	cleanup: func() {
+		os.Remove("../A")
+	},
 }
 
 var syscallTests = []ProgramTestCase{
@@ -116,4 +193,6 @@ var syscallTests = []ProgramTestCase{
 	doubleFreeTest,
 	readOverflowTest,
 	invalidFreeTest,
+	exitTest,
+	fileOpsTest,
 }

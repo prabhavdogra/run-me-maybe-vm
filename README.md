@@ -41,7 +41,7 @@ go test -v ./...
 | :--- | :--- |
 | `push <val>` | Push a literal value (int, float, char) onto the stack. |
 | `pop` | Remove the top value from the stack. |
-| `native <ID>` | Execute native syscall by ID. ID 1 = write (pops len (len of character to be printed), pops fd (1 for STDOUT, 2 for STDERR), writes chars). |
+| `native <ID>` | Execute native syscall by ID (see Native Syscalls below). |
 | `dup` | Duplicate the top stack value. |
 | `indup <idx>` | Duplicate the value at the given stack index to the top. |
 | `swap` | Swap the top two stack values. |
@@ -54,6 +54,20 @@ go test -v ./...
 | `print` | Pop and print the top value (int, char, float). |
 | `halt` | Stop execution. |
 | `noop` | No operation. |
+
+## Native Syscalls
+
+All native syscalls are invoked via `native <ID>`. Arguments are popped from the stack in the order expected by the syscall.
+
+| ID | Name | Arguments (Stack Top -> Bottom) | Returns (Pushes) | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `0` | `open` | `len`, `ptr` | `fd` | Opens file at path `ptr` (length `len`). Returns new File Descriptor. |
+| `1` | `write` | `char...`, `len`, `fd` | - | Writes `len` characters to `fd`. Supports `1` (Stdout), `2` (Stderr). |
+| `2` | `read` | `ptr`, `len`, `fd` | - | Reads `len` bytes from `fd` into heap buffer at `ptr`. Supports `0` (Signin). |
+| `3` | `close` | `fd` | - | Closes the file descriptor `fd`. |
+| `4` | `free` | `ptr` | - | Frees heap memory allocated at `ptr`. |
+| `5` | `malloc`| `size` | `ptr` | Allocates `size` bytes on the heap. Returns pointer. |
+| `6` | `exit` | `code` | - | Exits the VM with status `code`. |
 
 ## Preprocessor Directives
 

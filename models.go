@@ -3,15 +3,17 @@ package main
 import (
 	"fmt"
 	"io"
+	"os"
 )
 
 type Machine struct {
-	stack        []Literal
-	instructions []Instruction
-	heap         map[int64][]Literal
-	heapPtr      int64
-	input        io.Reader
-	output       io.Writer
+	stack           []Literal
+	instructions    []Instruction
+	heap            map[int64][]Literal
+	heapPtr         int64
+	input           io.Reader
+	output          io.Writer
+	fileDescriptors map[int64]*os.File
 }
 
 type Instruction struct {
