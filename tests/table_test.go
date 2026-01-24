@@ -15,6 +15,7 @@ type ProgramTestCase struct {
 	program         string
 	expected        []string
 	additionalFiles map[string]string // Optional: for @imp tests, filename -> content
+	input           string            // Optional: stdin for the program
 	expectedError   string            // Optional: for error case tests
 	expectedStderr  []string          // Optional: valid stderr output
 }
@@ -30,6 +31,7 @@ func TestPrograms(t *testing.T) {
 	}...)
 	cases = append(cases, PreprocessorTests...)
 	cases = append(cases, stringTests...)
+	cases = append(cases, syscallTests...)
 
 	literalLineRE := regexp.MustCompile(`.+`)
 
@@ -83,6 +85,9 @@ func TestPrograms(t *testing.T) {
 				cmd.Dir = vmModuleRoot
 				cmd.Stdout = &stdout
 				cmd.Stderr = &stderr
+				if tc.input != "" {
+					cmd.Stdin = strings.NewReader(tc.input)
+				}
 				err = cmd.Run()
 
 				outStr := stdout.String()

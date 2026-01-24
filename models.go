@@ -1,10 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 type Machine struct {
 	stack        []Literal
 	instructions []Instruction
+	heap         map[int64][]Literal
+	heapPtr      int64
+	input        io.Reader
+	output       io.Writer
 }
 
 type Instruction struct {

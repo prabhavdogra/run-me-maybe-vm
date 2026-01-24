@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"vm/internal/lexer"
 	"vm/internal/parser"
 )
@@ -20,8 +21,11 @@ func main() {
 		instructions.Print()
 	}
 	loadedMachine := &Machine{
-		stack:        make([]Literal, 0, maxStackSize),
 		instructions: instructions,
+		stack:        make([]Literal, 0, maxStackSize),
+		heap:         make(map[int64][]Literal),
+		input:        os.Stdin,
+		output:       os.Stdout,
 	}
 	loadedMachine = runInstructions(loadedMachine)
 	if debugMode {

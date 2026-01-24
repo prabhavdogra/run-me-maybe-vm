@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -249,6 +250,12 @@ func runInstructions(machine *Machine) *Machine {
 			switch syscallID.valueInt {
 			case 1:
 				nativeWrite(machine, instr)
+			case 2:
+				nativeRead(machine, instr)
+			case 3:
+				nativeMalloc(machine, instr)
+			case 4:
+				nativeFree(machine, instr)
 			default:
 				panic(instr.Error(fmt.Sprintf("unknown native syscall ID: %d", syscallID.valueInt)))
 			}
@@ -262,15 +269,13 @@ func runInstructions(machine *Machine) *Machine {
 }
 
 func nativeWrite(machine *Machine, instr Instruction) {
-	// Arguments are on stack: [..., fd, length] (Top is length)
-	// Pop length
+
 	lenVal := pop(machine)
 	if lenVal.Type() != LiteralInt {
 		panic(instr.Error("write length must be integer"))
 	}
 	length := int(lenVal.valueInt)
 
-	// Pop fd
 	fdVal := pop(machine)
 	if fdVal.Type() != LiteralInt {
 		panic(instr.Error("write fd must be integer"))
@@ -281,7 +286,6 @@ func nativeWrite(machine *Machine, instr Instruction) {
 		panic(instr.Error("unknown file descriptor"))
 	}
 
-	// Pop string characters
 	s := ""
 	for i := 0; i < length; i++ {
 		val := pop(machine)
@@ -292,8 +296,86 @@ func nativeWrite(machine *Machine, instr Instruction) {
 	}
 
 	if fd == 1 {
-		fmt.Fprint(os.Stdout, s)
+		fmt.Fprint(machine.output, s)
 	} else {
 		fmt.Fprint(os.Stderr, s)
 	}
+}
+
+func nativeRead(machine *Machine, instr Instruction) {
+	// Arguments: [..., fd, len, ptr] (Top is ptr)
+	ptrVal := pop(machine)
+	if ptrVal.Type() != LiteralInt {
+		panic(instr.Error("read buffer pointer must be integer"))
+	}
+	ptr := ptrVal.valueInt
+
+	lenVal := pop(machine)
+	if lenVal.Type() != LiteralInt {
+		panic(instr.Error("read length must be integer"))
+	}
+	length := int(lenVal.valueInt)
+
+	fdVal := pop(machine)
+	if fdVal.Type() != LiteralInt {
+		panic(instr.Error("read fd must be integer"))
+	}
+	// fd := int(fdVal.valueInt) // Currently checking 0 for Stdin
+
+	// Validate Heap Pointer
+	if _, ok := machine.heap[ptr]; !ok {
+		panic(instr.Error("segmentation fault: invalid heap pointer"))
+	}
+	// Validate Size against allocation
+	if length > len(machine.heap[ptr]) {
+		panic(instr.Error("buffer overflow: read length exceeds allocated size"))
+	}
+
+	// Read from Input
+	buf := make([]byte, length)
+	_, err := machine.input.Read(buf)
+	if err != nil && err != io.EOF {
+		panic(instr.Error(fmt.Sprintf("read error: %v", err)))
+	}
+
+	// Store in Heap
+	// Assuming we overwrite the 'length' bytes in the heap buffer?
+	// Or append? C read overwrites.
+	for i, b := range buf {
+		machine.heap[ptr][i] = CharLiteral(rune(b))
+	}
+	// Push number of bytes read? Standard read returns n.
+	// For now, void return or push len? CobbCoding implementation might void.
+}
+
+func nativeMalloc(machine *Machine, instr Instruction) {
+	// Pop size
+	sizeVal := pop(machine)
+	if sizeVal.Type() != LiteralInt {
+		panic(instr.Error("malloc size must be integer"))
+	}
+	size := int(sizeVal.valueInt)
+
+	// Allocate
+	ptr := machine.heapPtr
+	machine.heap[ptr] = make([]Literal, size)
+	machine.heapPtr++
+
+	// Push Pointer
+	push(machine, IntLiteral(ptr))
+}
+
+func nativeFree(machine *Machine, instr Instruction) {
+
+	// Pop ptr
+	ptrVal := pop(machine)
+	if ptrVal.Type() != LiteralInt {
+		panic(instr.Error("free pointer must be integer"))
+	}
+	ptr := ptrVal.valueInt
+
+	if _, ok := machine.heap[ptr]; !ok {
+		panic(instr.Error("double free or invalid heap pointer"))
+	}
+	delete(machine.heap, ptr)
 }
