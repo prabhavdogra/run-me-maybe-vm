@@ -36,6 +36,8 @@ func push(ctx *RuntimeContext, value Literal) {
 		ctx.stack = append(ctx.stack, value)
 	} else if value.Type() == LiteralString {
 		ctx.stack = append(ctx.stack, value)
+	} else if value.Type() == LiteralNull {
+		ctx.stack = append(ctx.stack, value)
 	}
 }
 
@@ -75,6 +77,14 @@ func (machine *Machine) programSize() int {
 
 func pushIntIns(value int64, ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionPush, value: IntLiteral(value), line: ctx.Line, fileName: ctx.FileName}
+}
+
+func pushPtrIns(value int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionPushPtr, value: IntLiteral(value), line: ctx.Line, fileName: ctx.FileName}
+}
+
+func pushNullIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionPushPtr, value: NullLiteral(), line: ctx.Line, fileName: ctx.FileName}
 }
 
 func pushFloatIns(value float64, ctx InstructionContext) Instruction {
@@ -232,6 +242,19 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 				for _, char := range strVal {
 					instructions = append(instructions, pushCharIns(char, ctx))
 				}
+			} else if cur.Next.Value.Type == token.TypeNull {
+				instructions = append(instructions, pushNullIns(ctx))
+			}
+			cur = cur.Next
+		case token.TypePushPtr:
+			if cur.Next.Value.Type == token.TypeInt {
+				value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
+				if err != nil {
+					panic(ctx.Error("invalid integer value for push_ptr instruction"))
+				}
+				instructions = append(instructions, pushPtrIns(value, ctx))
+			} else if cur.Next.Value.Type == token.TypeNull {
+				instructions = append(instructions, pushNullIns(ctx))
 			}
 			cur = cur.Next
 		case token.TypePop:
@@ -321,6 +344,8 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 			panic(ctx.Error("unexpected label definition token encountered during instruction generation"))
 		case token.TypeLabel:
 			panic(ctx.Error("unexpected label token encountered during instruction generation"))
+		case token.TypeNull:
+			instructions = append(instructions, pushNullIns(ctx))
 		case token.TypeHalt:
 			instructions = append(instructions, haltIns(ctx))
 		default:

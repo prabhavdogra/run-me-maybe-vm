@@ -37,8 +37,15 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 	case token.TypeInt, token.TypeLabel:
 		panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("program cannot start with a %s reference", tokens[0].Type)))
 	case token.TypePush:
-		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar, token.TypeString) {
+		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar, token.TypeString, token.TypeNull) {
 			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected integer, float, char, or string value after '%s' instruction, but found %s '%s'", tokens[0].Type, nextToken.Type, nextToken.Text)))
+		}
+		current = current.AddNextNode(tokens[1])
+		instructionNumber++
+		startIndex++
+	case token.TypePushPtr:
+		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeNull) {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected integer or NULL after 'push_ptr' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
 		}
 		current = current.AddNextNode(tokens[1])
 		instructionNumber++
@@ -97,7 +104,7 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		nextToken := tokens.PeekToken(i + 1)
 		switch curToken.Type {
 		case token.TypePush:
-			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar, token.TypeString) {
+			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar, token.TypeString, token.TypeNull) {
 				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected integer, float, char, or string value after '%s' instruction, but found %s '%s'", curToken.Type, nextToken.Type, nextToken.Text)))
 			}
 			current = current.AddNextNode(curToken)
@@ -107,6 +114,14 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			} else {
 				instructionNumber++
 			}
+			i++
+		case token.TypePushPtr:
+			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeNull) {
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected integer or NULL after 'push_ptr' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
+			}
+			current = current.AddNextNode(curToken)
+			current = current.AddNextNode(nextToken)
+			instructionNumber++
 			i++
 		case token.TypePushStr:
 			if nextToken.Type != token.TypeString {

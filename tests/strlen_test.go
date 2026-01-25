@@ -6,7 +6,7 @@ var StrlenTest = ProgramTestCase{
 		push_str "Any string here and you'll get the length!\n"
 		jmp main
 		
-		strlen:
+		my_strlen:
 			push_str "\0"
 			push 0
 			swap
@@ -27,13 +27,13 @@ var StrlenTest = ProgramTestCase{
 			push 1
 			sub
 			print
-			jmp end
+			jmp finish
 
 		main:
 			get_str 0
-			jmp strlen
+			jmp my_strlen
 
-		end:
+		finish:
 			push 0
 			exit`,
 	expected: []string{

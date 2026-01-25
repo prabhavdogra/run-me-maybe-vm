@@ -20,6 +20,7 @@ const (
 	TypeInvalid TokenType = iota
 	TypeNoOp
 	TypePush
+	TypePushPtr
 	TypePushStr
 	TypeGetStr
 	TypePop
@@ -51,6 +52,7 @@ const (
 	TypeString
 	TypeLabelDefinition
 	TypeLabel
+	TypeNull
 )
 
 type Token struct {

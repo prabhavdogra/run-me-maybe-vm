@@ -81,9 +81,145 @@ var NativeIntToStrTest = ProgramTestCase{
 	additionalFiles: StdDefs,
 }
 
+// 5. Strcat Test
+var StrcatTest = ProgramTestCase{
+	name: "native_strcat",
+	program: `@imp "stddefs.wm"
+		push 20
+		malloc           ; dest
+		dup
+		push_str "Hello "
+		get_str 0        ; dest, dest, src "Hello "
+		strcpy           ; dest, dest (strcpy returns dest)
+		pop              ; dest
+		
+		dup              ; dest, dest
+		push_str "World"
+		get_str 1        ; dest, dest, src "World"
+		strcat           ; dest, dest (strcat returns dest)
+		pop              ; dest
+		
+		push STDOUT
+		write            ; Prints "Hello World"
+		halt`,
+	expected: []string{
+		"Hello World",
+	},
+	additionalFiles: StdDefs,
+}
+
+// 6. Native Strlen Test
+var NativeStrlenTest = ProgramTestCase{
+	name: "native_strlen",
+	program: `@imp "stddefs.wm"
+		push_str "12345"
+		get_str 0
+		strlen           ; Native 94. Returns length (5)
+		int_to_str       ; Back to string implementation check
+		push STDOUT
+		write
+		halt`,
+	expected: []string{
+		"5",
+	},
+	additionalFiles: StdDefs,
+}
+
+// 7. Time Test
+var TimeTest = ProgramTestCase{
+	name: "native_time",
+	program: `@imp "stddefs.wm"
+		push 0
+		time             ; [0, T]
+		cmpg             ; Checks T > 0? (Because a=T, b=0). Stack: [0, T, 1] (if T>0)
+		
+		; Branching based on result
+		nzjmp success    ; Pops 1. Stack: [0, T].
+		push_str "Time is zero or negative"
+		get_str 0
+		push STDOUT
+		write
+		halt
+
+		success:
+		push_str "Time ok"
+		get_str 1
+		push STDOUT
+		write
+		halt`,
+	expected: []string{
+		"Time ok",
+	},
+	additionalFiles: StdDefs,
+}
+
+// 8. Realloc Test
+var ReallocTest = ProgramTestCase{
+	name: "native_realloc",
+	program: `@imp "stddefs.wm"
+		push 5
+		malloc           ; ptr (size 5)
+		dup              ; ptr, ptr
+		push_str "Hi"
+		get_str 0        ; ptr, ptr, src
+		strcpy
+		pop              ; ptr
+		
+		; Now realloc to 10
+		push 10
+		realloc          ; [ptr, 10] -> [new_ptr]
+		
+		dup              ; new_ptr, new_ptr
+		push_str " there"
+		get_str 1        ; new_ptr, new_ptr, src
+		strcat           ; Append
+		pop              ; new_ptr
+		
+		push STDOUT
+		write
+		halt`,
+	expected: []string{
+		"Hi there",
+	},
+	additionalFiles: StdDefs,
+}
+
+// 9. Assert Test
+var AssertTest = ProgramTestCase{
+	name: "native_assert",
+	program: `@imp "stddefs.wm"
+		push 1
+		assert           ; Should pass
+		
+		push 0
+		assert           ; Should panic "assertion failed"
+		halt`,
+	expectedError:   "assertion failed",
+	additionalFiles: StdDefs,
+}
+
+// 10. NULL Test
+var NullTest = ProgramTestCase{
+	name: "keyword_null",
+	program: `@imp "stddefs.wm"
+		push NULL        ; Pushes LiteralNull
+		print            ; Should print "NULL"
+		halt`,
+	expected: []string{
+		"NULL",
+	},
+	additionalFiles: StdDefs,
+}
+
 var NativeStringTest = []ProgramTestCase{
 	StrcmpTest,
 	StrcpyTest,
 	MemcpyTest,
 	NativeIntToStrTest,
+	StrcatTest,
+	NativeStrlenTest,
+	TimeTest,
+	ReallocTest,
+	AssertTest,
+	NullTest,
 }

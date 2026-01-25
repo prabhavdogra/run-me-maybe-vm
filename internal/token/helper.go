@@ -13,6 +13,8 @@ func (tt TokenType) String() string {
 		return "noop"
 	case TypePush:
 		return "push"
+	case TypePushPtr:
+		return "push_ptr"
 	case TypePushStr:
 		return "push_str"
 	case TypeGetStr:
@@ -75,6 +77,8 @@ func (tt TokenType) String() string {
 		return "halt"
 	case TypeIntToStr:
 		return "int_to_str"
+	case TypeNull:
+		return "NULL"
 	default:
 		return "invalid"
 	}
@@ -155,12 +159,16 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypeNzjmp
 	case "print":
 		return TypePrint
+	case "push_ptr":
+		return TypePushPtr
 	case "native":
 		return TypeNative
 	case "halt":
 		return TypeHalt
 	case "int_to_str":
 		return TypeIntToStr
+	case "NULL":
+		return TypeNull
 	default:
 		return checkLabelType(name)
 	}

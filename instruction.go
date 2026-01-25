@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 	"vm/internal/parser"
 	"vm/internal/token"
 )
@@ -13,6 +14,7 @@ type InstructionSet uint8
 const (
 	InstructionNoOp InstructionSet = iota
 	InstructionPush
+	InstructionPushPtr
 	InstructionGetStr
 	InstructionPop
 	InstructionDup
@@ -70,6 +72,8 @@ func (i InstructionSet) String() string {
 		return "NOOP"
 	case InstructionPush:
 		return "PUSH"
+	case InstructionPushPtr:
+		return "PUSH_PTR"
 	case InstructionGetStr:
 		return "GET_STR"
 	case InstructionPop:
@@ -133,6 +137,11 @@ func runInstructions(machine *Machine) *Machine {
 		case InstructionNoOp:
 			// do nothing
 		case InstructionPush:
+			push(ctx, instr.value)
+		case InstructionPushPtr:
+			if instr.value.Type() != LiteralInt && instr.value.Type() != LiteralNull {
+				panic(ctx.CurrentInstruction.Error("push_ptr requires an integer or NULL value"))
+			}
 			push(ctx, instr.value)
 		case InstructionGetStr:
 			idx := int(instr.value.valueInt)
@@ -307,8 +316,14 @@ func runInstructions(machine *Machine) *Machine {
 				// malloc(size)
 				nativeMalloc(ctx)
 			case 5:
+				// realloc(ptr, size)
+				nativeRealloc(ctx)
+			case 6:
 				// free(ptr)
 				nativeFree(ctx)
+			case 10:
+				// time
+				nativeTime(ctx)
 			case 60:
 				// exit(code)
 				nativeExit(ctx)
@@ -321,9 +336,18 @@ func runInstructions(machine *Machine) *Machine {
 			case 92:
 				// 92: memcpy
 				nativeMemcpy(ctx)
+			case 93:
+				// 93: strcat
+				nativeStrcat(ctx)
+			case 94:
+				// 94: strlen
+				nativeStrlen(ctx)
 			case 99:
 				// 99: int_to_str
 				nativeIntToStr(ctx)
+			case 100:
+				// 100: assert
+				nativeAssert(ctx)
 			default:
 				panic(ctx.CurrentInstruction.Error(fmt.Sprintf("unknown native syscall ID: %d", syscallID.valueInt)))
 			}
@@ -345,15 +369,11 @@ func nativeIntToStr(ctx *RuntimeContext) {
 		panic(ctx.CurrentInstruction.Error("int_to_str expects an integer"))
 	}
 	s := fmt.Sprintf("%d", value.valueInt)
-	ptr := len(ctx.heap) // Start at end of heap
-
-	// Append chars
+	ptr := len(ctx.heap)
 	for _, char := range s {
 		ctx.heap = append(ctx.heap, CharLiteral(char))
 	}
-	// Null terminator
 	ctx.heap = append(ctx.heap, CharLiteral(0))
-
 	push(ctx, IntLiteral(int64(ptr)))
 }
 
@@ -572,6 +592,9 @@ func nativeClose(ctx *RuntimeContext) {
 func nativeFree(ctx *RuntimeContext) {
 	// Pop ptr
 	ptrVal := pop(ctx)
+	if ptrVal.Type() == LiteralNull {
+		return
+	}
 	if ptrVal.Type() != LiteralInt {
 		panic(ctx.CurrentInstruction.Error("free pointer must be integer"))
 	}
@@ -721,4 +744,132 @@ func nativeMemcpy(ctx *RuntimeContext) {
 	}
 
 	push(ctx, destPtrVal)
+}
+
+func nativeRealloc(ctx *RuntimeContext) {
+	sizeVal := pop(ctx)
+	ptrVal := pop(ctx)
+
+	if sizeVal.Type() != LiteralInt {
+		panic(ctx.CurrentInstruction.Error("realloc size must be integer"))
+	}
+	if ptrVal.Type() != LiteralInt && ptrVal.Type() != LiteralNull {
+		panic(ctx.CurrentInstruction.Error("realloc pointer must be integer or NULL"))
+	}
+
+	size := int(sizeVal.valueInt)
+
+	// Check for NULL (Strictly LiteralNull)
+	isNull := ptrVal.Type() == LiteralNull
+
+	if isNull { // NULL check -> behaves like malloc
+		// Allocate new
+		newPtr := len(ctx.heap)
+		for i := 0; i < size; i++ {
+			ctx.heap = append(ctx.heap, CharLiteral(0))
+		}
+		ctx.allocations[newPtr] = size
+		push(ctx, IntLiteral(int64(newPtr)))
+		return
+	}
+
+	ptr := int(ptrVal.valueInt)
+
+	// Check existing allocation
+	oldSize, ok := ctx.allocations[ptr]
+	if !ok {
+		panic(ctx.CurrentInstruction.Error("realloc: invalid heap pointer"))
+	}
+
+	if size <= oldSize {
+		// Shrinking or same size: Just update allocation size (oversimplified)
+		// Usually we'd want to reuse usage.
+		ctx.allocations[ptr] = size
+		push(ctx, ptrVal)
+		return
+	}
+
+	// Expand: Allocate new, copy, free old (simple implementation)
+	newPtr := len(ctx.heap)
+	for i := 0; i < size; i++ {
+		ctx.heap = append(ctx.heap, CharLiteral(0))
+	}
+	ctx.allocations[newPtr] = size
+
+	// Copy data
+	for i := 0; i < oldSize; i++ {
+		ctx.heap[newPtr+i] = ctx.heap[ptr+i]
+	}
+
+	// 'Free' old (remove from allocations)
+	delete(ctx.allocations, ptr)
+
+	push(ctx, IntLiteral(int64(newPtr)))
+}
+
+func nativeTime(ctx *RuntimeContext) {
+	now := time.Now().Unix()
+	push(ctx, IntLiteral(now))
+}
+
+func nativeStrcat(ctx *RuntimeContext) {
+	srcPtrVal := pop(ctx)
+	destPtrVal := pop(ctx)
+
+	if srcPtrVal.Type() != LiteralInt || destPtrVal.Type() != LiteralInt {
+		panic(ctx.CurrentInstruction.Error("strcat pointers must be integer"))
+	}
+
+	srcPtr := int(srcPtrVal.valueInt)
+	destPtr := int(destPtrVal.valueInt)
+
+	// Get length of dest
+	sDest := getStringFromHeap(ctx, int64(destPtr))
+	destLen := len(sDest)
+
+	// Append pointer
+	appendPtr := destPtr + destLen
+
+	// Copy src to dest end
+	// Note: We need to ensure heap is large enough or extend it.
+	// getStringFromHeap reads until null.
+
+	sSrc := getStringFromHeap(ctx, int64(srcPtr))
+
+	for i, char := range sSrc {
+		// Check bounds/grow
+		target := appendPtr + i
+		if target >= len(ctx.heap) {
+			ctx.heap = append(ctx.heap, CharLiteral(char))
+		} else {
+			ctx.heap[target] = CharLiteral(char)
+		}
+	}
+	// Null terminate
+	target := appendPtr + len(sSrc)
+	if target >= len(ctx.heap) {
+		ctx.heap = append(ctx.heap, CharLiteral(0))
+	} else {
+		ctx.heap[target] = CharLiteral(0)
+	}
+
+	push(ctx, destPtrVal)
+}
+
+func nativeStrlen(ctx *RuntimeContext) {
+	ptrVal := pop(ctx)
+	if ptrVal.Type() != LiteralInt {
+		panic(ctx.CurrentInstruction.Error("strlen pointer must be integer"))
+	}
+	s := getStringFromHeap(ctx, ptrVal.valueInt)
+	push(ctx, IntLiteral(int64(len(s))))
+}
+
+func nativeAssert(ctx *RuntimeContext) {
+	val := pop(ctx)
+	if val.Type() == LiteralInt {
+		if val.valueInt == 0 {
+			panic(ctx.CurrentInstruction.Error("assertion failed"))
+		}
+	}
 }
