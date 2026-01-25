@@ -73,6 +73,42 @@ func (machine *Machine) programSize() int {
 	return len(machine.instructions)
 }
 
+func pushStr(ctx *RuntimeContext, val int64) {
+	if len(ctx.strStack) >= maxStrStackSize {
+		panic(ctx.CurrentInstruction.Error("string stack overflow"))
+	}
+	ctx.strStack = append(ctx.strStack, val)
+}
+
+func popStr(ctx *RuntimeContext) int64 {
+	if len(ctx.strStack) == 0 {
+		panic(ctx.CurrentInstruction.Error("string stack underflow"))
+	}
+	val := ctx.strStack[len(ctx.strStack)-1]
+	ctx.strStack = ctx.strStack[:len(ctx.strStack)-1]
+	return val
+}
+
+func indexDupStr(ctx *RuntimeContext, index int64) {
+	if index < 0 || int(index) >= len(ctx.strStack) {
+		panic(ctx.CurrentInstruction.Error("index out of bounds for indup_str"))
+	}
+	targetIdx := int(index)
+	pushStr(ctx, ctx.strStack[targetIdx])
+}
+
+func indexSwapStr(ctx *RuntimeContext, index int64) {
+	if index < 0 || int(index) >= len(ctx.strStack) {
+		panic(ctx.CurrentInstruction.Error("index out of bounds for inswap_str"))
+	}
+	targetIdx := int(index)
+	topIdx := len(ctx.strStack) - 1
+
+	temp := ctx.strStack[targetIdx]
+	ctx.strStack[targetIdx] = ctx.strStack[topIdx]
+	ctx.strStack[topIdx] = temp
+}
+
 // ---- Instruction helper functions ----
 
 func pushIntIns(value int64, ctx InstructionContext) Instruction {
@@ -198,6 +234,26 @@ func callIns(label int64, ctx InstructionContext) Instruction {
 
 func retIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionRet, line: ctx.Line, fileName: ctx.FileName}
+}
+
+func popStrIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionPopStr, line: ctx.Line, fileName: ctx.FileName}
+}
+
+func dupStrIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionDupStr, line: ctx.Line, fileName: ctx.FileName}
+}
+
+func inDupStrIns(index int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionInDupStr, value: IntLiteral(index), line: ctx.Line, fileName: ctx.FileName}
+}
+
+func swapStrIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionSwapStr, line: ctx.Line, fileName: ctx.FileName}
+}
+
+func inSwapStrIns(index int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionInSwapStr, value: IntLiteral(index), line: ctx.Line, fileName: ctx.FileName}
 }
 
 func noopIns(ctx InstructionContext) Instruction {
@@ -380,6 +436,26 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 			instructions = append(instructions, pushNullIns(ctx))
 		case token.TypeHalt:
 			instructions = append(instructions, haltIns(ctx))
+		case token.TypePopStr:
+			instructions = append(instructions, popStrIns(ctx))
+		case token.TypeDupStr:
+			instructions = append(instructions, dupStrIns(ctx))
+		case token.TypeInDupStr:
+			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
+			if err != nil {
+				panic(ctx.Error("invalid integer value for indup_str instruction"))
+			}
+			cur = cur.Next
+			instructions = append(instructions, inDupStrIns(value, ctx))
+		case token.TypeSwapStr:
+			instructions = append(instructions, swapStrIns(ctx))
+		case token.TypeInSwapStr:
+			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
+			if err != nil {
+				panic(ctx.Error("invalid integer value for inswap_str instruction"))
+			}
+			cur = cur.Next
+			instructions = append(instructions, inSwapStrIns(value, ctx))
 		default:
 			panic(ctx.Error("unknown token type encountered during instruction generation"))
 		}

@@ -28,6 +28,11 @@ const (
 	TypeCall
 	TypeRet
 	TypeEntrypoint
+	TypePopStr
+	TypeDupStr
+	TypeInDupStr
+	TypeSwapStr
+	TypeInSwapStr
 	TypeInDup
 	TypeSwap
 	TypeInSwap

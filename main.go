@@ -22,7 +22,7 @@ func main() {
 		instructions.Print()
 	}
 	// preprocess strings into Heap
-	stringTable, heap := populateStringTable(parsedTokens)
+	strStack, heap := populateStringTable(parsedTokens)
 	loadedMachine := &Machine{
 		stack:           []Literal{},
 		instructions:    instructions,
@@ -31,7 +31,7 @@ func main() {
 		input:           os.Stdin,
 		output:          os.Stdout,
 		fileDescriptors: make(map[int64]*os.File),
-		stringTable:     stringTable,
+		strStack:        strStack,
 		entrypoint:      entrypoint,
 	}
 

@@ -56,8 +56,13 @@ go test -v ./...
 | `print` | Pop and print the top value (int, char, float). |
 | `halt` | Stop execution. |
 | `noop` | No operation. |
-| `push_str <string>` | (Directive) Allocates string in heap and adds to string table. Does not execute at runtime. |
-| `get_str <index>` | Push the pointer to the string at `index` in the string table onto the stack. Index corresponds to the order of `push_str`. |
+| `push_str <string>` | (Directive) Allocates string in heap and adds to string stack at load time. |
+| `get_str <index>` | Push the pointer to the string at `index` in the string stack onto the data stack. |
+| `pop_str` | Remove the top string from the string stack. |
+| `dup_str` | Duplicate the top string on the string stack. |
+| `indup_str <idx>` | Duplicate the string at the given index in the string stack to the top. |
+| `swap_str` | Swap the top two strings on the string stack. |
+| `inswap_str <idx>` | Swap the top string with the string at the given index in the string stack. |
 | `entrypoint <label>` | (Directive) Sets the program entry point execution start label. |
 
 ## Native Syscalls

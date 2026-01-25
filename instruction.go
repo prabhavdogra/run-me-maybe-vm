@@ -39,11 +39,17 @@ const (
 	InstructionNative
 	InstructionCall
 	InstructionRet
+	InstructionPushStr
+	InstructionPopStr
+	InstructionDupStr
+	InstructionInDupStr
+	InstructionSwapStr
+	InstructionInSwapStr
 	InstructionHalt
 )
 
 func populateStringTable(parsedTokens *parser.ParserList) ([]int64, []Literal) {
-	stringTable := []int64{}
+	strStack := []int64{}
 	heap := []Literal{}
 
 	cur := parsedTokens
@@ -61,11 +67,11 @@ func populateStringTable(parsedTokens *parser.ParserList) ([]int64, []Literal) {
 			}
 			heap = append(heap, CharLiteral(0))
 
-			stringTable = append(stringTable, ptr)
+			strStack = append(strStack, ptr)
 		}
 		cur = cur.Next
 	}
-	return stringTable, heap
+	return strStack, heap
 }
 
 func (i InstructionSet) String() string {
@@ -126,6 +132,18 @@ func (i InstructionSet) String() string {
 		return "CALL"
 	case InstructionRet:
 		return "RET"
+	case InstructionPushStr:
+		return "PUSH_STR"
+	case InstructionPopStr:
+		return "POP_STR"
+	case InstructionDupStr:
+		return "DUP_STR"
+	case InstructionInDupStr:
+		return "INDUP_STR"
+	case InstructionSwapStr:
+		return "SWAP_STR"
+	case InstructionInSwapStr:
+		return "INSWAP_STR"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
@@ -173,8 +191,39 @@ func runInstructions(machine *Machine) *Machine {
 			ctx.returnStack = ctx.returnStack[:len(ctx.returnStack)-1]
 			insPtr = retAddr
 			jumped = true
+		case InstructionPopStr:
+			popStr(ctx)
+		case InstructionDupStr:
+			if len(ctx.strStack) == 0 {
+				panic(ctx.CurrentInstruction.Error("string stack underflow"))
+			}
+			val := ctx.strStack[len(ctx.strStack)-1]
+			pushStr(ctx, val)
+		case InstructionInDupStr:
+			if instr.value.Type() != LiteralInt {
+				panic("ERROR: indup_str requires integer arguments")
+			}
+			indexDupStr(ctx, instr.value.valueInt)
+		case InstructionSwapStr:
+			if len(ctx.strStack) < 2 {
+				panic(ctx.CurrentInstruction.Error("string stack underflow"))
+			}
+			a := popStr(ctx)
+			b := popStr(ctx)
+			pushStr(ctx, a)
+			pushStr(ctx, b)
+		case InstructionInSwapStr:
+			if instr.value.Type() != LiteralInt {
+				panic("ERROR: inswap_str requires integer arguments")
+			}
+			indexSwapStr(ctx, instr.value.valueInt)
 		case InstructionPush:
 			push(ctx, instr.value)
+		case InstructionPushStr:
+			if instr.value.Type() != LiteralInt {
+				panic(ctx.CurrentInstruction.Error("push_str value must be integer pointer"))
+			}
+			pushStr(ctx, instr.value.valueInt)
 		case InstructionPushPtr:
 			if instr.value.Type() != LiteralInt && instr.value.Type() != LiteralNull {
 				panic(ctx.CurrentInstruction.Error("push_ptr requires an integer or NULL value"))
@@ -182,10 +231,10 @@ func runInstructions(machine *Machine) *Machine {
 			push(ctx, instr.value)
 		case InstructionGetStr:
 			idx := int(instr.value.valueInt)
-			if idx < 0 || idx >= len(machine.stringTable) {
+			if idx < 0 || idx >= len(machine.strStack) {
 				panic(ctx.CurrentInstruction.Error("string index out of bounds"))
 			}
-			ptr := machine.stringTable[idx]
+			ptr := machine.strStack[idx]
 			push(ctx, IntLiteral(ptr))
 		case InstructionPop:
 			pop(ctx)

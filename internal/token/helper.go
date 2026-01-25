@@ -19,6 +19,16 @@ func (tt TokenType) String() string {
 		return "push_str"
 	case TypeGetStr:
 		return "get_str"
+	case TypePopStr:
+		return "pop_str"
+	case TypeDupStr:
+		return "dup_str"
+	case TypeInDupStr:
+		return "indup_str"
+	case TypeSwapStr:
+		return "swap_str"
+	case TypeInSwapStr:
+		return "inswap_str"
 	case TypePop:
 		return "pop"
 	case TypeDup:
@@ -125,6 +135,16 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypePushStr
 	case "get_str":
 		return TypeGetStr
+	case "pop_str":
+		return TypePopStr
+	case "dup_str":
+		return TypeDupStr
+	case "indup_str":
+		return TypeInDupStr
+	case "swap_str":
+		return TypeSwapStr
+	case "inswap_str":
+		return TypeInSwapStr
 	case "pop":
 		return TypePop
 	case "dup":

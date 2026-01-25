@@ -195,6 +195,76 @@ var intToStrTest = ProgramTestCase{
 	additionalFiles: StdDefs,
 }
 
+var stringPopStrTest = ProgramTestCase{
+	name: "string_pop_str",
+	program: `push_str "keep"
+		push_str "discard"
+		pop_str
+		get_str 0
+		push 1
+		native 1
+		halt`,
+	expected: []string{"keep"},
+}
+
+var stringDupStrTest = ProgramTestCase{
+	name: "string_dup_str",
+	program: `push_str "hello"
+		dup_str
+		pop_str
+		get_str 0
+		push 1
+		native 1
+		halt`,
+	expected: []string{"hello"},
+}
+
+var stringSwapStrTest = ProgramTestCase{
+	name: "string_swap_str",
+	program: `push_str "first"
+		push_str "second"
+		swap_str
+		get_str 1
+		push 1
+		native 1
+		get_str 0
+		push 1
+		native 1
+		halt`,
+	expected: []string{"firstsecond"},
+}
+
+var stringInDupStrTest = ProgramTestCase{
+	name: "string_indup_str",
+	program: `push_str "bottom"
+		push_str "top"
+		indup_str 0
+		get_str 2
+		push 1
+		native 1
+		halt`,
+	expected: []string{"bottom"},
+}
+
+var stringInSwapStrTest = ProgramTestCase{
+	name: "string_inswap_str",
+	program: `push_str "A"
+		push_str "B"
+		push_str "C"
+		inswap_str 0
+		get_str 0
+		push 1
+		native 1
+		get_str 1
+		push 1
+		native 1
+		get_str 2
+		push 1
+		native 1
+		halt`,
+	expected: []string{"CBA"},
+}
+
 var testFibTest = ProgramTestCase{
 	name: "t_fib",
 	program: `@imp "stddefs.wm"
@@ -281,5 +351,10 @@ var stringTests = []ProgramTestCase{
 	stringMacroImportTest,
 	stringLengthTest,
 	intToStrTest,
+	stringPopStrTest,
+	stringDupStrTest,
+	stringSwapStrTest,
+	stringInDupStrTest,
+	stringInSwapStrTest,
 	testFibTest,
 }

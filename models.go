@@ -17,6 +17,7 @@ type Machine struct {
 	fileDescriptors map[int64]*os.File
 	stringTable     []int64
 	entrypoint      int
+	strStack        []int64 // Stack of pointers to heap
 }
 
 type RuntimeContext struct {
@@ -40,5 +41,6 @@ func (i Instruction) Error(message string) string {
 
 const maxStackSize = 1024
 const maxReturnStackSize = 1024
+const maxStrStackSize = 1024
 
 var debugMode = false
