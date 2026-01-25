@@ -39,6 +39,7 @@ func TestPrograms(t *testing.T) {
 	cases = append(cases, StringEscapeTest)
 	cases = append(cases, StrlenTest)
 	cases = append(cases, NativeStringTest...)
+	cases = append(cases, fibRecTest)
 
 	literalLineRE := regexp.MustCompile(`.+`)
 

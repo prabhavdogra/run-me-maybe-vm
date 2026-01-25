@@ -2,12 +2,13 @@ package main
 
 import (
 	"os"
+	"vm/cli"
 	"vm/internal/lexer"
 	"vm/internal/parser"
 )
 
 func main() {
-	args := parseArgs()
+	args := cli.GetArgs()
 	lex := lexer.Init(args.FileName).Lex()
 	if args.DebugMode {
 		lex.Print()
@@ -16,7 +17,7 @@ func main() {
 	if args.DebugMode {
 		parsedTokens.Print()
 	}
-	instructions := generateInstructions(parsedTokens)
+	instructions, entrypoint := generateInstructions(parsedTokens)
 	if args.DebugMode {
 		instructions.Print()
 	}
@@ -31,6 +32,7 @@ func main() {
 		output:          os.Stdout,
 		fileDescriptors: make(map[int64]*os.File),
 		stringTable:     stringTable,
+		entrypoint:      entrypoint,
 	}
 
 	loadedMachine = runInstructions(loadedMachine)

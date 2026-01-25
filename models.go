@@ -16,10 +16,12 @@ type Machine struct {
 	output          io.Writer
 	fileDescriptors map[int64]*os.File
 	stringTable     []int64
+	entrypoint      int
 }
 
 type RuntimeContext struct {
 	*Machine
+	returnStack        []int
 	CurrentInstruction Instruction
 }
 
@@ -37,5 +39,6 @@ func (i Instruction) Error(message string) string {
 }
 
 const maxStackSize = 1024
+const maxReturnStackSize = 1024
 
 var debugMode = false

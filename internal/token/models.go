@@ -25,6 +25,9 @@ const (
 	TypeGetStr
 	TypePop
 	TypeDup
+	TypeCall
+	TypeRet
+	TypeEntrypoint
 	TypeInDup
 	TypeSwap
 	TypeInSwap

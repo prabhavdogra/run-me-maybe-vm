@@ -192,6 +192,14 @@ func nativeIns(id int64, ctx InstructionContext) Instruction {
 	}
 }
 
+func callIns(label int64, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionCall, value: IntLiteral(label), line: ctx.Line, fileName: ctx.FileName}
+}
+
+func retIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionRet, line: ctx.Line, fileName: ctx.FileName}
+}
+
 func noopIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionNoOp, line: ctx.Line, fileName: ctx.FileName}
 }
@@ -204,9 +212,11 @@ func printStack(machine *Machine) {
 	fmt.Println("------ END OF STACK")
 }
 
-func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
+func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int) {
 	instructions := []Instruction{}
 	cur := parsedTokens
+	entrypointIndex := 0
+
 	for cur != nil {
 		ctx := InstructionContext{
 			Line:     int(cur.Value.Line),
@@ -218,6 +228,28 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 			panic(ctx.Error("invalid token encountered during instruction generation"))
 		case token.TypeNoOp:
 			instructions = append(instructions, noopIns(ctx))
+		case token.TypeCall:
+			if cur.Next.Value.Type != token.TypeInt {
+				panic(ctx.Error("expected integer (label address) after call"))
+			}
+			value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
+			if err != nil {
+				panic(ctx.Error("invalid integer value for call instruction"))
+			}
+			cur = cur.Next
+			instructions = append(instructions, callIns(value, ctx))
+		case token.TypeRet:
+			instructions = append(instructions, retIns(ctx))
+		case token.TypeEntrypoint:
+			if cur.Next.Value.Type != token.TypeInt {
+				panic(ctx.Error("expected integer (label address) after entrypoint"))
+			}
+			val, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
+			if err != nil {
+				panic(ctx.Error("invalid integer value for entrypoint"))
+			}
+			entrypointIndex = int(val)
+			cur = cur.Next
 		case token.TypePush:
 			if cur.Next.Value.Type == token.TypeInt {
 				value, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
@@ -353,7 +385,7 @@ func generateInstructions(parsedTokens *parser.ParserList) InstructionList {
 		}
 		cur = cur.Next
 	}
-	return instructions
+	return instructions, entrypointIndex
 }
 
 func (il InstructionList) Print() {

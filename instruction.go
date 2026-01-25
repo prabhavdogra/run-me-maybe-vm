@@ -37,6 +37,8 @@ const (
 	InstructionJmp
 	InstructionPrint
 	InstructionNative
+	InstructionCall
+	InstructionRet
 	InstructionHalt
 )
 
@@ -120,22 +122,57 @@ func (i InstructionSet) String() string {
 		return "MOD"
 	case InstructionHalt:
 		return "HALT"
+	case InstructionCall:
+		return "CALL"
+	case InstructionRet:
+		return "RET"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
 }
 
 func runInstructions(machine *Machine) *Machine {
-	ctx := &RuntimeContext{Machine: machine}
-	for insPtr := 0; insPtr < len(machine.instructions); insPtr++ {
+	ctx := &RuntimeContext{
+		Machine:     machine,
+		returnStack: make([]int, 0, maxReturnStackSize),
+	}
+	// Jump to entrypoint
+	insPtr := machine.entrypoint
+
+	for insPtr < len(machine.instructions) {
 		instr := machine.instructions[insPtr]
 		ctx.CurrentInstruction = instr
 		if debugMode {
 			fmt.Fprintf(os.Stderr, "Line %d: %v, Stack: %+v\n", instr.line, instr.instructionType, ctx.stack)
 		}
+
+		jumped := false
+
 		switch instr.instructionType {
 		case InstructionNoOp:
 			// do nothing
+		case InstructionCall:
+			if instr.value.Type() != LiteralInt {
+				panic(ctx.CurrentInstruction.Error("call target must be an integer"))
+			}
+			target := int(instr.value.valueInt)
+			if target >= machine.programSize() || target < 0 {
+				panic(ctx.CurrentInstruction.Error("call target out of bounds"))
+			}
+			if len(ctx.returnStack) >= maxReturnStackSize {
+				panic(ctx.CurrentInstruction.Error("return stack overflow"))
+			}
+			ctx.returnStack = append(ctx.returnStack, insPtr+1)
+			insPtr = target
+			jumped = true
+		case InstructionRet:
+			if len(ctx.returnStack) == 0 {
+				panic(ctx.CurrentInstruction.Error("return stack underflow"))
+			}
+			retAddr := ctx.returnStack[len(ctx.returnStack)-1]
+			ctx.returnStack = ctx.returnStack[:len(ctx.returnStack)-1]
+			insPtr = retAddr
+			jumped = true
 		case InstructionPush:
 			push(ctx, instr.value)
 		case InstructionPushPtr:
@@ -259,7 +296,8 @@ func runInstructions(machine *Machine) *Machine {
 			if target >= machine.programSize() || target < 0 {
 				panic("ERROR: jump target out of bounds")
 			}
-			insPtr = target - 1 // -1 because loop will increment
+			insPtr = target
+			jumped = true
 		case InstructionNzjmp:
 			if instr.value.Type() != LiteralInt {
 				panic("ERROR: jump target must be an integer")
@@ -273,7 +311,8 @@ func runInstructions(machine *Machine) *Machine {
 				if target >= machine.programSize() || target < 0 {
 					panic("ERROR: jump target out of bounds")
 				}
-				insPtr = target - 1 // -1 because loop will increment
+				insPtr = target
+				jumped = true
 			}
 		case InstructionZjmp:
 			value := pop(ctx)
@@ -288,7 +327,8 @@ func runInstructions(machine *Machine) *Machine {
 				if target >= machine.programSize() || target < 0 {
 					panic("ERROR: jump target out of bounds")
 				}
-				insPtr = target - 1 // -1 because loop will increment
+				insPtr = target
+				jumped = true
 			}
 		case InstructionPrint:
 			value := pop(ctx)
@@ -353,8 +393,12 @@ func runInstructions(machine *Machine) *Machine {
 			}
 		case InstructionHalt:
 			insPtr = machine.programSize()
+			jumped = true
 		default:
 			panic(ctx.CurrentInstruction.Error(fmt.Sprintf("unknown instruction type: %d", instr.instructionType)))
+		}
+		if !jumped {
+			insPtr++
 		}
 	}
 	return machine

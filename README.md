@@ -51,11 +51,14 @@ go test -v ./...
 | `jmp <label/ptr>` | Unconditional jump. |
 | `zjmp <label/ptr>` | Jump if top of stack is 0 (pops condition). |
 | `nzjmp <label/ptr>` | Jump if top of stack is NOT 0 (pops condition). |
+| `call <label>` | Call function at `label` (pushes return address to return stack). |
+| `ret` | Return from function (pops return address from return stack). |
 | `print` | Pop and print the top value (int, char, float). |
 | `halt` | Stop execution. |
 | `noop` | No operation. |
 | `push_str <string>` | (Directive) Allocates string in heap and adds to string table. Does not execute at runtime. |
 | `get_str <index>` | Push the pointer to the string at `index` in the string table onto the stack. Index corresponds to the order of `push_str`. |
+| `entrypoint <label>` | (Directive) Sets the program entry point execution start label. |
 
 ## Native Syscalls
 

@@ -88,6 +88,28 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		current = current.AddNextNode(tokens[1])
 		instructionNumber++
 		startIndex++
+	case token.TypeCall:
+		if len(tokens) < 2 {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error("expected label or integer after call instruction"))
+		}
+		if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeLabel) {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error("expected label or integer after call instruction"))
+		}
+		current = current.AddNextNode(tokens[1])
+		instructionNumber++
+		startIndex++
+	case token.TypeEntrypoint:
+		if len(tokens) < 2 {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error("expected label or integer after entrypoint instruction"))
+		}
+		if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeLabel) {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error("expected label or integer after entrypoint instruction"))
+		}
+		current = current.AddNextNode(tokens[1])
+		startIndex++
+	case token.TypeRet:
+		instructionNumber++
+		startIndex++
 	case token.TypeLabelDefinition:
 		handleLabelDefination(tokens[0], labelMap, instructionNumber)
 		ctx := token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}
@@ -167,11 +189,31 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			current = current.AddNextNode(token.GetNoOpToken(ctx))
 			instructionNumber++
 			handleLabelDefination(curToken, labelMap, instructionNumber)
+		case token.TypeCall:
+			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeLabel) {
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected label or integer after '%s' instruction, but found %s '%s'", curToken.Type, nextToken.Type, nextToken.Text)))
+			}
+			current = current.AddNextNode(curToken)
+			current = current.AddNextNode(nextToken)
+			instructionNumber++
+			i++
+		case token.TypeEntrypoint:
+			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeLabel) {
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected label or integer after '%s' instruction, but found %s '%s'", curToken.Type, nextToken.Type, nextToken.Text)))
+			}
+			current = current.AddNextNode(curToken)
+			current = current.AddNextNode(nextToken)
+			// No instruction increment
+			i++
+		case token.TypeRet:
+			current = current.AddNextNode(curToken)
+			instructionNumber++
 		case token.TypeNoOp, token.TypePop, token.TypeDup, token.TypeSwap,
 			token.TypeAdd, token.TypeSub, token.TypeMul, token.TypeDiv,
 			token.TypeMod, token.TypeCmpe, token.TypeCmpne, token.TypeCmpg,
 			token.TypeCmpl, token.TypeCmpge, token.TypeCmple, token.TypePrint,
-			token.TypeInt, token.TypeHalt, token.TypeLabel, token.TypeIntToStr:
+			token.TypeInt, token.TypeHalt, token.TypeLabel, token.TypeIntToStr,
+			token.TypeNull:
 			current = current.AddNextNode(curToken)
 			instructionNumber++
 		default:

@@ -79,6 +79,12 @@ func (tt TokenType) String() string {
 		return "int_to_str"
 	case TypeNull:
 		return "NULL"
+	case TypeCall:
+		return "call"
+	case TypeRet:
+		return "ret"
+	case TypeEntrypoint:
+		return "entrypoint"
 	default:
 		return "invalid"
 	}
@@ -169,6 +175,12 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypeIntToStr
 	case "NULL":
 		return TypeNull
+	case "call":
+		return TypeCall
+	case "ret":
+		return TypeRet
+	case "entrypoint":
+		return TypeEntrypoint
 	default:
 		return checkLabelType(name)
 	}
