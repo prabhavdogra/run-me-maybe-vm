@@ -65,11 +65,15 @@ All native syscalls are invoked via `native <ID>`. Arguments are popped from the
 | :--- | :--- | :--- | :--- | :--- |
 | `0` | `open` | `flags`, `len`, `ptr` | `fd` | Opens file at path `ptr` (length `len`) with `flags`. Returns new File Descriptor. |
 | `1` | `write` | `fd`, `ptr` | - | Writes null-terminated string at `ptr` to `fd`. Supports `1` (Stdout), `2` (Stderr). |
-| `2` | `read` | `ptr`, `len`, `fd` | - | Reads `len` bytes from `fd` into heap buffer at `ptr`. Supports `0` (Signin). |
+| `2` | `read` | `ptr`, `len`, `fd` | - | Reads `len` bytes from `fd` into heap buffer at `ptr`. Supports `0` (Stdin). |
 | `3` | `close` | `fd` | - | Closes the file descriptor `fd`. |
-| `4` | `free` | `ptr` | - | Frees heap memory allocated at `ptr`. |
-| `5` | `malloc`| `size` | `ptr` | Allocates `size` bytes on the heap. Returns pointer. |
-| `6` | `exit` | `code` | - | Exits the VM with status `code`. |
+| `4` | `malloc`| `size` | `ptr` | Allocates `size` bytes on the heap. Returns pointer. |
+| `5` | `free` | `ptr` | - | Frees heap memory allocated at `ptr`. |
+| `60` | `exit` | `code` | - | Exits the VM with status `code`. |
+| `90` | `strcmp` | `ptr2`, `ptr1` | `result` | Compares two null-terminated strings. Returns `1` if equal, `0` otherwise. |
+| `91` | `strcpy` | `src`, `dest` | `dest` | Copies null-terminated string from `src` to `dest`. Returns `dest`. |
+| `92` | `memcpy` | `size`, `src`, `dest` | `dest` | Copies `size` bytes from `src` to `dest`. Returns `dest`. |
+| `99` | `int_to_str`| `int` | `ptr` | Converts integer to null-terminated string on heap. Returns pointer. |
 
 ## Preprocessor Directives
 

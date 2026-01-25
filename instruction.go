@@ -36,13 +36,11 @@ const (
 	InstructionPrint
 	InstructionNative
 	InstructionHalt
-	InstructionIntToStr
 )
 
-func populateStringTable(parsedTokens *parser.ParserList) ([]int64, map[int64][]Literal, int64) {
+func populateStringTable(parsedTokens *parser.ParserList) ([]int64, []Literal) {
 	stringTable := []int64{}
-	heap := make(map[int64][]Literal)
-	heapPtr := int64(0)
+	heap := []Literal{}
 
 	cur := parsedTokens
 	for cur != nil {
@@ -52,20 +50,18 @@ func populateStringTable(parsedTokens *parser.ParserList) ([]int64, map[int64][]
 			}
 			strVal := cur.Next.Value.Text
 
-			// Malloc string (len + 1 for null terminator)
-			ptr := heapPtr
-			heap[ptr] = make([]Literal, len(strVal)+1)
-			for i, char := range strVal {
-				heap[ptr][i] = CharLiteral(char)
+			ptr := int64(len(heap))
+
+			for _, char := range strVal {
+				heap = append(heap, CharLiteral(char))
 			}
-			heap[ptr][len(strVal)] = CharLiteral(0) // Null terminator
-			heapPtr++
+			heap = append(heap, CharLiteral(0))
 
 			stringTable = append(stringTable, ptr)
 		}
 		cur = cur.Next
 	}
-	return stringTable, heap, heapPtr
+	return stringTable, heap
 }
 
 func (i InstructionSet) String() string {
@@ -120,8 +116,6 @@ func (i InstructionSet) String() string {
 		return "MOD"
 	case InstructionHalt:
 		return "HALT"
-	case InstructionIntToStr:
-		return "INT_TO_STR"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
@@ -310,38 +304,57 @@ func runInstructions(machine *Machine) *Machine {
 				// close(fd)
 				nativeClose(ctx)
 			case 4:
-				// free(ptr)
-				nativeFree(ctx)
-			case 5:
 				// malloc(size)
 				nativeMalloc(ctx)
-			case 6:
+			case 5:
+				// free(ptr)
+				nativeFree(ctx)
+			case 60:
 				// exit(code)
 				nativeExit(ctx)
+			case 90:
+				// 90: strcmp
+				nativeStrcmp(ctx)
+			case 91:
+				// 91: strcpy
+				nativeStrcpy(ctx)
+			case 92:
+				// 92: memcpy
+				nativeMemcpy(ctx)
+			case 99:
+				// 99: int_to_str
+				nativeIntToStr(ctx)
 			default:
 				panic(ctx.CurrentInstruction.Error(fmt.Sprintf("unknown native syscall ID: %d", syscallID.valueInt)))
 			}
 		case InstructionHalt:
 			insPtr = machine.programSize()
-		case InstructionIntToStr:
-			value := pop(ctx)
-			if value.Type() != LiteralInt {
-				panic(ctx.CurrentInstruction.Error("int_to_str expects an integer"))
-			}
-			s := fmt.Sprintf("%d", value.valueInt)
-			ptr := machine.heapPtr
-			machine.heap[ptr] = make([]Literal, len(s)+1)
-			for i, char := range s {
-				machine.heap[ptr][i] = CharLiteral(char)
-			}
-			machine.heap[ptr][len(s)] = CharLiteral(0) // Null terminator
-			machine.heapPtr++
-			push(ctx, IntLiteral(ptr))
 		default:
-			panic("ERROR: unknown instruction")
+			panic(ctx.CurrentInstruction.Error(fmt.Sprintf("unknown instruction type: %d", instr.instructionType)))
 		}
 	}
 	return machine
+}
+
+// Native function ID 99: int_to_str
+// Stack inputs: [int]
+// Stack output: [ptr] (pointer to new string)
+func nativeIntToStr(ctx *RuntimeContext) {
+	value := pop(ctx)
+	if value.Type() != LiteralInt {
+		panic(ctx.CurrentInstruction.Error("int_to_str expects an integer"))
+	}
+	s := fmt.Sprintf("%d", value.valueInt)
+	ptr := len(ctx.heap) // Start at end of heap
+
+	// Append chars
+	for _, char := range s {
+		ctx.heap = append(ctx.heap, CharLiteral(char))
+	}
+	// Null terminator
+	ctx.heap = append(ctx.heap, CharLiteral(0))
+
+	push(ctx, IntLiteral(int64(ptr)))
 }
 
 // Open a file
@@ -383,18 +396,16 @@ func nativeOpen(ctx *RuntimeContext) {
 	if ptrVal.Type() != LiteralInt {
 		panic(ctx.CurrentInstruction.Error("open filename pointer must be integer"))
 	}
-	ptr := ptrVal.valueInt
 
 	// Read filename from heap
-	if _, ok := ctx.heap[ptr]; !ok {
+	ptr := int(ptrVal.valueInt)
+	if ptr < 0 || ptr+length > len(ctx.heap) {
 		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid heap pointer for filename"))
 	}
-	if length > len(ctx.heap[ptr]) {
-		panic(ctx.CurrentInstruction.Error("buffer overflow: filename length exceeds allocated size"))
-	}
-	filenameChars := ctx.heap[ptr][:length]
+
 	filename := ""
-	for _, charLit := range filenameChars {
+	for i := 0; i < length; i++ {
+		charLit := ctx.heap[ptr+i]
 		if charLit.Type() != LiteralChar {
 			panic(ctx.CurrentInstruction.Error("filename must be a string of characters"))
 		}
@@ -452,21 +463,23 @@ func nativeWrite(ctx *RuntimeContext) {
 		}
 	}
 
-	if buffer, ok := ctx.heap[int64(ptr.valueInt)]; ok {
-		s := ""
-		for _, charLit := range buffer {
-			if charLit.Type() != LiteralChar {
-				continue
-			}
-			if charLit.valueChar == 0 {
-				break
-			}
-			s += string(charLit.valueChar)
-		}
-		fmt.Fprint(writer, s)
-	} else {
+	ptrIdx := int(ptr.valueInt)
+	if ptrIdx < 0 || ptrIdx >= len(ctx.heap) {
 		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid heap pointer"))
 	}
+
+	s := ""
+	for i := ptrIdx; i < len(ctx.heap); i++ {
+		charLit := ctx.heap[i]
+		if charLit.Type() != LiteralChar {
+			continue
+		}
+		if charLit.valueChar == 0 {
+			break
+		}
+		s += string(charLit.valueChar)
+	}
+	fmt.Fprint(writer, s)
 }
 
 // Read from a file descriptor into a buffer
@@ -476,7 +489,6 @@ func nativeRead(ctx *RuntimeContext) {
 	if ptrVal.Type() != LiteralInt {
 		panic(ctx.CurrentInstruction.Error("read buffer pointer must be integer"))
 	}
-	ptr := ptrVal.valueInt
 
 	lenVal := pop(ctx)
 	if lenVal.Type() != LiteralInt {
@@ -501,13 +513,19 @@ func nativeRead(ctx *RuntimeContext) {
 		}
 	}
 
-	// Validate Heap Pointer
-	if _, ok := ctx.heap[ptr]; !ok {
-		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid heap pointer"))
-	}
-	// Validate Size against allocation
-	if length > len(ctx.heap[ptr]) {
-		panic(ctx.CurrentInstruction.Error("buffer overflow: read length exceeds allocated size"))
+	// Validate Heap Pointer and Size
+	ptr := int(ptrVal.valueInt)
+
+	// Safety check against allocation size if tracked
+	if allocSize, ok := ctx.allocations[ptr]; ok {
+		if length > allocSize {
+			panic(ctx.CurrentInstruction.Error("buffer overflow: read length exceeds allocated size"))
+		}
+	} else {
+		// Fallback strictly to heap bounds
+		if ptr < 0 || ptr+length > len(ctx.heap) {
+			panic(ctx.CurrentInstruction.Error("segmentation fault: invalid heap pointer or length"))
+		}
 	}
 
 	// Read from Input
@@ -519,7 +537,7 @@ func nativeRead(ctx *RuntimeContext) {
 
 	// Store in Heap
 	for i, b := range buf {
-		ctx.heap[ptr][i] = CharLiteral(rune(b))
+		ctx.heap[ptr+i] = CharLiteral(rune(b))
 	}
 }
 
@@ -557,12 +575,14 @@ func nativeFree(ctx *RuntimeContext) {
 	if ptrVal.Type() != LiteralInt {
 		panic(ctx.CurrentInstruction.Error("free pointer must be integer"))
 	}
-	ptr := ptrVal.valueInt
+	ptr := int(ptrVal.valueInt)
 
-	if _, ok := ctx.heap[ptr]; !ok {
+	// Check allocations map
+	if _, ok := ctx.allocations[ptr]; !ok {
 		panic(ctx.CurrentInstruction.Error("double free or invalid heap pointer"))
 	}
-	delete(ctx.heap, ptr)
+	delete(ctx.allocations, ptr)
+	// We don't shrink the heap slice, just mark as freed in allocations map
 }
 
 func nativeMalloc(ctx *RuntimeContext) {
@@ -574,12 +594,16 @@ func nativeMalloc(ctx *RuntimeContext) {
 	size := int(sizeVal.valueInt)
 
 	// Allocate
-	ptr := ctx.heapPtr
-	ctx.heap[ptr] = make([]Literal, size)
-	ctx.heapPtr++
+	ptr := len(ctx.heap)
+	for i := 0; i < size; i++ {
+		ctx.heap = append(ctx.heap, CharLiteral(0))
+	}
+
+	// Track allocation
+	ctx.allocations[ptr] = size
 
 	// Push Pointer
-	push(ctx, IntLiteral(ptr))
+	push(ctx, IntLiteral(int64(ptr)))
 }
 
 func nativeExit(ctx *RuntimeContext) {
@@ -590,4 +614,111 @@ func nativeExit(ctx *RuntimeContext) {
 	}
 	code := int(codeVal.valueInt)
 	os.Exit(code)
+}
+
+func nativeStrcmp(ctx *RuntimeContext) {
+	ptr2Val := pop(ctx)
+	ptr1Val := pop(ctx)
+
+	if ptr1Val.Type() != LiteralInt || ptr2Val.Type() != LiteralInt {
+		panic(ctx.CurrentInstruction.Error("strcmp pointers must be integer"))
+	}
+
+	ptr1 := ptr1Val.valueInt
+	ptr2 := ptr2Val.valueInt
+
+	s1 := getStringFromHeap(ctx, ptr1)
+	s2 := getStringFromHeap(ctx, ptr2)
+
+	if s1 == s2 {
+		push(ctx, IntLiteral(1))
+	} else {
+		push(ctx, IntLiteral(0))
+	}
+}
+
+// Helper to get string from heap
+func getStringFromHeap(ctx *RuntimeContext, ptr int64) string {
+	if int(ptr) < 0 || int(ptr) >= len(ctx.heap) {
+		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid heap pointer"))
+	}
+	s := ""
+	for i := int(ptr); i < len(ctx.heap); i++ {
+		charLit := ctx.heap[i]
+		if charLit.Type() != LiteralChar {
+			continue
+		}
+		if charLit.valueChar == 0 {
+			break
+		}
+		s += string(charLit.valueChar)
+	}
+	return s
+}
+
+func nativeStrcpy(ctx *RuntimeContext) {
+	srcPtrVal := pop(ctx)
+	destPtrVal := pop(ctx)
+
+	if srcPtrVal.Type() != LiteralInt || destPtrVal.Type() != LiteralInt {
+		panic(ctx.CurrentInstruction.Error("strcpy pointers must be integer"))
+	}
+
+	srcPtr := int(srcPtrVal.valueInt)
+	destPtr := int(destPtrVal.valueInt)
+
+	if srcPtr < 0 || srcPtr >= len(ctx.heap) {
+		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid source pointer"))
+	}
+	if destPtr < 0 || destPtr >= len(ctx.heap) {
+		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid destination pointer"))
+	}
+
+	for i := 0; srcPtr+i < len(ctx.heap); i++ {
+		charLit := ctx.heap[srcPtr+i]
+		if destPtr+i >= len(ctx.heap) {
+			ctx.heap = append(ctx.heap, CharLiteral(0))
+		}
+		ctx.heap[destPtr+i] = charLit
+		if charLit.Type() == LiteralChar && charLit.valueChar == 0 {
+			break
+		}
+	}
+	push(ctx, destPtrVal)
+}
+
+// Native function ID 92: memcpy
+// Stack inputs: [dest, src, size] (top is size)
+// Stack output: [dest]
+func nativeMemcpy(ctx *RuntimeContext) {
+	sizeVal := pop(ctx)
+	srcPtrVal := pop(ctx)
+	destPtrVal := pop(ctx)
+
+	if sizeVal.Type() != LiteralInt || srcPtrVal.Type() != LiteralInt || destPtrVal.Type() != LiteralInt {
+		panic(ctx.CurrentInstruction.Error("memcpy arguments must be integer"))
+	}
+
+	size := int(sizeVal.valueInt)
+	srcPtr := int(srcPtrVal.valueInt)
+	destPtr := int(destPtrVal.valueInt)
+
+	if srcPtr < 0 || srcPtr+size > len(ctx.heap) { // Strict bound check for src
+		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid source range"))
+	}
+
+	// Extend dest if needed
+	if destPtr+size > len(ctx.heap) {
+		required := (destPtr + size) - len(ctx.heap)
+		for k := 0; k < required; k++ {
+			ctx.heap = append(ctx.heap, CharLiteral(0))
+		}
+	}
+
+	// Copy
+	for i := 0; i < size; i++ {
+		ctx.heap[destPtr+i] = ctx.heap[srcPtr+i]
+	}
+
+	push(ctx, destPtrVal)
 }

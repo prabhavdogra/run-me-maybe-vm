@@ -2,20 +2,26 @@ package tests
 
 // Common macro definitions for tests
 var StdDefs = map[string]string{
-	"stddefs.wm": `@def STDOUT 1
-	@def STDIN 0
-	@def open native 0
-	@def write native 1
-	@def read native 2
-	@def close native 3
-	@def free native 4
-	@def malloc native 5
-	@def exit native 6
+	"stddefs.wm": `@def STDIN 0
+	@def STDOUT 1
+	@def STDERR 2
 
 	@def RONLY 0
 	@def WONLY 1
 	@def RDWR 2
 	@def CREAT 64
 	@def EXCL 128
+
+	@def open native 0
+	@def write native 1
+	@def read native 2
+	@def close native 3
+	@def malloc native 4
+	@def free native 5
+	@def exit native 60
+	@def strcmp native 90
+	@def strcpy native 91
+	@def memcpy native 92
+	@def int_to_str native 99
 	`,
 }

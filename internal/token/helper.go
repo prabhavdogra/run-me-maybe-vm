@@ -256,6 +256,8 @@ func GenerateString(input string, currentIndex int, ctx TokenContext) (Token, in
 				strValue += "\""
 			case '\\':
 				strValue += "\\"
+			case '0':
+				strValue += "\000"
 			default:
 				panic(ctx.Error(fmt.Sprintf("unknown escape character: \\%c", input[currentIndex])))
 			}

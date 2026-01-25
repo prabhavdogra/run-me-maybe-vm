@@ -10,8 +10,8 @@ import (
 type Machine struct {
 	stack           []Literal
 	instructions    []Instruction
-	heap            map[int64][]Literal
-	heapPtr         int64
+	heap            []Literal
+	allocations     map[int]int // ptr -> size, for safety checks
 	input           io.Reader
 	output          io.Writer
 	fileDescriptors map[int64]*os.File
