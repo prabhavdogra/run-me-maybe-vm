@@ -45,6 +45,8 @@ const (
 	InstructionInDupStr
 	InstructionSwapStr
 	InstructionInSwapStr
+	InstructionCastIntToFloat
+	InstructionCastFloatToInt
 	InstructionHalt
 )
 
@@ -144,6 +146,10 @@ func (i InstructionSet) String() string {
 		return "SWAP_STR"
 	case InstructionInSwapStr:
 		return "INSWAP_STR"
+	case InstructionCastIntToFloat:
+		return "ITOF"
+	case InstructionCastFloatToInt:
+		return "FTOI"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
@@ -217,6 +223,18 @@ func runInstructions(machine *Machine) *Machine {
 				panic("ERROR: inswap_str requires integer arguments")
 			}
 			indexSwapStr(ctx, instr.value.valueInt)
+		case InstructionCastIntToFloat:
+			val := pop(ctx)
+			if val.Type() != LiteralInt {
+				panic(ctx.CurrentInstruction.Error("itof requires an integer"))
+			}
+			push(ctx, FloatLiteral(float64(val.valueInt)))
+		case InstructionCastFloatToInt:
+			val := pop(ctx)
+			if val.Type() != LiteralFloat {
+				panic(ctx.CurrentInstruction.Error("ftoi requires a float"))
+			}
+			push(ctx, IntLiteral(int64(val.valueFloat)))
 		case InstructionPush:
 			push(ctx, instr.value)
 		case InstructionPushStr:

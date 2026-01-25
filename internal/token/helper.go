@@ -95,6 +95,10 @@ func (tt TokenType) String() string {
 		return "ret"
 	case TypeEntrypoint:
 		return "entrypoint"
+	case TypeCastIntToFloat:
+		return "itof"
+	case TypeCastFloatToInt:
+		return "ftoi"
 	default:
 		return "invalid"
 	}
@@ -201,6 +205,10 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypeRet
 	case "entrypoint":
 		return TypeEntrypoint
+	case "itof":
+		return TypeCastIntToFloat
+	case "ftoi":
+		return TypeCastFloatToInt
 	default:
 		return checkLabelType(name)
 	}

@@ -61,6 +61,8 @@ const (
 	TypeLabelDefinition
 	TypeLabel
 	TypeNull
+	TypeCastIntToFloat
+	TypeCastFloatToInt
 )
 
 type Token struct {

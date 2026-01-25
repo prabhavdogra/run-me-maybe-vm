@@ -56,6 +56,8 @@ go test -v ./...
 | `print` | Pop and print the top value (int, char, float). |
 | `halt` | Stop execution. |
 | `noop` | No operation. |
+| `itof` | Convert the top stack value from integer to float. |
+| `ftoi` | Convert the top stack value from float to integer. |
 | `push_str <string>` | (Directive) Allocates string in heap and adds to string stack at load time. |
 | `get_str <index>` | Push the pointer to the string at `index` in the string stack onto the data stack. |
 | `pop_str` | Remove the top string from the string stack. |

@@ -256,6 +256,14 @@ func inSwapStrIns(index int64, ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionInSwapStr, value: IntLiteral(index), line: ctx.Line, fileName: ctx.FileName}
 }
 
+func castIntToFloatIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionCastIntToFloat, line: ctx.Line, fileName: ctx.FileName}
+}
+
+func castFloatToIntIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionCastFloatToInt, line: ctx.Line, fileName: ctx.FileName}
+}
+
 func noopIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionNoOp, line: ctx.Line, fileName: ctx.FileName}
 }
@@ -456,6 +464,10 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 			}
 			cur = cur.Next
 			instructions = append(instructions, inSwapStrIns(value, ctx))
+		case token.TypeCastIntToFloat:
+			instructions = append(instructions, castIntToFloatIns(ctx))
+		case token.TypeCastFloatToInt:
+			instructions = append(instructions, castFloatToIntIns(ctx))
 		default:
 			panic(ctx.Error("unknown token type encountered during instruction generation"))
 		}

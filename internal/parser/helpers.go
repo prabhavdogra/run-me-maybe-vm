@@ -64,7 +64,8 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		current = current.AddNextNode(tokens[1])
 		instructionNumber++
 		startIndex++
-	case token.TypeInDup, token.TypeInSwap, token.TypeInDupStr, token.TypeInSwapStr:
+	case token.TypeInDup, token.TypeInSwap, token.TypeInDupStr,
+		token.TypeInSwapStr, token.TypeCastIntToFloat, token.TypeCastFloatToInt:
 		if len(tokens) < 2 || util.NotOneOf(nextToken.Type, token.TypeInt) {
 			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected integer value after '%s' instruction, but found %s '%s'", tokens[0].Type, nextToken.Type, nextToken.Text)))
 		}
@@ -213,7 +214,8 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			token.TypeMod, token.TypeCmpe, token.TypeCmpne, token.TypeCmpg,
 			token.TypeCmpl, token.TypeCmpge, token.TypeCmple, token.TypePrint,
 			token.TypeInt, token.TypeHalt, token.TypeLabel, token.TypeIntToStr,
-			token.TypeNull, token.TypePopStr, token.TypeDupStr, token.TypeSwapStr:
+			token.TypeNull, token.TypePopStr, token.TypeDupStr, token.TypeSwapStr,
+			token.TypeCastIntToFloat, token.TypeCastFloatToInt:
 			current = current.AddNextNode(curToken)
 			instructionNumber++
 		default:
