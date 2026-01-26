@@ -65,6 +65,7 @@ const (
 	TypeCastFloatToInt
 	TypeRef
 	TypeDeref
+	TypeMovStr
 )
 
 type Token struct {

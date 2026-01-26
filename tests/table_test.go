@@ -41,7 +41,9 @@ func TestPrograms(t *testing.T) {
 	cases = append(cases, NativeStringTest...)
 	cases = append(cases, fibRecTest)
 	cases = append(cases, castTests...)
+	cases = append(cases, castTests...)
 	cases = append(cases, pointerTests...)
+	cases = append(cases, movStrTests...)
 
 	literalLineRE := regexp.MustCompile(`.+`)
 
@@ -116,6 +118,8 @@ func TestPrograms(t *testing.T) {
 					return
 				} else if err != nil {
 					// Unexpected error
+					t.Logf("STDOUT: %s", outStr)
+					t.Logf("STDERR: %s", errStr)
 					t.Fatalf("program failed unexpectedly: %v\nstderr: %s", err, errStr)
 				}
 

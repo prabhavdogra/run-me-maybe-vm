@@ -49,6 +49,7 @@ const (
 	InstructionCastFloatToInt
 	InstructionRef
 	InstructionDeref
+	InstructionMovStr
 	InstructionHalt
 )
 
@@ -156,6 +157,8 @@ func (i InstructionSet) String() string {
 		return "REF"
 	case InstructionDeref:
 		return "DEREF"
+	case InstructionMovStr:
+		return "MOV_STR"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
@@ -257,6 +260,18 @@ func runInstructions(machine *Machine) *Machine {
 			}
 			val := ctx.heap[ptr]
 			push(ctx, val)
+		case InstructionMovStr:
+			val := pop(ctx)
+			if val.Type() == LiteralChar {
+				ptr := int64(len(ctx.heap))
+				ctx.heap = append(ctx.heap, val)
+				ctx.heap = append(ctx.heap, CharLiteral(0))
+				pushStr(ctx, ptr)
+			} else if val.Type() == LiteralInt {
+				pushStr(ctx, val.valueInt)
+			} else {
+				panic(ctx.CurrentInstruction.Error("mov_str requires char or int (pointer)"))
+			}
 		case InstructionPush:
 			push(ctx, instr.value)
 		case InstructionPushStr:

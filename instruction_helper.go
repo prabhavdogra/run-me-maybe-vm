@@ -272,6 +272,10 @@ func derefIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionDeref, line: ctx.Line, fileName: ctx.FileName}
 }
 
+func movStrIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionMovStr, line: ctx.Line, fileName: ctx.FileName}
+}
+
 func noopIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionNoOp, line: ctx.Line, fileName: ctx.FileName}
 }
@@ -480,6 +484,8 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 			instructions = append(instructions, refIns(ctx))
 		case token.TypeDeref:
 			instructions = append(instructions, derefIns(ctx))
+		case token.TypeMovStr:
+			instructions = append(instructions, movStrIns(ctx))
 		default:
 			panic(ctx.Error("unknown token type encountered during instruction generation"))
 		}
