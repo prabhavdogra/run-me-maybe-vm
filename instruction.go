@@ -506,6 +506,9 @@ func runInstructions(machine *Machine) *Machine {
 			case 6:
 				// free(ptr)
 				nativeFree(ctx)
+			case 7:
+				// scanf(ptr)
+				nativeScanf(ctx)
 			case 10:
 				// time
 				nativeTime(ctx)
@@ -796,7 +799,35 @@ func nativeFree(ctx *RuntimeContext) {
 		panic(ctx.CurrentInstruction.Error("double free or invalid heap pointer"))
 	}
 	delete(ctx.allocations, ptr)
-	// We don't shrink the heap slice, just mark as freed in allocations map
+	delete(ctx.allocations, ptr)
+}
+
+func nativeScanf(ctx *RuntimeContext) {
+	ptrVal := pop(ctx)
+	if ptrVal.Type() != LiteralInt {
+		panic(ctx.CurrentInstruction.Error("scanf buffer pointer must be integer"))
+	}
+	ptr := int(ptrVal.valueInt)
+
+	var input string
+	_, err := fmt.Scan(&input)
+	if err != nil {
+		if err == io.EOF {
+		} else {
+			panic(ctx.CurrentInstruction.Error(fmt.Sprintf("scanf error: %v", err)))
+		}
+	}
+
+	if ptr < 0 || ptr+len(input)+1 > len(ctx.heap) {
+		panic(ctx.CurrentInstruction.Error("segmentation fault: scanf overflow heap bounds"))
+	}
+
+	for i, char := range input {
+		ctx.heap[ptr+i] = CharLiteral(char)
+	}
+	ctx.heap[ptr+len(input)] = CharLiteral(0)
+
+	push(ctx, ptrVal)
 }
 
 func nativeMalloc(ctx *RuntimeContext) {

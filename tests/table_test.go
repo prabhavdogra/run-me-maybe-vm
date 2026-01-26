@@ -45,6 +45,7 @@ func TestPrograms(t *testing.T) {
 	cases = append(cases, pointerTests...)
 	cases = append(cases, movStrTests...)
 	cases = append(cases, indexTests...)
+	cases = append(cases, scanfTests...)
 
 	literalLineRE := regexp.MustCompile(`.+`)
 

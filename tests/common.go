@@ -19,6 +19,7 @@ var StdDefs = map[string]string{
 	@def malloc native 4
 	@def realloc native 5
 	@def free native 6
+	@def scanf native 7
 	@def time native 10
 	@def exit native 60
 	@def strcmp native 90
