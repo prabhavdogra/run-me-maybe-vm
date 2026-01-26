@@ -75,7 +75,7 @@ go test -v ./...
 
 ## Registers
 
-The VM supports 4 general-purpose registers: `r0`, `r1`, `r2`, `r3`.
+The VM supports 16 general-purpose registers: `r0` through `r15`.
 - Use `mov <reg> <val>` to set an immediate value.
 - Use `mov <reg> top` to pop the top value from the stack into the register.
 - Use `push <reg>` to push the value to the stack.

@@ -51,18 +51,17 @@ func pop(ctx *RuntimeContext) Literal {
 }
 
 func getRegisterIndex(name string) int {
-	switch name {
-	case "r0":
-		return 0
-	case "r1":
-		return 1
-	case "r2":
-		return 2
-	case "r3":
-		return 3
-	default:
-		panic(fmt.Sprintf("unknown register %s", name))
+	if len(name) < 2 || name[0] != 'r' {
+		panic("invalid register name: " + name)
 	}
+	idx, err := strconv.Atoi(name[1:])
+	if err != nil {
+		panic("invalid register index: " + name)
+	}
+	if idx < 0 || idx >= MaxRegisters {
+		panic("register index out of bounds: " + name)
+	}
+	return idx
 }
 func indexSwap(ctx *RuntimeContext, index int64) {
 	if index < 0 || int(index) >= len(ctx.stack) {

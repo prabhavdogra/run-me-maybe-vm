@@ -235,8 +235,6 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypeMov
 	case "top":
 		return TypeTop
-	case "r0", "r1", "r2", "r3":
-		return TypeRegister
 	default:
 		return checkLabelType(name)
 	}
@@ -255,12 +253,28 @@ func GetWord(input string, currentIndex int) (string, int) {
 	return keyword, currentIndex
 }
 
+func checkRegisterType(name string) TokenType {
+	if len(name) > 1 && name[0] == 'r' {
+		for _, r := range name[1:] {
+			if !unicode.IsDigit(r) {
+				return TypeInvalid
+			}
+		}
+		return TypeRegister
+	}
+	return TypeInvalid
+}
+
 func GenerateKeyword(input string, currentIndex int, ctx TokenContext, macros map[string]string) (Token, string, int) {
 	keyword, updatedIndex := GetWord(input, currentIndex)
 	if val, ok := macros[keyword]; ok {
 		return Token{}, val, updatedIndex
 	}
-	tokenType := checkBuiltinKeywords(keyword)
+	tokenType := checkRegisterType(keyword)
+	if tokenType == TypeInvalid {
+		tokenType = checkBuiltinKeywords(keyword)
+	}
+
 	if tokenType == TypeLabelDefinition {
 		keyword = keyword[:len(keyword)-1]
 	}

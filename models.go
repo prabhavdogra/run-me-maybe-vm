@@ -24,7 +24,8 @@ type RuntimeContext struct {
 	*Machine
 	returnStack        []int
 	CurrentInstruction Instruction
-	registers          [4]Literal
+	// Registers (r0-r15)
+	registers [MaxRegisters]Literal
 }
 
 type Instruction struct {
@@ -44,5 +45,6 @@ func (i Instruction) Error(message string) string {
 const maxStackSize = 1024
 const maxReturnStackSize = 1024
 const maxStrStackSize = 1024
+const MaxRegisters = 16
 
 var debugMode = false

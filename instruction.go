@@ -181,7 +181,8 @@ func runInstructions(machine *Machine) *Machine {
 	ctx := &RuntimeContext{
 		Machine:     machine,
 		returnStack: make([]int, 0, maxReturnStackSize),
-		registers:   [4]Literal{},
+		// Registers (r0-r15)
+		registers: [MaxRegisters]Literal{},
 	}
 	// Jump to entrypoint
 	insPtr := machine.entrypoint

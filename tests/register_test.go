@@ -50,9 +50,9 @@ var registerTests = []ProgramTestCase{
 	{
 		name: "registers_error_invalid_reg",
 		program: `
-			push r4
+			push r16
 		`,
-		expectedError: "found label 'r4'",
+		expectedError: "register index out of bounds: r16",
 	},
 	{
 		name: "registers_mov_top",
