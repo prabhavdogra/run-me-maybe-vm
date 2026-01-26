@@ -20,7 +20,7 @@ tools:
 	cd vscode-extension && vsce package
 
 install_tools:
-	cd vscode-extension && code --install-extension cmm-assembly-0.0.1.vsix
+	cd vscode-extension && code --install-extension compilememaybeasm-0.0.2.vsix
 
 uninstall_tools:
-	code --uninstall-extension undefined_publisher.cmm-assembly
+	code --uninstall-extension undefined_publisher.compilememaybeasm

@@ -1,14 +1,19 @@
 {
-  "name": "cmm-assembly",
-  "displayName": "cmm Assembly",
-  "description": "Syntax highlighting for cmm Assembly Language",
-  "version": "0.0.1",
+  "name": "compilememaybeasm",
+  "displayName": "CompileMeMaybe Assembly",
+  "description": "Syntax highlighting for CompileMeMaybe Assembly Language",
+  "version": "0.0.2",
+  "publisher": "compilememaybedev",
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
     "Programming Languages"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prabhavdogra/compile-me-maybe"
+  },
   "contributes": {
     "languages": [
       {
