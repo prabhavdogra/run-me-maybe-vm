@@ -67,4 +67,28 @@ var registerTests = []ProgramTestCase{
 		`,
 		expected: []string{"INT 50", "INT 999"},
 	},
+	{
+		name: "registers_mov_imm_types",
+		program: `
+			mov r0 42
+			push r0
+			print       ; INT 42
+			mov r1 3.14
+			push r1
+			print       ; FLOAT 3.140000
+			mov r2 'Z'
+			push r2
+			print       ; CHAR Z
+		`,
+		expected: []string{"INT 42", "FLOAT 3.140000", "CHAR Z"},
+	},
+	{
+		name: "registers_mov_start",
+		program: `
+			mov r0 100
+			push r0
+			print       ; INT 100
+		`,
+		expected: []string{"INT 100"},
+	},
 }

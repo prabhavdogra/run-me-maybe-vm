@@ -108,6 +108,18 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 		}
 		current = current.AddNextNode(tokens[1])
 		startIndex++
+	case token.TypeMov:
+		if nextToken.Type != token.TypeRegister {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected register after 'mov' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
+		}
+		valToken := tokens.PeekToken(2)
+		if util.NotOneOf(valToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar, token.TypeTop) {
+			panic(token.TokenContext{Line: tokens[0].Line, Character: tokens[0].Character, FileName: tokens[0].FileName}.Error(fmt.Sprintf("expected integer, float, char, or top value after register in 'mov' instruction, but found %s '%s'", valToken.Type, valToken.Text)))
+		}
+		current = current.AddNextNode(tokens[1])
+		current = current.AddNextNode(valToken)
+		instructionNumber++
+		startIndex += 2
 	case token.TypeRet:
 		instructionNumber++
 		startIndex++
