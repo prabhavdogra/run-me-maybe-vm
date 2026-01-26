@@ -69,14 +69,15 @@ go test -v ./...
 | `indup_str <idx>` | Duplicate the string at the given index in the string stack to the top. |
 | `swap_str` | Swap the top two strings on the string stack. |
 | `inswap_str <idx>` | Swap the top string with the string at the given index in the string stack. |
-| `mov <reg> <val>` | Move an immediate value (int, char, float) into register `r0`-`r3`. |
+| `mov <reg> <val>` | Move an immediate value (int, char, float) or `top` (pop from stack) into register `r0`-`r3`. |
 | `push <reg>` | Push the value of register `r0`-`r3` onto the stack. |
 | `entrypoint <label>` | (Directive) Sets the program entry point execution start label. |
 
 ## Registers
 
 The VM supports 4 general-purpose registers: `r0`, `r1`, `r2`, `r3`.
-- Use `mov <reg> <val>` to set a value.
+- Use `mov <reg> <val>` to set an immediate value.
+- Use `mov <reg> top` to pop the top value from the stack into the register.
 - Use `push <reg>` to push the value to the stack.
 
 

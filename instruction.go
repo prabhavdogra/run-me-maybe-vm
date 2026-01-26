@@ -53,6 +53,7 @@ const (
 	InstructionIndex
 	InstructionMov
 	InstructionPushReg
+	InstructionMovTop
 	InstructionHalt
 )
 
@@ -168,6 +169,8 @@ func (i InstructionSet) String() string {
 		return "MOV"
 	case InstructionPushReg:
 		return "PUSH_REG"
+	case InstructionMovTop:
+		return "MOV_TOP"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
@@ -283,29 +286,29 @@ func runInstructions(machine *Machine) *Machine {
 				panic(ctx.CurrentInstruction.Error("mov_str requires char or int (pointer)"))
 			}
 		case InstructionIndex:
-			idxVal := pop(ctx)
-			if idxVal.Type() != LiteralInt {
-				panic(ctx.CurrentInstruction.Error("index argument must be an integer"))
+			var val Literal
+			if instr.value.Type() == LiteralChar {
+				val = instr.value
+			} else {
+				val = pop(ctx) // Pop char from stack
 			}
-			idx := idxVal.valueInt
-
-			ptrVal := pop(ctx)
-			if ptrVal.Type() != LiteralInt {
-				panic(ctx.CurrentInstruction.Error("index pointer must be an integer"))
+			idx := pop(ctx).valueInt
+			ptrCtx := pop(ctx)
+			if ptrCtx.Type() != LiteralInt && ptrCtx.Type() != LiteralString { // String might be treated as ptr
+				panic(ctx.CurrentInstruction.Error("expected pointer for index"))
 			}
-			ptr := ptrVal.valueInt
 
 			if idx < 0 {
 				panic(ctx.CurrentInstruction.Error("index cannot be less than 0"))
 			}
-			targetAddr := ptr + idx
+
+			targetAddr := ptrCtx.valueInt + idx
 			if targetAddr < 0 || int(targetAddr) >= len(ctx.heap) {
 				panic(ctx.CurrentInstruction.Error("segmentation fault: index out of bounds"))
 			}
+			ctx.heap[targetAddr] = val
 
-			ctx.heap[targetAddr] = instr.value
-
-			push(ctx, ptrVal)
+			push(ctx, ptrCtx)
 		case InstructionMov:
 			if instr.registerIndex < 0 || instr.registerIndex >= len(ctx.registers) {
 				panic(ctx.CurrentInstruction.Error("invalid register index"))
@@ -316,6 +319,12 @@ func runInstructions(machine *Machine) *Machine {
 				panic(ctx.CurrentInstruction.Error("invalid register index"))
 			}
 			push(ctx, ctx.registers[instr.registerIndex])
+		case InstructionMovTop:
+			if instr.registerIndex < 0 || instr.registerIndex >= len(ctx.registers) {
+				panic(ctx.CurrentInstruction.Error("invalid register index"))
+			}
+			val := pop(ctx)
+			ctx.registers[instr.registerIndex] = val
 		case InstructionPush:
 			push(ctx, instr.value)
 		case InstructionPushStr:

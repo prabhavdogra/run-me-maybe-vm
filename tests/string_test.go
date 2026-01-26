@@ -358,6 +358,94 @@ var testFibTest = ProgramTestCase{
 	additionalFiles: StdDefs,
 }
 
+var testStringReverse = ProgramTestCase{
+	name: "string_reverse",
+	program: `
+	@imp "stddefs.wm"
+	_strrev:
+	push_str "testing"
+	dup_str
+	get_str 0 ; dst
+	dup
+	strlen ; [dst, len]
+
+	; Setup Pointers
+	; r2 = start (dst)
+	; r3 = end (dst + len - 1)
+
+	get_str 1
+	mov r2 top ; pop start -> r2
+
+	get_str 1
+	add ; end_exclusive
+	push 1
+	sub
+	mov r3 top ; pop end -> r3
+
+	loop:
+	push r2 ; start
+	push r3 ; end
+	cmpl ; start < end
+	push 0
+	cmpe ; start >= end
+	nzjmp end_loop
+
+	; Swap Logic
+	; c1 = *r2
+	push r2
+	deref
+	mov r0 top ; r0 = c1 values
+
+	; c2 = *r3
+	push r3
+	deref
+	mov r1 top ; r1 = c2 values
+
+	; Write c2 (r1) to r2
+	push r2
+	push 0
+	push r1
+	index
+	pop
+
+	; Write c1 (r0) to r3
+	push r3
+	push 0
+	push r0
+	index
+	pop
+
+	; Increment r2
+	push r2
+	push 1
+	add
+	mov r2 top
+
+	; Decrement r3
+	push r3
+	push 1
+	sub
+	mov r3 top
+
+	jmp loop
+
+	end_loop:
+
+	end:
+	get_str 1
+	push 1
+	write
+
+	push '\n'
+	ref
+	push 1
+	write
+
+	halt`,
+	expected:        []string{"gnitset"},
+	additionalFiles: StdDefs,
+}
+
 var stringTests = []ProgramTestCase{
 	explanatoryTest,
 	stringPushTest,
@@ -380,4 +468,5 @@ var stringTests = []ProgramTestCase{
 	stringInDupStrTest,
 	stringInSwapStrTest,
 	testFibTest,
+	testStringReverse,
 }

@@ -295,12 +295,20 @@ func indexIns(val rune, ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionIndex, value: CharLiteral(val), line: ctx.Line, fileName: ctx.FileName}
 }
 
+func indexStackIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionIndex, line: ctx.Line, fileName: ctx.FileName}
+}
+
 func pushRegIns(idx int, ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionPushReg, registerIndex: idx, line: ctx.Line, fileName: ctx.FileName}
 }
 
 func movIns(idx int, val Literal, ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionMov, registerIndex: idx, value: val, line: ctx.Line, fileName: ctx.FileName}
+}
+
+func movTopIns(idx int, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionMovTop, registerIndex: idx, line: ctx.Line, fileName: ctx.FileName}
 }
 
 func noopIns(ctx InstructionContext) Instruction {
@@ -526,38 +534,45 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 			if cur.Next == nil {
 				panic(ctx.Error("expected immediate value after register in mov"))
 			}
-			var val Literal
-			switch cur.Next.Value.Type {
-			case token.TypeInt:
-				v, _ := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
-				val = IntLiteral(v)
-			case token.TypeFloat:
-				v, _ := strconv.ParseFloat(cur.Next.Value.Text, 64)
-				val = FloatLiteral(v)
-			case token.TypeChar:
-				if len(cur.Next.Value.Text) == 0 {
-					panic(ctx.Error("empty char literal"))
+
+			if cur.Next.Value.Type == token.TypeTop {
+				instructions = append(instructions, movTopIns(regIdx, ctx))
+				cur = cur.Next
+			} else {
+				var val Literal
+				switch cur.Next.Value.Type {
+				case token.TypeInt:
+					v, _ := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
+					val = IntLiteral(v)
+				case token.TypeFloat:
+					v, _ := strconv.ParseFloat(cur.Next.Value.Text, 64)
+					val = FloatLiteral(v)
+				case token.TypeChar:
+					if len(cur.Next.Value.Text) == 0 {
+						panic(ctx.Error("empty char literal"))
+					}
+					val = CharLiteral(rune(cur.Next.Value.Text[0]))
+				case token.TypeTop:
+					instructions = append(instructions, movTopIns(regIdx, ctx))
+					cur = cur.Next
+					break
+				default:
+					panic(ctx.Error("mov only supports immediate values (int, float, char) or 'top'"))
 				}
-				val = CharLiteral(rune(cur.Next.Value.Text[0]))
-			default:
-				panic(ctx.Error("mov only supports immediate values (int, float, char)"))
+				instructions = append(instructions, movIns(regIdx, val, ctx))
+				cur = cur.Next
 			}
-			instructions = append(instructions, movIns(regIdx, val, ctx))
-			cur = cur.Next
 		case token.TypeIndex:
-			if cur.Next == nil {
-				panic(ctx.Error("expected char after index"))
-			}
-			if cur.Next.Value.Type == token.TypeChar {
+			if cur.Next != nil && cur.Next.Value.Type == token.TypeChar {
 				if len(cur.Next.Value.Text) == 0 {
 					panic(ctx.Error("empty character literal for index"))
 				}
 				charValue := rune(cur.Next.Value.Text[0])
 				instructions = append(instructions, indexIns(charValue, ctx))
+				cur = cur.Next
 			} else {
-				panic(ctx.Error("expected char after index"))
+				instructions = append(instructions, indexStackIns(ctx))
 			}
-			cur = cur.Next
 		default:
 			panic(ctx.Error("unknown token type encountered during instruction generation"))
 		}

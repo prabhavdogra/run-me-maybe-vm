@@ -143,16 +143,15 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected register after 'mov' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
 			}
 			// mov <reg> <val>
-			// Check 2nd argument (value)
 			valToken := tokens.PeekToken(i + 2)
-			if util.NotOneOf(valToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar) {
-				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected integer, float, or char value after register in 'mov' instruction, but found %s '%s'", valToken.Type, valToken.Text)))
+			if util.NotOneOf(valToken.Type, token.TypeInt, token.TypeFloat, token.TypeChar, token.TypeTop) {
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected integer, float, char, or top value after register in 'mov' instruction, but found %s '%s'", valToken.Type, valToken.Text)))
 			}
-			current = current.AddNextNode(curToken)  // mov
-			current = current.AddNextNode(nextToken) // reg
-			current = current.AddNextNode(valToken)  // val
+			current = current.AddNextNode(curToken)
+			current = current.AddNextNode(nextToken)
+			current = current.AddNextNode(valToken)
 			instructionNumber++
-			i += 2 // Skip reg and val
+			i += 2
 		case token.TypePushPtr:
 			if util.NotOneOf(nextToken.Type, token.TypeInt, token.TypeNull) {
 				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected integer or NULL after 'push_ptr' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
@@ -235,13 +234,19 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			current = current.AddNextNode(curToken)
 			instructionNumber++
 		case token.TypeIndex:
-			if nextToken.Type != token.TypeChar {
-				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected char after 'index' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
+			if nextToken.Type == token.TypeChar {
+				if len(nextToken.Text) == 0 {
+					panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error("empty character literal for index"))
+				}
+				current = current.AddNextNode(curToken)
+				current = current.AddNextNode(nextToken)
+				instructionNumber++
+				i++
+			} else {
+				// Index without immediate char (pops from stack)
+				current = current.AddNextNode(curToken)
+				instructionNumber++
 			}
-			current = current.AddNextNode(curToken)
-			current = current.AddNextNode(nextToken)
-			instructionNumber++
-			i++
 		default:
 			panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error("unknown token type encountered during parsing"))
 		}

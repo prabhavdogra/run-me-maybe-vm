@@ -48,10 +48,16 @@ var indexTests = []ProgramTestCase{
 		expectedError: "segmentation fault: index out of bounds",
 	},
 	{
-		name: "index_missing_char_arg",
+		name: "index_stack_usage",
 		program: `
-			index
+			push_str "Hello"
+			get_str 0    ; ptr
+			push 0       ; index
+			push 'J'     ; val
+			index        ; Set "Hello"[0] = 'J' using stack args
+			deref        ; Read char at ptr (index 0)
+			print        ; Should be 'J' (74)
 		`,
-		expectedError: "expected char after 'index' instruction",
+		expected: []string{"CHAR J"},
 	},
 }

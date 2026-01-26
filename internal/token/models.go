@@ -69,6 +69,7 @@ const (
 	TypeIndex
 	TypeRegister
 	TypeMov
+	TypeTop
 )
 
 type Token struct {

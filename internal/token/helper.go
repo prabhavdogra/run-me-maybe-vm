@@ -111,6 +111,8 @@ func (tt TokenType) String() string {
 		return "register"
 	case TypeMov:
 		return "mov"
+	case TypeTop:
+		return "top"
 	default:
 		return "invalid"
 	}
@@ -231,6 +233,8 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypeIndex
 	case "mov":
 		return TypeMov
+	case "top":
+		return TypeTop
 	case "r0", "r1", "r2", "r3":
 		return TypeRegister
 	default:
