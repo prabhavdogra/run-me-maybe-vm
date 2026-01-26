@@ -17,9 +17,14 @@ func writeProgram(machine *Machine, filePath string) {
 	}
 	defer f.Close()
 
-	buf := make([]byte, 16*len(machine.instructions)) // 16 bytes per instruction
+	// Calculate buffer size: 8 bytes for entrypoint + 16 bytes per instruction
+	buf := make([]byte, 8+16*len(machine.instructions))
+
+	// Write entrypoint (8 bytes) at the beginning
+	binary.LittleEndian.PutUint64(buf[0:8], uint64(machine.entrypoint))
+
 	for i := 0; i < len(machine.instructions); i++ {
-		off := i * 16
+		off := 8 + i*16 // Offset by 8 bytes for entrypoint
 
 		instr := machine.instructions[i]
 
@@ -39,6 +44,8 @@ func writeProgram(machine *Machine, filePath string) {
 			binary.LittleEndian.PutUint64(buf[off+8:off+16], uint64(instr.value.valueChar))
 		case LiteralNone:
 			binary.LittleEndian.PutUint64(buf[off+8:off+16], 0)
+		case LiteralPointer:
+			binary.LittleEndian.PutUint64(buf[off+8:off+16], uint64(instr.value.valuePtr))
 		}
 	}
 
