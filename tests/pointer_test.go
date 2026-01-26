@@ -112,7 +112,7 @@ var PrintIntTest = ProgramTestCase{
 			swap
 			push 0
 			swap
-			sub 
+			sub
 			swap
 		_not_neg:
 			pop

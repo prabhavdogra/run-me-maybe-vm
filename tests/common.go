@@ -29,4 +29,52 @@ var StdDefs = map[string]string{
 	@def int_to_str native 99
 	@def assert native 100
 	`,
+	"std.wm": `
+	print_newline:
+		push '\n'
+		ref
+		push 1
+		native 1
+		pop
+		ret
+
+	convert:
+		push 0
+		cmpg
+		zjmp _not_neg
+		push '-'
+		ref
+		push 1 
+		native 1
+		pop
+		swap
+		push 0
+		swap
+		sub 
+		swap
+		_not_neg:
+		pop
+		push 9
+		cmpl
+		zjmp _lessthannine
+		pop
+		dup
+		push 10
+		div
+		call convert 
+		_lessthannine:
+		pop
+		push 10
+		mod
+		push 48
+		add
+		ref
+		push 1 
+		native 1
+		ret
+
+	printint:
+		call convert
+		pop
+		ret`,
 }

@@ -344,8 +344,6 @@ func runInstructions(machine *Machine) *Machine {
 			}
 			a := pop(ctx)
 			b := pop(ctx)
-			push(ctx, b)
-			push(ctx, a)
 			if b.Less(a) {
 				push(ctx, IntLiteral(1))
 			} else {

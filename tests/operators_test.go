@@ -114,10 +114,8 @@ var cmpgTestTrue = ProgramTestCase{
 	push 10
 	cmpg
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 0", "INT 10", "INT 5"},
+	expected: []string{"INT 0"},
 }
 
 // Test comparison greater than (false case)
@@ -127,10 +125,8 @@ var cmpgTestFalse = ProgramTestCase{
 	push 3
 	cmpg
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 1", "INT 3", "INT 5"},
+	expected: []string{"INT 1"},
 }
 
 // Test comparison less than (true case)
@@ -140,10 +136,8 @@ var cmplTestTrue = ProgramTestCase{
 	push 3
 	cmpl
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 0", "INT 3", "INT 10"},
+	expected: []string{"INT 0"},
 }
 
 // Test comparison less than (false case)
@@ -153,10 +147,8 @@ var cmplTestFalse = ProgramTestCase{
 	push 10
 	cmpl
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 1", "INT 10", "INT 3"},
+	expected: []string{"INT 1"},
 }
 
 // Test comparison greater or equal (true - greater)
