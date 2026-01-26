@@ -62,10 +62,8 @@ var cmpeTestTrue = ProgramTestCase{
 	push 5
 	cmpe
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 1", "INT 5", "INT 5"},
+	expected: []string{"INT 1"},
 }
 
 // Test comparison equal (false case)
@@ -75,10 +73,8 @@ var cmpeTestFalse = ProgramTestCase{
 	push 3
 	cmpe
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 0", "INT 3", "INT 5"},
+	expected: []string{"INT 0"},
 }
 
 // Test comparison not equal (true case)
@@ -88,10 +84,8 @@ var cmpneTestTrue = ProgramTestCase{
 	push 3
 	cmpne
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 1", "INT 3", "INT 5"},
+	expected: []string{"INT 1"},
 }
 
 // Test comparison not equal (false case)
@@ -101,10 +95,8 @@ var cmpneTestFalse = ProgramTestCase{
 	push 5
 	cmpne
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 0", "INT 5", "INT 5"},
+	expected: []string{"INT 0"},
 }
 
 // Test comparison greater than (true case)
@@ -158,10 +150,8 @@ var cmpgeTestTrue = ProgramTestCase{
 	push 10
 	cmpge
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 0", "INT 10", "INT 5"},
+	expected: []string{"INT 0"},
 }
 
 // Test comparison greater or equal (true - equal)
@@ -171,10 +161,8 @@ var cmpgeTestEqual = ProgramTestCase{
 	push 5
 	cmpge
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 1", "INT 5", "INT 5"},
+	expected: []string{"INT 1"},
 }
 
 // Test comparison greater or equal (false)
@@ -184,10 +172,8 @@ var cmpgeTestFalse = ProgramTestCase{
 	push 3
 	cmpge
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 1", "INT 3", "INT 10"},
+	expected: []string{"INT 1"},
 }
 
 // Test comparison less or equal (true - less)
@@ -197,10 +183,8 @@ var cmpleTestTrue = ProgramTestCase{
 	push 3
 	cmple
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 0", "INT 3", "INT 10"},
+	expected: []string{"INT 0"},
 }
 
 // Test comparison less or equal (true - equal)
@@ -210,10 +194,8 @@ var cmpleTestEqual = ProgramTestCase{
 	push 5
 	cmple
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 1", "INT 5", "INT 5"},
+	expected: []string{"INT 1"},
 }
 
 // Test comparison less or equal (false)
@@ -223,10 +205,8 @@ var cmpleTestFalse = ProgramTestCase{
 	push 10
 	cmple
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 1", "INT 10", "INT 3"},
+	expected: []string{"INT 1"},
 }
 
 // Test stack operations - dup
@@ -461,10 +441,8 @@ var charEqualTestTrue = ProgramTestCase{
 	push 'x'
 	cmpe
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 1", "CHAR x", "CHAR x"},
+	expected: []string{"INT 1"},
 }
 
 // Test char equality (false)
@@ -474,10 +452,8 @@ var charEqualTestFalse = ProgramTestCase{
 	push 'b'
 	cmpe
 	print
-	print
-	print
 	halt`,
-	expected: []string{"INT 0", "CHAR b", "CHAR a"},
+	expected: []string{"INT 0"},
 }
 
 // Test char dup

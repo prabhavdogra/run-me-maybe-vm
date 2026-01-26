@@ -83,8 +83,8 @@ var FizzBuzzTest = ProgramTestCase{
 			dup
 
 			push N 
-			cmpg                 ; Check if counter < N
-			nzjmp end            ; Exit if counter >= N
+			cmpg                 ; Check if counter < N. Stack: [counter, N, res]
+			nzjmp end            ; Exit if counter >= N. Stack: [counter, N]
 
 
 			jmp loop

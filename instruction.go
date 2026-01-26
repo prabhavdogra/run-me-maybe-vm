@@ -349,8 +349,10 @@ func runInstructions(machine *Machine) *Machine {
 		case InstructionPop:
 			pop(ctx)
 		case InstructionDup:
-			x := pop(ctx)
-			push(ctx, x)
+			if len(ctx.stack) == 0 {
+				panic(ctx.CurrentInstruction.Error("stack underflow"))
+			}
+			x := ctx.stack[len(ctx.stack)-1]
 			push(ctx, x)
 		case InstructionInDup:
 			if instr.value.Type() != LiteralInt {
@@ -358,10 +360,11 @@ func runInstructions(machine *Machine) *Machine {
 			}
 			indexDup(ctx, instr.value.valueInt)
 		case InstructionSwap:
-			a := pop(ctx)
-			b := pop(ctx)
-			push(ctx, a)
-			push(ctx, b)
+			if len(ctx.stack) < 2 {
+				panic(ctx.CurrentInstruction.Error("stack underflow"))
+			}
+			l := len(ctx.stack)
+			ctx.stack[l-1], ctx.stack[l-2] = ctx.stack[l-2], ctx.stack[l-1]
 		case InstructionInSwap:
 			if instr.value.Type() != LiteralInt {
 				panic("ERROR: inswap requires integer arguments")
@@ -377,8 +380,6 @@ func runInstructions(machine *Machine) *Machine {
 			}
 			a := pop(ctx)
 			b := pop(ctx)
-			push(ctx, b)
-			push(ctx, a)
 			if b.Equal(a) {
 				push(ctx, IntLiteral(1))
 			} else {
@@ -390,8 +391,6 @@ func runInstructions(machine *Machine) *Machine {
 			}
 			a := pop(ctx)
 			b := pop(ctx)
-			push(ctx, b)
-			push(ctx, a)
 			if !b.Equal(a) {
 				push(ctx, IntLiteral(1))
 			} else {
@@ -425,8 +424,6 @@ func runInstructions(machine *Machine) *Machine {
 			}
 			a := pop(ctx)
 			b := pop(ctx)
-			push(ctx, b)
-			push(ctx, a)
 			if b.GreaterOrEqual(a) {
 				push(ctx, IntLiteral(1))
 			} else {
@@ -438,8 +435,6 @@ func runInstructions(machine *Machine) *Machine {
 			}
 			a := pop(ctx)
 			b := pop(ctx)
-			push(ctx, b)
-			push(ctx, a)
 			if b.LessOrEqual(a) {
 				push(ctx, IntLiteral(1))
 			} else {

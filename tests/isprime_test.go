@@ -27,8 +27,6 @@ var isPrime = ProgramTestCase{
 			indup 1         ; [n, d, n, d]
 			cmpe            ; [n, d, n, d, res]
 			nzjmp is_prime  ; [n, d, n, d]
-			pop             ; [n, d, n]
-			pop             ; [n, d]
 
 			; Check if n "%" d == 0 (not prime)
 			indup 0         ; [n, d, n]
@@ -37,8 +35,6 @@ var isPrime = ProgramTestCase{
 			push 0          ; [n, d, rem, 0]
 			cmpe            ; [n, d, rem, 0, res]
 			nzjmp not_prime ; [n, d, rem, 0]
-			pop             ; [n, d, rem]
-			pop             ; [n, d]
 
 			; d++
 			push 1
@@ -46,20 +42,16 @@ var isPrime = ProgramTestCase{
 			jmp check_loop
 
 		is_prime:
-			; Entered with [n, d, n, d]
-			pop
-			pop             ; [n, d]
-			pop             ; [n]
-			indup 0         ; [n, n]
-			print           ; print n. stack: [n]
-			jmp next_iter
+		; Entered with [n, d, n, d]
+		pop             ; [n]
+		indup 0         ; [n, n]
+		print           ; print n. stack: [n]
+		jmp next_iter
 
-		not_prime:
-			; Entered with [n, d, rem, 0]
-			pop
-			pop             ; [n, d]
-			pop             ; [n]
-			jmp next_iter
+	not_prime:
+		; Entered with [n, d, rem, 0]
+		pop             ; [n]
+		jmp next_iter
 
 		next_iter:
 			; Stack: [n]

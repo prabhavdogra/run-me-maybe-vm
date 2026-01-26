@@ -171,19 +171,16 @@ var stringLengthTest = ProgramTestCase{
 			push 0
 			cmpe
 			nzjmp length_done
-			pop            ; Clean up cmpe result (0)
-			pop            ; Clean up operand (0)
 			pop            ; Clean up operand (char)
 			
 			; At this point stack is [..., acc]
+			; We popped the char, so we consumed it.
 			; We popped the char, so we consumed it.
 			push 1
 			add            ; Increment accumulator
 			jmp length_loop
 
 		length_done:
-			pop            ; Clean up cmpe operand (0)
-			pop            ; Clean up cmpe operand (0)
 			pop            ; Clean up stack sentinel (0)
 			push 11        ; Expected length
 			cmpe
@@ -302,7 +299,6 @@ var testFibTest = ProgramTestCase{
 	push 0
 	cmpe
 	nzjmp end
-	pop
 	inswap 0
 
 	indup 2

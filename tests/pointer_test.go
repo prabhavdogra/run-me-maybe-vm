@@ -109,37 +109,47 @@ var PrintIntTest = ProgramTestCase{
 			ret
 
 		convert:
-			dup
-			push 0
-			cmpl
-			zjmp _not_neg
-			push '-'
-			ref
-			push 1 
-			native 1
-			pop
-			push 0
-			swap
-			sub
-			_not_neg:
-			dup
-			push 9
-			cmpg
-			zjmp _lessthannine
-			dup
-			push 10
-			div
-			call convert 
-			_lessthannine:
-			push 10
-			mod
-			push 48
-			add
-			ref
-			push 1 
-			native 1
-			pop
-			ret
+		dup              ; [n, n]
+		push 0           ; [n, n, 0]
+		cmpl             ; [n, n, 0, res]
+		zjmp _not_neg    ; [n, n, 0] if res==0 (n>=0)
+		; Fall-through: n < 0
+		push '-'
+		ref
+		push 1 
+		native 1
+		pop
+		swap             ; [n, 0] -> [0, n]
+		push 0
+		swap
+		sub              ; [n_abs]
+		jmp _after_neg
+		_not_neg:
+		; n >= 0
+		_after_neg:
+		dup              ; [n, n]
+		push 9           ; [n, n, 9]
+		cmpg             ; [n, n, 9, res]
+		zjmp _lessthannine  ; [n, n, 9] if res==0 (n<=9)
+		; Fall-through: n > 9
+		; Fall-through: n > 9
+		dup
+		push 10
+		div
+		call convert
+		jmp _after_recursive
+		_lessthannine:
+		; n <= 9
+		_after_recursive:
+		push 10
+		mod
+		push 48
+		add
+		ref
+		push 1 
+		native 1
+		pop
+		ret
 
 		printint:
 			call convert

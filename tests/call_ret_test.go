@@ -12,14 +12,14 @@ var fibRecTest = ProgramTestCase{
 		dup
 		dup
 		push 2
-		cmpl
+		cmpl             ; Stack: [n, n, 2, res]
 		push 2
 		swap
-		nzjmp fib_base_case
+		nzjmp fib_base_case  ; Stack: [n, n, 2]
 		
-		; Cleanup comparison operands (2, n)
+		; Cleanup comparison operands (n, 2)
 		pop
-		pop
+		pop              ; [n]
 
 		; Recursive case: fib(n-1) + fib(n-2)
 		dup
@@ -36,9 +36,9 @@ var fibRecTest = ProgramTestCase{
 		ret
 
 	fib_base_case:
-		; Cleanup comparison operands (2, n)
+		; Cleanup comparison operands (n, 2)
 		pop
-		pop
+		pop              ; [n]
 		ret
 
 	main:
