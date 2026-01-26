@@ -183,6 +183,14 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypeDiv
 	case "mod":
 		return TypeMod
+	case "add_f":
+		return TypeAdd
+	case "sub_f":
+		return TypeSub
+	case "mul_f":
+		return TypeMul
+	case "div_f":
+		return TypeDiv
 	case "cmpe":
 		return TypeCmpe
 	case "cmpne":

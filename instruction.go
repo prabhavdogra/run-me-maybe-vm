@@ -267,6 +267,7 @@ func runInstructions(machine *Machine) *Machine {
 		case InstructionDeref:
 			ptrVal := pop(ctx)
 			if ptrVal.Type() != LiteralPointer {
+				fmt.Printf("DEBUG: Deref failed. Type: %v, Value: %+v\n", ptrVal.Type(), ptrVal)
 				panic(ctx.CurrentInstruction.Error("deref requires a pointer"))
 			}
 			ptr := ptrVal.valuePtr
@@ -318,6 +319,13 @@ func runInstructions(machine *Machine) *Machine {
 			ctx.heap[targetAddr] = val
 
 			push(ctx, ptrCtx)
+		case InstructionMovTop:
+			val := pop(ctx)
+			regIdx := instr.value.valueInt
+			if regIdx < 0 || regIdx >= MaxRegisters {
+				panic(ctx.CurrentInstruction.Error("invalid register index"))
+			}
+			ctx.registers[regIdx] = val
 		case InstructionMov:
 			if instr.registerIndex < 0 || instr.registerIndex >= len(ctx.registers) {
 				panic(ctx.CurrentInstruction.Error("invalid register index"))
@@ -327,13 +335,8 @@ func runInstructions(machine *Machine) *Machine {
 			if instr.registerIndex < 0 || instr.registerIndex >= len(ctx.registers) {
 				panic(ctx.CurrentInstruction.Error("invalid register index"))
 			}
-			push(ctx, ctx.registers[instr.registerIndex])
-		case InstructionMovTop:
-			if instr.registerIndex < 0 || instr.registerIndex >= len(ctx.registers) {
-				panic(ctx.CurrentInstruction.Error("invalid register index"))
-			}
-			val := pop(ctx)
-			ctx.registers[instr.registerIndex] = val
+			val := ctx.registers[instr.registerIndex]
+			push(ctx, val)
 		case InstructionPush:
 			push(ctx, instr.value)
 		case InstructionPushStr:
@@ -454,7 +457,7 @@ func runInstructions(machine *Machine) *Machine {
 		case InstructionAdd:
 			a := pop(ctx)
 			b := pop(ctx)
-			push(ctx, b.Add(a))
+			push(ctx, a.Add(b))
 		case InstructionSub:
 			a := pop(ctx)
 			b := pop(ctx)

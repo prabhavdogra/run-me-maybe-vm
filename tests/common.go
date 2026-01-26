@@ -32,52 +32,154 @@ var StdDefs = map[string]string{
 	@def int_to_str native 99
 	@def assert native 100
 	`,
-	"std.wm": `
-	print_newline:
-		push '\n'
-		ref
-		push 1
-		native 1
-		pop
-		ret
+	"std.wm": `print_newline:
+    push '\n'
+    ref
+    push 1
+    native 1
+    pop
+    ret
 
-	convert:
-		push 0
-		cmpg
-		zjmp _not_neg
-		push '-'
-		ref
-		push 1 
-		native 1
-		pop
-		swap
-		push 0
-		swap
-		sub 
-		swap
-		_not_neg:
-		pop
-		push 9
-		cmpl
-		zjmp _lessthannine
-		pop
-		dup
-		push 10
-		div
-		call convert 
-		_lessthannine:
-		pop
-		push 10
-		mod
-		push 48
-		add
-		ref
-		push 1 
-		native 1
-		ret
+convert:
+    dup
+    push 0
+    cmpl
+    zjmp _not_neg
+    push '-'
+    ref
+    push 1 
+    native 1
+    pop
+    swap
+    push 0
+    swap
+    sub 
+    swap
+    _not_neg:
+    pop
+    push 9
+    cmpl
+    zjmp _lessthannine
+    pop
+    dup
+    push 10
+    div
+    call convert 
+    _lessthannine:
+    pop
+    push 10
+    mod
+    push 48
+    add
+    ref
+    push 1 
+    native 1
+    ret
 
-	printint:
-		call convert
-		pop
-		ret`,
+printint:
+    call convert
+    pop
+    ret
+
+printfloat:
+    dup
+    ftoi 
+    dup
+    inswap 0
+    swap
+    itof
+    sub_f
+    mov r0 top
+    pop
+    call printint
+    push '.'
+    ref
+    push 1
+    native 1
+    push r0
+    push 8
+    push 10
+    native 8
+    itof
+    mul_f
+    ftoi
+    push 0
+    cmpg
+    zjmp _notneg
+    pop
+    dup
+    push 2
+    mul
+    sub 
+    jmp _endneg
+    _notneg:
+    pop
+    _endneg:
+
+    call printint
+    pop
+    ret
+
+_strcmp_not_equal:
+    push 0
+    ret
+
+stringcmp:
+    _loop:
+    push r0
+    deref
+    push r1
+    deref
+    inswap 0
+    dup
+    push '\0'
+    cmpe
+    nzjmp _c0_is_null
+    swap
+    cmpe
+    zjmp _strcmp_not_equal
+    push r0
+    push 1
+    add
+    mov r0 top
+    push r1
+    push 1
+    add
+    mov r1 top
+    jmp _loop
+
+_c0_is_null:
+    pop
+    push '\0'
+    cmpe 
+    nzjmp _equal
+    push 0
+    ret
+
+_equal:
+    push 1
+    ret
+
+stringlen:
+    push '\0'
+    mov r0 top
+    push 0
+    swap
+    _strlen_loop:
+        dup
+        deref
+        push r0
+        cmpe
+        nzjmp _strlen_end
+        push 1
+        add
+        swap
+        push 1
+        add
+        swap
+        jmp _strlen_loop
+    _strlen_end:
+        pop
+        ret
+`,
 }

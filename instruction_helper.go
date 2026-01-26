@@ -309,7 +309,12 @@ func movIns(idx int, val Literal, ctx InstructionContext) Instruction {
 }
 
 func movTopIns(idx int, ctx InstructionContext) Instruction {
-	return Instruction{instructionType: InstructionMovTop, registerIndex: idx, line: ctx.Line, fileName: ctx.FileName}
+	return Instruction{
+		instructionType: InstructionMovTop,
+		value:           IntLiteral(int64(idx)),
+		line:            ctx.Line,
+		fileName:        ctx.FileName,
+	}
 }
 
 func noopIns(ctx InstructionContext) Instruction {
@@ -556,12 +561,8 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 						panic(ctx.Error("empty char literal"))
 					}
 					val = CharLiteral(rune(cur.Next.Value.Text[0]))
-				case token.TypeTop:
-					instructions = append(instructions, movTopIns(regIdx, ctx))
-					cur = cur.Next
-					break
 				default:
-					panic(ctx.Error("mov only supports immediate values (int, float, char) or 'top'"))
+					panic(ctx.Error("mov only supports immediate values (int, float, char)"))
 				}
 				instructions = append(instructions, movIns(regIdx, val, ctx))
 				cur = cur.Next
