@@ -263,13 +263,13 @@ func runInstructions(machine *Machine) *Machine {
 			val := pop(ctx)
 			ptr := int64(len(ctx.heap))
 			ctx.heap = append(ctx.heap, val)
-			push(ctx, IntLiteral(ptr))
+			push(ctx, PointerLiteral(ptr))
 		case InstructionDeref:
 			ptrVal := pop(ctx)
-			if ptrVal.Type() != LiteralInt {
-				panic(ctx.CurrentInstruction.Error("deref requires a pointer (int)"))
+			if ptrVal.Type() != LiteralPointer {
+				panic(ctx.CurrentInstruction.Error("deref requires a pointer"))
 			}
-			ptr := ptrVal.valueInt
+			ptr := ptrVal.valuePtr
 			if ptr < 0 || int(ptr) >= len(ctx.heap) {
 				panic(ctx.CurrentInstruction.Error("segmentation fault: invalid pointer"))
 			}
@@ -284,6 +284,8 @@ func runInstructions(machine *Machine) *Machine {
 				pushStr(ctx, ptr)
 			} else if val.Type() == LiteralInt {
 				pushStr(ctx, val.valueInt)
+			} else if val.Type() == LiteralPointer {
+				pushStr(ctx, val.valuePtr)
 			} else {
 				panic(ctx.CurrentInstruction.Error("mov_str requires char or int (pointer)"))
 			}
@@ -296,7 +298,7 @@ func runInstructions(machine *Machine) *Machine {
 			}
 			idx := pop(ctx).valueInt
 			ptrCtx := pop(ctx)
-			if ptrCtx.Type() != LiteralInt && ptrCtx.Type() != LiteralString { // String might be treated as ptr
+			if ptrCtx.Type() != LiteralPointer && ptrCtx.Type() != LiteralString {
 				panic(ctx.CurrentInstruction.Error("expected pointer for index"))
 			}
 
@@ -304,7 +306,12 @@ func runInstructions(machine *Machine) *Machine {
 				panic(ctx.CurrentInstruction.Error("index cannot be less than 0"))
 			}
 
-			targetAddr := ptrCtx.valueInt + idx
+			var targetAddr int64
+			if ptrCtx.Type() == LiteralPointer {
+				targetAddr = ptrCtx.valuePtr + idx
+			} else {
+				panic(ctx.CurrentInstruction.Error("expected pointer for index"))
+			}
 			if targetAddr < 0 || int(targetAddr) >= len(ctx.heap) {
 				panic(ctx.CurrentInstruction.Error("segmentation fault: index out of bounds"))
 			}
@@ -338,14 +345,18 @@ func runInstructions(machine *Machine) *Machine {
 			if instr.value.Type() != LiteralInt && instr.value.Type() != LiteralNull {
 				panic(ctx.CurrentInstruction.Error("push_ptr requires an integer or NULL value"))
 			}
-			push(ctx, instr.value)
+			if instr.value.Type() == LiteralNull {
+				push(ctx, instr.value)
+			} else {
+				push(ctx, PointerLiteral(instr.value.valueInt))
+			}
 		case InstructionGetStr:
 			idx := int(instr.value.valueInt)
 			if idx < 0 || idx >= len(machine.strStack) {
 				panic(ctx.CurrentInstruction.Error("string index out of bounds"))
 			}
 			ptr := machine.strStack[idx]
-			push(ctx, IntLiteral(ptr))
+			push(ctx, PointerLiteral(ptr))
 		case InstructionPop:
 			pop(ctx)
 		case InstructionDup:
@@ -593,7 +604,7 @@ func nativeIntToStr(ctx *RuntimeContext) {
 		ctx.heap = append(ctx.heap, CharLiteral(char))
 	}
 	ctx.heap = append(ctx.heap, CharLiteral(0))
-	push(ctx, IntLiteral(int64(ptr)))
+	push(ctx, PointerLiteral(int64(ptr)))
 }
 
 // Open a file
@@ -632,12 +643,12 @@ func nativeOpen(ctx *RuntimeContext) {
 
 	// Pop filename pointer
 	ptrVal := pop(ctx)
-	if ptrVal.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("open filename pointer must be integer"))
+	if ptrVal.Type() != LiteralPointer {
+		panic(ctx.CurrentInstruction.Error("open filename pointer must be pointer"))
 	}
 
 	// Read filename from heap
-	ptr := int(ptrVal.valueInt)
+	ptr := int(ptrVal.valuePtr)
 	if ptr < 0 || ptr+length > len(ctx.heap) {
 		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid heap pointer for filename"))
 	}
@@ -682,8 +693,8 @@ func nativeWrite(ctx *RuntimeContext) {
 	}
 
 	ptr := pop(ctx) // Ptr
-	if ptr.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("write string pointer must be integer"))
+	if ptr.Type() != LiteralPointer {
+		panic(ctx.CurrentInstruction.Error("write string pointer must be pointer"))
 	}
 
 	var writer io.Writer
@@ -699,7 +710,7 @@ func nativeWrite(ctx *RuntimeContext) {
 		}
 	}
 
-	ptrIdx := int(ptr.valueInt)
+	ptrIdx := int(ptr.valuePtr)
 	if ptrIdx < 0 || ptrIdx >= len(ctx.heap) {
 		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid heap pointer"))
 	}
@@ -725,10 +736,10 @@ func nativeWrite(ctx *RuntimeContext) {
 
 // Read from a file descriptor into a buffer
 func nativeRead(ctx *RuntimeContext) {
-	// Arguments: [..., fd, len, ptr] (Top is ptr)
-	ptrVal := pop(ctx)
-	if ptrVal.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("read buffer pointer must be integer"))
+	// Arguments: [ptr, len, fd] (Top is fd)
+	fdVal := pop(ctx)
+	if fdVal.Type() != LiteralInt {
+		panic(ctx.CurrentInstruction.Error("read fd must be integer"))
 	}
 
 	lenVal := pop(ctx)
@@ -737,9 +748,9 @@ func nativeRead(ctx *RuntimeContext) {
 	}
 	length := int(lenVal.valueInt)
 
-	fdVal := pop(ctx)
-	if fdVal.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("read fd must be integer"))
+	ptrVal := pop(ctx)
+	if ptrVal.Type() != LiteralPointer {
+		panic(ctx.CurrentInstruction.Error("read buffer pointer must be pointer"))
 	}
 	fd := int64(fdVal.valueInt)
 
@@ -755,7 +766,7 @@ func nativeRead(ctx *RuntimeContext) {
 	}
 
 	// Validate Heap Pointer and Size
-	ptr := int(ptrVal.valueInt)
+	ptr := int(ptrVal.valuePtr)
 
 	// Safety check against allocation size if tracked
 	if allocSize, ok := ctx.allocations[ptr]; ok {
@@ -816,10 +827,10 @@ func nativeFree(ctx *RuntimeContext) {
 	if ptrVal.Type() == LiteralNull {
 		return
 	}
-	if ptrVal.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("free pointer must be integer"))
+	if ptrVal.Type() != LiteralPointer {
+		panic(ctx.CurrentInstruction.Error("free pointer must be pointer"))
 	}
-	ptr := int(ptrVal.valueInt)
+	ptr := int(ptrVal.valuePtr)
 
 	// Check allocations map
 	if _, ok := ctx.allocations[ptr]; !ok {
@@ -831,10 +842,10 @@ func nativeFree(ctx *RuntimeContext) {
 
 func nativeScanf(ctx *RuntimeContext) {
 	ptrVal := pop(ctx)
-	if ptrVal.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("scanf buffer pointer must be integer"))
+	if ptrVal.Type() != LiteralPointer {
+		panic(ctx.CurrentInstruction.Error("scanf buffer pointer must be pointer"))
 	}
-	ptr := int(ptrVal.valueInt)
+	ptr := int(ptrVal.valuePtr)
 
 	var input string
 	_, err := fmt.Scan(&input)
@@ -875,7 +886,7 @@ func nativeMalloc(ctx *RuntimeContext) {
 	ctx.allocations[ptr] = size
 
 	// Push Pointer
-	push(ctx, IntLiteral(int64(ptr)))
+	push(ctx, PointerLiteral(int64(ptr)))
 }
 
 func nativeExit(ctx *RuntimeContext) {
@@ -913,19 +924,19 @@ func nativeFloatToStr(ctx *RuntimeContext) {
 		ctx.heap = append(ctx.heap, CharLiteral(ch))
 	}
 	ctx.heap = append(ctx.heap, CharLiteral(0))
-	push(ctx, IntLiteral(ptr))
+	push(ctx, PointerLiteral(int64(ptr)))
 }
 
 func nativeStrcmp(ctx *RuntimeContext) {
 	ptr2Val := pop(ctx)
 	ptr1Val := pop(ctx)
 
-	if ptr1Val.Type() != LiteralInt || ptr2Val.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("strcmp pointers must be integer"))
+	if ptr1Val.Type() != LiteralPointer || ptr2Val.Type() != LiteralPointer {
+		panic(ctx.CurrentInstruction.Error("strcmp pointers must be pointer"))
 	}
 
-	ptr1 := ptr1Val.valueInt
-	ptr2 := ptr2Val.valueInt
+	ptr1 := ptr1Val.valuePtr
+	ptr2 := ptr2Val.valuePtr
 
 	s1 := getStringFromHeap(ctx, ptr1)
 	s2 := getStringFromHeap(ctx, ptr2)
@@ -960,12 +971,12 @@ func nativeStrcpy(ctx *RuntimeContext) {
 	srcPtrVal := pop(ctx)
 	destPtrVal := pop(ctx)
 
-	if srcPtrVal.Type() != LiteralInt || destPtrVal.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("strcpy pointers must be integer"))
+	if srcPtrVal.Type() != LiteralPointer || destPtrVal.Type() != LiteralPointer {
+		panic(ctx.CurrentInstruction.Error("strcpy pointers must be pointer"))
 	}
 
-	srcPtr := int(srcPtrVal.valueInt)
-	destPtr := int(destPtrVal.valueInt)
+	srcPtr := int(srcPtrVal.valuePtr)
+	destPtr := int(destPtrVal.valuePtr)
 
 	if srcPtr < 0 || srcPtr >= len(ctx.heap) {
 		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid source pointer"))
@@ -995,13 +1006,13 @@ func nativeMemcpy(ctx *RuntimeContext) {
 	srcPtrVal := pop(ctx)
 	destPtrVal := pop(ctx)
 
-	if sizeVal.Type() != LiteralInt || srcPtrVal.Type() != LiteralInt || destPtrVal.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("memcpy arguments must be integer"))
+	if sizeVal.Type() != LiteralInt || srcPtrVal.Type() != LiteralPointer || destPtrVal.Type() != LiteralPointer {
+		panic(ctx.CurrentInstruction.Error("memcpy arguments must be valid (src/dest: ptr, size: int)"))
 	}
 
 	size := int(sizeVal.valueInt)
-	srcPtr := int(srcPtrVal.valueInt)
-	destPtr := int(destPtrVal.valueInt)
+	srcPtr := int(srcPtrVal.valuePtr)
+	destPtr := int(destPtrVal.valuePtr)
 
 	if srcPtr < 0 || srcPtr+size > len(ctx.heap) { // Strict bound check for src
 		panic(ctx.CurrentInstruction.Error("segmentation fault: invalid source range"))
@@ -1030,8 +1041,8 @@ func nativeRealloc(ctx *RuntimeContext) {
 	if sizeVal.Type() != LiteralInt {
 		panic(ctx.CurrentInstruction.Error("realloc size must be integer"))
 	}
-	if ptrVal.Type() != LiteralInt && ptrVal.Type() != LiteralNull {
-		panic(ctx.CurrentInstruction.Error("realloc pointer must be integer or NULL"))
+	if ptrVal.Type() != LiteralPointer && ptrVal.Type() != LiteralNull {
+		panic(ctx.CurrentInstruction.Error("realloc pointer must be pointer or NULL"))
 	}
 
 	size := int(sizeVal.valueInt)
@@ -1046,11 +1057,11 @@ func nativeRealloc(ctx *RuntimeContext) {
 			ctx.heap = append(ctx.heap, CharLiteral(0))
 		}
 		ctx.allocations[newPtr] = size
-		push(ctx, IntLiteral(int64(newPtr)))
+		push(ctx, PointerLiteral(int64(newPtr)))
 		return
 	}
 
-	ptr := int(ptrVal.valueInt)
+	ptr := int(ptrVal.valuePtr)
 
 	// Check existing allocation
 	oldSize, ok := ctx.allocations[ptr]
@@ -1081,7 +1092,7 @@ func nativeRealloc(ctx *RuntimeContext) {
 	// 'Free' old (remove from allocations)
 	delete(ctx.allocations, ptr)
 
-	push(ctx, IntLiteral(int64(newPtr)))
+	push(ctx, PointerLiteral(int64(newPtr)))
 }
 
 func nativeTime(ctx *RuntimeContext) {
@@ -1093,12 +1104,12 @@ func nativeStrcat(ctx *RuntimeContext) {
 	srcPtrVal := pop(ctx)
 	destPtrVal := pop(ctx)
 
-	if srcPtrVal.Type() != LiteralInt || destPtrVal.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("strcat pointers must be integer"))
+	if srcPtrVal.Type() != LiteralPointer || destPtrVal.Type() != LiteralPointer {
+		panic(ctx.CurrentInstruction.Error("strcat pointers must be pointer"))
 	}
 
-	srcPtr := int(srcPtrVal.valueInt)
-	destPtr := int(destPtrVal.valueInt)
+	srcPtr := int(srcPtrVal.valuePtr)
+	destPtr := int(destPtrVal.valuePtr)
 
 	// Get length of dest
 	sDest := getStringFromHeap(ctx, int64(destPtr))
@@ -1135,10 +1146,10 @@ func nativeStrcat(ctx *RuntimeContext) {
 
 func nativeStrlen(ctx *RuntimeContext) {
 	ptrVal := pop(ctx)
-	if ptrVal.Type() != LiteralInt {
-		panic(ctx.CurrentInstruction.Error("strlen pointer must be integer"))
+	if ptrVal.Type() != LiteralPointer {
+		panic(ctx.CurrentInstruction.Error("strlen pointer must be pointer"))
 	}
-	s := getStringFromHeap(ctx, ptrVal.valueInt)
+	s := getStringFromHeap(ctx, ptrVal.valuePtr)
 	push(ctx, IntLiteral(int64(len(s))))
 }
 

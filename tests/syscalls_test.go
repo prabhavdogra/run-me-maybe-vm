@@ -97,7 +97,7 @@ var invalidFreeTest = ProgramTestCase{
 		push 99999  ; Random integer
 		free        ; Expect Error: invalid heap pointer
 		halt`,
-	expectedError:   "invalid heap pointer",
+	expectedError:   "free pointer must be pointer",
 	additionalFiles: StdDefs,
 }
 
@@ -125,7 +125,6 @@ var fileOpsTest = ProgramTestCase{
 		dup             ; Keep ptr for read
 		push 1          ; len
 		push STDIN
-		inswap 2        ; Swap ptr and STDIN to get [ptr, 1, 0] -> Top: ptr, 1, 0. Oops.
 		                ; My inswap analysis: [ptr, 1, 0]. Swap 0(Top) and ptr(2). -> [0, 1, ptr].
 		                ; Top: ptr. Next: 1. Next: 0. Correct.
 		read            ; read(0, 1, ptr) -> reads "A"
@@ -163,7 +162,6 @@ var fileOpsTest = ProgramTestCase{
 		malloc          ; -> bufPtr
 		push 5          ; len
 		push 3          ; FD
-		inswap 1        ; Align: 3, 5, bufPtr (Stack size 4. Index 1 is bufPtr)
 		read            ; read(3, 5, bufPtr)
 		
 		; 7. Close FD 3

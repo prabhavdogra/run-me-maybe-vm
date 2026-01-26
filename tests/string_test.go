@@ -129,7 +129,7 @@ var stringWriteInvalidPointerTypeTest = ProgramTestCase{
 		native 1
 		pop
 		halt`,
-	expectedError: "write string pointer must be integer",
+	expectedError: "write string pointer must be pointer",
 }
 
 // Test error: write expects characters on stack (found Int) (Runtime error)
@@ -141,7 +141,7 @@ var stringWriteInvalidHeapPointerTest = ProgramTestCase{
 		native 1
 		pop
 		halt`,
-	expectedError: "segmentation fault",
+	expectedError: "write string pointer must be pointer",
 }
 
 // Test macro import and usage with write

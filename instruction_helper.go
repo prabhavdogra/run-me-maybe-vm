@@ -38,6 +38,8 @@ func push(ctx *RuntimeContext, value Literal) {
 		ctx.stack = append(ctx.stack, value)
 	} else if value.Type() == LiteralNull {
 		ctx.stack = append(ctx.stack, value)
+	} else if value.Type() == LiteralPointer {
+		ctx.stack = append(ctx.stack, value)
 	}
 }
 

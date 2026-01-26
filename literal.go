@@ -14,6 +14,7 @@ const (
 	LiteralChar
 	LiteralString
 	LiteralNull
+	LiteralPointer
 )
 
 type Literal struct {
@@ -21,6 +22,7 @@ type Literal struct {
 	valueInt   int64
 	valueFloat float64
 	valueChar  rune
+	valuePtr   int64
 }
 
 func (l *Literal) Type() LiteralType {
@@ -54,6 +56,13 @@ func CharLiteral(value rune) Literal {
 	}
 }
 
+func PointerLiteral(value int64) Literal {
+	return Literal{
+		valueType: LiteralPointer,
+		valuePtr:  value,
+	}
+}
+
 func (l Literal) String() string {
 	if l.Type() == LiteralInt {
 		return fmt.Sprintf("INT %d", l.valueInt)
@@ -63,6 +72,8 @@ func (l Literal) String() string {
 		return fmt.Sprintf("CHAR %c", l.valueChar)
 	} else if l.Type() == LiteralNull {
 		return "NULL"
+	} else if l.Type() == LiteralPointer {
+		return fmt.Sprintf("PTR %d", l.valuePtr)
 	}
 	return "NONE"
 }
@@ -84,6 +95,8 @@ func (l Literal) Equal(other Literal) bool {
 		return l.valueChar == other.valueChar
 	case LiteralNull:
 		return true
+	case LiteralPointer:
+		return l.valuePtr == other.valuePtr
 	default:
 		return false
 	}
@@ -98,6 +111,8 @@ func (l Literal) Greater(other Literal) bool {
 		return l.valueInt > other.valueInt
 	case LiteralFloat:
 		return l.valueFloat > other.valueFloat
+	case LiteralPointer:
+		return l.valuePtr > other.valuePtr
 	default:
 		panic("ERROR: \"greater\" comparison not supported for this type")
 	}
@@ -112,6 +127,8 @@ func (l Literal) Less(other Literal) bool {
 		return l.valueInt < other.valueInt
 	case LiteralFloat:
 		return l.valueFloat < other.valueFloat
+	case LiteralPointer:
+		return l.valuePtr < other.valuePtr
 	default:
 		panic("ERROR: \"less\" comparison not supported for this type")
 	}
@@ -126,6 +143,8 @@ func (l Literal) GreaterOrEqual(other Literal) bool {
 		return l.valueInt >= other.valueInt
 	case LiteralFloat:
 		return l.valueFloat >= other.valueFloat
+	case LiteralPointer:
+		return l.valuePtr >= other.valuePtr
 	default:
 		panic("ERROR:\"greater or equal\" comparison not supported for this type")
 	}
@@ -140,34 +159,56 @@ func (l Literal) LessOrEqual(other Literal) bool {
 		return l.valueInt <= other.valueInt
 	case LiteralFloat:
 		return l.valueFloat <= other.valueFloat
+	case LiteralPointer:
+		return l.valuePtr <= other.valuePtr
 	default:
 		panic("ERROR: \"less or equal\" comparison not supported for this type")
 	}
 }
 
 func (l Literal) Add(other Literal) Literal {
-	if l.Type() != other.Type() {
+	if l.Type() == LiteralPointer && other.Type() == LiteralInt {
+	} else if l.Type() == LiteralInt && other.Type() == LiteralPointer {
+	} else if l.Type() != other.Type() {
 		panic("ERROR: \"add\" requires operands of same type")
 	}
 	switch l.Type() {
 	case LiteralInt:
+		if other.Type() == LiteralPointer {
+			return PointerLiteral(l.valueInt + other.valuePtr)
+		}
 		return IntLiteral(l.valueInt + other.valueInt)
 	case LiteralFloat:
 		return FloatLiteral(l.valueFloat + other.valueFloat)
+	case LiteralPointer:
+		if other.Type() == LiteralInt {
+			return PointerLiteral(l.valuePtr + other.valueInt)
+		}
+		panic("ERROR: \"add\" with pointer requires integer operand")
 	default:
 		panic("ERROR: \"add\" not supported for this type")
 	}
 }
 
 func (l Literal) Sub(other Literal) Literal {
-	if l.Type() != other.Type() {
+	if l.Type() == LiteralPointer && other.Type() == LiteralInt {
+	} else if l.Type() == LiteralInt && other.Type() == LiteralPointer {
+	} else if l.Type() != other.Type() {
 		panic("ERROR: \"sub\" requires operands of same type")
 	}
 	switch l.Type() {
 	case LiteralInt:
+		if other.Type() == LiteralPointer {
+			return PointerLiteral(l.valueInt - other.valuePtr)
+		}
 		return IntLiteral(l.valueInt - other.valueInt)
 	case LiteralFloat:
 		return FloatLiteral(l.valueFloat - other.valueFloat)
+	case LiteralPointer:
+		if other.Type() == LiteralInt {
+			return PointerLiteral(l.valuePtr - other.valueInt)
+		}
+		panic("ERROR: \"sub\" with pointer requires integer operand")
 	default:
 		panic("ERROR: \"sub\" not supported for this type")
 	}

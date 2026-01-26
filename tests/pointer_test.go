@@ -54,7 +54,7 @@ var DerefErrorTypeTest = ProgramTestCase{
 	program: `push 3.14
 		deref
 		halt`,
-	expectedError: "deref requires a pointer (int)",
+	expectedError: "deref requires a pointer",
 }
 
 var DerefErrorBoundsTest = ProgramTestCase{
@@ -62,7 +62,7 @@ var DerefErrorBoundsTest = ProgramTestCase{
 	program: `push 9999
 		deref
 		halt`,
-	expectedError: "segmentation fault: invalid pointer",
+	expectedError: "deref requires a pointer",
 }
 
 // Complex case: Pointer arithmetic (if allowed? indices are ints, so yes)
