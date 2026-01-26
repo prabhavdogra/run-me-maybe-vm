@@ -1,0 +1,128 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "cmm Assembly",
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#registers"
+        },
+        {
+            "include": "#numbers"
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#labels"
+        },
+        {
+            "include": "#directives"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "scopeName": "comment.line.semicolon.cmm",
+                    "match": ";.*$"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.cmm",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.cmm",
+                            "match": "\\\\."
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.single.cmm",
+                    "begin": "'",
+                    "end": "'",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.cmm",
+                            "match": "\\\\."
+                        }
+                    ]
+                }
+            ]
+        },
+        "registers": {
+            "patterns": [
+                {
+                    "name": "variable.language.register.cmm",
+                    "match": "\\b(r[0-9]+)\\b"
+                }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.float.cmm",
+                    "match": "\\b[0-9]+\\.[0-9]+\\b"
+                },
+                {
+                    "name": "constant.numeric.integer.cmm",
+                    "match": "\\b[0-9]+\\b"
+                }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.cmm",
+                    "match": "\\b(jmp|zjmp|nzjmp|call|ret|halt|entrypoint|native)\\b"
+                },
+                {
+                    "name": "keyword.control.directive.cmm",
+                    "match": "\\b(noop|print)\\b"
+                },
+                {
+                    "name": "keyword.operator.cmm",
+                    "match": "\\b(add|sub|mul|div|mod|cmpe|cmpne|cmpg|cmpl|cmpge|cmple|itof|ftoi|add_f|sub_f|mul_f|div_f)\\b"
+                },
+                {
+                    "name": "keyword.other.cmm",
+                    "match": "\\b(push|pop|dup|swap|inswap|indup|push_ptr|push_str|get_str|pop_str|dup_str|indup_str|swap_str|inswap_str|ref|deref|mov_str|index|mov|top|int_to_str)\\b"
+                },
+                {
+                    "name": "constant.language.null.cmm",
+                    "match": "\\bNULL\\b"
+                }
+            ]
+        },
+        "labels": {
+            "patterns": [
+                {
+                    "name": "entity.name.function.label.cmm",
+                    "match": "\\b[a-z_][a-z0-9_]*:"
+                },
+                {
+                    "name": "string.other.label.usage.cmm",
+                    "match": "\\b[a-z_][a-z0-9_]*\\b"
+                }
+            ]
+        },
+        "directives": {
+            "patterns": [
+                {
+                    "name": "keyword.control.directive.cmm",
+                    "match": "@(imp|def)"
+                }
+            ]
+        }
+    },
+    "scopeName": "source.cmm"
+}

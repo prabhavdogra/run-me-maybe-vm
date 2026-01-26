@@ -8,7 +8,7 @@ import "os"
 // Verifies that 'write' correctly outputs a string from the stack to Stdout (ID 1).
 var writeTest = ProgramTestCase{
 	name: "syscall_write",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push_str "hello"
 		get_str 0     ; Pushes ptr to "hello"
 		push STDOUT   ; Push File Descriptor (fd) 1 (Stdout)
@@ -21,7 +21,7 @@ var writeTest = ProgramTestCase{
 // Verifies that 'write' can target Stderr (ID 2), which is captured separately in tests.
 var writeStderrTest = ProgramTestCase{
 	name: "syscall_write_stderr",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push_str "error"
 		get_str 0
 		push 2        ; Push File Descriptor (fd) 2 (Stderr)
@@ -38,7 +38,7 @@ var writeStderrTest = ProgramTestCase{
 // 3. Deallocation (free) of the buffer.
 var echoLifecycleTest = ProgramTestCase{
 	name: "syscall_echo_lifecycle",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		; Allocate 5 bytes on Heap
 		push 5
 		malloc      ; Pops size 5, Pushes Heap Pointer (ptr)
@@ -61,7 +61,7 @@ var echoLifecycleTest = ProgramTestCase{
 // Verifies that attempting to free the same pointer twice causes a crash (safety check).
 var doubleFreeTest = ProgramTestCase{
 	name: "syscall_error_double_free",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push 10
 		malloc      ; Alloc ptr
 		dup         ; Dup ptr
@@ -76,7 +76,7 @@ var doubleFreeTest = ProgramTestCase{
 // Verifies that 'read' prevents writing more bytes than explicitly allocated (Heap Safety).
 var readOverflowTest = ProgramTestCase{
 	name: "syscall_error_read_overflow",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push 2
 		malloc      ; Allocate size 2
 		
@@ -93,7 +93,7 @@ var readOverflowTest = ProgramTestCase{
 // Verifies that 'free' prevents freeing arbitrary integers that are not valid heap pointers.
 var invalidFreeTest = ProgramTestCase{
 	name: "syscall_error_invalid_free",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push 99999  ; Random integer
 		free        ; Expect Error: invalid heap pointer
 		halt`,
@@ -105,7 +105,7 @@ var invalidFreeTest = ProgramTestCase{
 // Verifies that 'exit(code)' terminates the program with the specified status code.
 var exitTest = ProgramTestCase{
 	name: "syscall_exit_explicit",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push 69     ; Exit Code
 		exit
 		`,
@@ -117,7 +117,7 @@ var exitTest = ProgramTestCase{
 // Verifies that we can open a file, read from it, and close it.
 var fileOpsTest = ProgramTestCase{
 	name: "syscall_file_ops",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		; 1. Read filename "A" from Stdin into Heap
 		push 1          ; Size 1
 		malloc          ; -> ptr

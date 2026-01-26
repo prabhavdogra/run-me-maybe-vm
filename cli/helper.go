@@ -8,7 +8,7 @@ import (
 func GetArgs() Args {
 	args := Args{}
 	if len(os.Args) < 2 {
-		fmt.Printf("Usage: %s <sourcefile.wm>\n", os.Args[0])
+		fmt.Printf("Usage: %s <sourcefile.cmm>\n", os.Args[0])
 		return args
 	}
 

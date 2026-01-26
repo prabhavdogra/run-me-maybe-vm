@@ -2,7 +2,7 @@ package tests
 
 var explanatoryTest = ProgramTestCase{
 	name: "string_test2",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push_str "hello\n"
 		push_str "world\n"
 		get_str 1     ; Pushes ptr to "hello"
@@ -147,7 +147,7 @@ var stringWriteInvalidHeapPointerTest = ProgramTestCase{
 // Test macro import and usage with write
 var stringMacroImportTest = ProgramTestCase{
 	name: "string_macro_import",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push_str "Hello, world!\n"
 		get_str 0
 		push STDOUT
@@ -191,7 +191,7 @@ var stringLengthTest = ProgramTestCase{
 
 var intToStrTest = ProgramTestCase{
 	name: "int_to_str",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push 12345
 		int_to_str
 		push STDOUT
@@ -282,7 +282,7 @@ var stringInSwapStrTest = ProgramTestCase{
 
 var testFibTest = ProgramTestCase{
 	name: "t_fib",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 	@def N 30 
 
 	push_str "\n"
@@ -357,7 +357,7 @@ var testFibTest = ProgramTestCase{
 var testStringReverse = ProgramTestCase{
 	name: "string_reverse",
 	program: `
-	@imp "stddefs.wm"
+	@imp "stddefs.cmm"
 	_strrev:
 	push_str "testing"
 	dup_str

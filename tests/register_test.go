@@ -70,7 +70,7 @@ var registerTests = []ProgramTestCase{
 	{
 		name: "native_pow",
 		program: `
-			@imp "stddefs.wm"
+			@imp "stddefs.cmm"
 			push 3 ; power
 			push 2 ; base
 			pow
@@ -82,7 +82,7 @@ var registerTests = []ProgramTestCase{
 	{
 		name: "native_ftoa",
 		program: `
-			@imp "stddefs.wm"
+			@imp "stddefs.cmm"
 			push 3.14159
 			float_to_str
 			push 1

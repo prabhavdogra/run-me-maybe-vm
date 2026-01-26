@@ -2,7 +2,7 @@ package tests
 
 var StringEscapeTest = ProgramTestCase{
 	name: "string_escapes",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push_str "Hello\nWorld"
 		get_str 0
 		push STDOUT

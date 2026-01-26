@@ -2,7 +2,7 @@ package tests
 
 var StrlenTest = ProgramTestCase{
 	name: "strlen",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 		push_str "Any string here and you'll get the length!\n"
 		jmp main
 		

@@ -2,7 +2,7 @@ package tests
 
 var NegativeTest = ProgramTestCase{
 	name: "negative_numbers",
-	program: `@imp "stddefs.wm"
+	program: `@imp "stddefs.cmm"
 push_str "\n"
 push -35
 push -34

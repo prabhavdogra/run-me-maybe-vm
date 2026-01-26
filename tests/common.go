@@ -2,7 +2,7 @@ package tests
 
 // Common macro definitions for tests
 var StdDefs = map[string]string{
-	"stddefs.wm": `@def STDIN 0
+	"stddefs.cmm": `@def STDIN 0
 	@def STDOUT 1
 	@def STDERR 2
 
@@ -32,7 +32,7 @@ var StdDefs = map[string]string{
 	@def int_to_str native 99
 	@def assert native 100
 	`,
-	"std.wm": `print_newline:
+	"std.cmm": `print_newline:
     push '\n'
     ref
     push 1

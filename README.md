@@ -1,12 +1,12 @@
-# Go Stack Virtual Machine
+# CompileMeMaybe (cmm)
 
-A lightweight, stack-based virtual machine written in Go, featuring a custom assembly-like language, a lexer with preprocessor support, and a parser.
+A lightweight, stack-based virtual machine written in Go, featuring the custom **CompileMeMaybe** (`.cmm`) assembly language, a lexer with preprocessor support, and a parser.
 
 ## Features
 
 - **Stack-based Execution**: All operations occur on a central stack.
 - **Preprocessor**:
-  - `@imp "file.wm"`: Resolve and include external files.
+  - `@imp "file.cmm"`: Resolve and include external files.
   - `@def NAME VALUE`: Simple macro substitution.
 - **Support for Multiple Literals**: Integers, Floats, and Characters.
 - **Flexible Instruction Set**: Arithmetic, stack manipulation, control flow, and comparison.
@@ -21,13 +21,13 @@ A lightweight, stack-based virtual machine written in Go, featuring a custom ass
 
 ### Running a Program
 ```bash
-go run . path/to/source.wm
+go run . path/to/source.cmm
 ```
 
 ### Running in Debug Mode
 Debug mode prints the lexed tokens, parsed instruction list, and the final state of the stack.
 ```bash
-go run . path/to/source.wm --debug
+go run . path/to/source.cmm --debug
 ```
 
 ### Running Tests
@@ -106,7 +106,7 @@ All native syscalls are invoked via `native <ID>`. Arguments are popped from the
 
 - **Imports**: Resolve paths relative to the current file.
   ```assembly
-  @imp "stdlib.wm"
+  @imp "stdlib.cmm"
   ```
 - **Macros**: Simple text substitution for constants or shorthand.
   ```assembly
