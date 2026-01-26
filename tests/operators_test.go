@@ -36,8 +36,8 @@ var mulTest = ProgramTestCase{
 // Test division with integers
 var divTest = ProgramTestCase{
 	name: "division",
-	program: `push 4
-	push 20
+	program: `push 20
+	push 4
 	div
 	print
 	halt`,
@@ -110,45 +110,32 @@ var cmpneTestFalse = ProgramTestCase{
 // Test comparison greater than (true case)
 var cmpgTestTrue = ProgramTestCase{
 	name: "compare_greater_true",
-	program: `push 10
-	push 5
+	program: `push 5
+	push 10
 	cmpg
 	print
 	print
 	print
 	halt`,
-	expected: []string{"INT 0", "INT 5", "INT 10"},
+	expected: []string{"INT 0", "INT 10", "INT 5"},
 }
 
 // Test comparison greater than (false case)
 var cmpgTestFalse = ProgramTestCase{
 	name: "compare_greater_false",
-	program: `push 3
-	push 5
+	program: `push 5
+	push 3
 	cmpg
 	print
 	print
 	print
 	halt`,
-	expected: []string{"INT 1", "INT 5", "INT 3"},
+	expected: []string{"INT 1", "INT 3", "INT 5"},
 }
 
 // Test comparison less than (true case)
 var cmplTestTrue = ProgramTestCase{
 	name: "compare_less_true",
-	program: `push 3
-	push 10
-	cmpl
-	print
-	print
-	print
-	halt`,
-	expected: []string{"INT 0", "INT 10", "INT 3"},
-}
-
-// Test comparison less than (false case)
-var cmplTestFalse = ProgramTestCase{
-	name: "compare_less_false",
 	program: `push 10
 	push 3
 	cmpl
@@ -156,20 +143,33 @@ var cmplTestFalse = ProgramTestCase{
 	print
 	print
 	halt`,
-	expected: []string{"INT 1", "INT 3", "INT 10"},
+	expected: []string{"INT 0", "INT 3", "INT 10"},
+}
+
+// Test comparison less than (false case)
+var cmplTestFalse = ProgramTestCase{
+	name: "compare_less_false",
+	program: `push 3
+	push 10
+	cmpl
+	print
+	print
+	print
+	halt`,
+	expected: []string{"INT 1", "INT 10", "INT 3"},
 }
 
 // Test comparison greater or equal (true - greater)
 var cmpgeTestTrue = ProgramTestCase{
 	name: "compare_greater_equal_true",
-	program: `push 10
-	push 5
+	program: `push 5
+	push 10
 	cmpge
 	print
 	print
 	print
 	halt`,
-	expected: []string{"INT 0", "INT 5", "INT 10"},
+	expected: []string{"INT 0", "INT 10", "INT 5"},
 }
 
 // Test comparison greater or equal (true - equal)
@@ -188,27 +188,27 @@ var cmpgeTestEqual = ProgramTestCase{
 // Test comparison greater or equal (false)
 var cmpgeTestFalse = ProgramTestCase{
 	name: "compare_greater_equal_false",
-	program: `push 3
-	push 10
+	program: `push 10
+	push 3
 	cmpge
 	print
 	print
 	print
 	halt`,
-	expected: []string{"INT 1", "INT 10", "INT 3"},
+	expected: []string{"INT 1", "INT 3", "INT 10"},
 }
 
 // Test comparison less or equal (true - less)
 var cmpleTestTrue = ProgramTestCase{
 	name: "compare_less_equal_true",
-	program: `push 3
-	push 10
+	program: `push 10
+	push 3
 	cmple
 	print
 	print
 	print
 	halt`,
-	expected: []string{"INT 0", "INT 10", "INT 3"},
+	expected: []string{"INT 0", "INT 3", "INT 10"},
 }
 
 // Test comparison less or equal (true - equal)
@@ -227,14 +227,14 @@ var cmpleTestEqual = ProgramTestCase{
 // Test comparison less or equal (false)
 var cmpleTestFalse = ProgramTestCase{
 	name: "compare_less_equal_false",
-	program: `push 10
-	push 3
+	program: `push 3
+	push 10
 	cmple
 	print
 	print
 	print
 	halt`,
-	expected: []string{"INT 1", "INT 3", "INT 10"},
+	expected: []string{"INT 1", "INT 10", "INT 3"},
 }
 
 // Test stack operations - dup
@@ -366,10 +366,10 @@ var complexExpr1 = ProgramTestCase{
 // Test complex expression: 20 / (10 - 5)
 var complexExpr2 = ProgramTestCase{
 	name: "complex_expression_2",
-	program: `push 10
-	push 5
+	program: `push 30
+	push 10
 	sub
-	push 20
+	push 5
 	div
 	print
 	halt`,
@@ -423,8 +423,8 @@ var floatModTest = ProgramTestCase{
 // Test float division
 var floatDivTest = ProgramTestCase{
 	name: "float_division",
-	program: `push 2.0
-	push 10.0
+	program: `push 10.0
+	push 2.0
 	div
 	print
 	halt`,

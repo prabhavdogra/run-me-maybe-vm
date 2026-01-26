@@ -15,6 +15,7 @@ var FizzBuzzTest = ProgramTestCase{
 			get_str 0
 			push STDOUT
 			write
+			pop
 			inswap 0             ; Swap counter (stack[0]) with top (flag)
 			push 1
 			add                  ; Increment flag
@@ -26,6 +27,7 @@ var FizzBuzzTest = ProgramTestCase{
 			get_str 1
 			push STDOUT
 			write
+			pop
 			inswap 0
 			push 1
 			add
@@ -38,9 +40,11 @@ var FizzBuzzTest = ProgramTestCase{
 			int_to_str
 			push STDOUT
 			write
+			pop
 			get_str 2
 			push STDOUT
 			write
+			pop
 			jmp number_continue
 
 			main:
@@ -71,13 +75,14 @@ var FizzBuzzTest = ProgramTestCase{
 			get_str 2            ; Otherwise print newline (Fizz/Buzz was printed)
 			push STDOUT
 			write
+			pop
 			number_continue:
 
 			push 1
 			add                  ; Increment counter
 
 			push N 
-			cmpl                 ; Check if counter < N
+			cmpg                 ; Check if counter < N
 			nzjmp end            ; Exit if counter >= N
 			pop
 

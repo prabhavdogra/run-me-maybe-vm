@@ -63,6 +63,8 @@ const (
 	TypeNull
 	TypeCastIntToFloat
 	TypeCastFloatToInt
+	TypeRef
+	TypeDeref
 )
 
 type Token struct {

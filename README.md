@@ -58,6 +58,8 @@ go test -v ./...
 | `noop` | No operation. |
 | `itof` | Convert the top stack value from integer to float. |
 | `ftoi` | Convert the top stack value from float to integer. |
+| `ref` | Moves the top value to the heap and pushes a pointer (index) to it. |
+| `deref` | Pop a pointer (index) call and push the value stored at that heap location. |
 | `push_str <string>` | (Directive) Allocates string in heap and adds to string stack at load time. |
 | `get_str <index>` | Push the pointer to the string at `index` in the string stack onto the data stack. |
 | `pop_str` | Remove the top string from the string stack. |
@@ -74,7 +76,7 @@ All native syscalls are invoked via `native <ID>`. Arguments are popped from the
 | ID | Name | Arguments (Stack Top -> Bottom) | Returns (Pushes) | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `0` | `open` | `flags`, `len`, `ptr` | `fd` | Opens file at path `ptr` (length `len`) with `flags`. Returns new File Descriptor. |
-| `1` | `write` | `fd`, `ptr` | - | Writes null-terminated string at `ptr` to `fd`. Supports `1` (Stdout), `2` (Stderr). |
+| `1` | `write` | `fd`, `ptr` | `len` | Writes null-terminated string at `ptr` to `fd`. Returns bytes written. Supports `1` (Stdout), `2` (Stderr). |
 | `2` | `read` | `ptr`, `len`, `fd` | - | Reads `len` bytes from `fd` into heap buffer at `ptr`. Supports `0` (Stdin). |
 | `3` | `close` | `fd` | - | Closes the file descriptor `fd`. |
 | `4` | `malloc`| `size` | `ptr` | Allocates `size` bytes on the heap. Returns pointer. |

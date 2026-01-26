@@ -99,6 +99,10 @@ func (tt TokenType) String() string {
 		return "itof"
 	case TypeCastFloatToInt:
 		return "ftoi"
+	case TypeRef:
+		return "ref"
+	case TypeDeref:
+		return "deref"
 	default:
 		return "invalid"
 	}
@@ -209,6 +213,10 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypeCastIntToFloat
 	case "ftoi":
 		return TypeCastFloatToInt
+	case "ref":
+		return TypeRef
+	case "deref":
+		return TypeDeref
 	default:
 		return checkLabelType(name)
 	}
@@ -271,7 +279,30 @@ func GenerateChar(input string, currentIndex int, ctx TokenContext) (Token, int)
 	}
 
 	charValue := input[currentIndex]
-	currentIndex++ // skip the character
+	if charValue == '\\' {
+		currentIndex++
+		if currentIndex >= len(input) {
+			panic(fmt.Sprintf("ERROR: unterminated character literal at line %d", ctx.Line))
+		}
+		escapeChar := input[currentIndex]
+		switch escapeChar {
+		case 'n':
+			charValue = '\n'
+		case 't':
+			charValue = '\t'
+		case 'r':
+			charValue = '\r'
+		case '\\':
+			charValue = '\\'
+		case '\'':
+			charValue = '\''
+		case '0':
+			charValue = 0
+		default:
+			panic(fmt.Sprintf("ERROR: unknown escape character '\\%c' at line %d", escapeChar, ctx.Line))
+		}
+	}
+	currentIndex++ // skip the character (or the escape code)
 
 	if currentIndex >= len(input) || input[currentIndex] != '\'' {
 		panic(fmt.Sprintf("ERROR: unterminated character literal at line %d", ctx.Line))

@@ -11,7 +11,7 @@ var fibRecTest = ProgramTestCase{
 		; Arg n is on stack
 		dup
 		push 2
-		cmpg
+		cmpl
 		nzjmp fib_base_case
 		
 		; Cleanup comparison operands (2, n)

@@ -9,7 +9,7 @@ var isPrime = ProgramTestCase{
 			; Check if n > 100
 			indup 0         ; [n, n]
 			push 100        ; [n, n, 100]
-			cmpl            ; [n, n, 100, res]
+			cmpg            ; [n, n, 100, res]
 			nzjmp end       ; [n, n, 100]
 			pop             ; [n, n]
 			pop             ; [n]

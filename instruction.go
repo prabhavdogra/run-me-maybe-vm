@@ -47,6 +47,8 @@ const (
 	InstructionInSwapStr
 	InstructionCastIntToFloat
 	InstructionCastFloatToInt
+	InstructionRef
+	InstructionDeref
 	InstructionHalt
 )
 
@@ -150,6 +152,10 @@ func (i InstructionSet) String() string {
 		return "ITOF"
 	case InstructionCastFloatToInt:
 		return "FTOI"
+	case InstructionRef:
+		return "REF"
+	case InstructionDeref:
+		return "DEREF"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
@@ -235,6 +241,22 @@ func runInstructions(machine *Machine) *Machine {
 				panic(ctx.CurrentInstruction.Error("ftoi requires a float"))
 			}
 			push(ctx, IntLiteral(int64(val.valueFloat)))
+		case InstructionRef:
+			val := pop(ctx)
+			ptr := int64(len(ctx.heap))
+			ctx.heap = append(ctx.heap, val)
+			push(ctx, IntLiteral(ptr))
+		case InstructionDeref:
+			ptrVal := pop(ctx)
+			if ptrVal.Type() != LiteralInt {
+				panic(ctx.CurrentInstruction.Error("deref requires a pointer (int)"))
+			}
+			ptr := ptrVal.valueInt
+			if ptr < 0 || int(ptr) >= len(ctx.heap) {
+				panic(ctx.CurrentInstruction.Error("segmentation fault: invalid pointer"))
+			}
+			val := ctx.heap[ptr]
+			push(ctx, val)
 		case InstructionPush:
 			push(ctx, instr.value)
 		case InstructionPushStr:
@@ -280,61 +302,77 @@ func runInstructions(machine *Machine) *Machine {
 			b := pop(ctx)
 			push(ctx, b.Mod(a))
 		case InstructionCmpe:
+			if len(ctx.stack) < 2 {
+				panic(ctx.CurrentInstruction.Error("stack underflow"))
+			}
 			a := pop(ctx)
 			b := pop(ctx)
 			push(ctx, b)
 			push(ctx, a)
-			if a.Equal(b) {
+			if b.Equal(a) {
 				push(ctx, IntLiteral(1))
 			} else {
 				push(ctx, IntLiteral(0))
 			}
 		case InstructionCmpne:
+			if len(ctx.stack) < 2 {
+				panic(ctx.CurrentInstruction.Error("stack underflow"))
+			}
 			a := pop(ctx)
 			b := pop(ctx)
 			push(ctx, b)
 			push(ctx, a)
-			if !a.Equal(b) {
+			if !b.Equal(a) {
 				push(ctx, IntLiteral(1))
 			} else {
 				push(ctx, IntLiteral(0))
 			}
 		case InstructionCmpg:
+			if len(ctx.stack) < 2 {
+				panic(ctx.CurrentInstruction.Error("stack underflow"))
+			}
 			a := pop(ctx)
 			b := pop(ctx)
-			push(ctx, b)
-			push(ctx, a)
-			if a.Greater(b) {
+			if b.Greater(a) {
 				push(ctx, IntLiteral(1))
 			} else {
 				push(ctx, IntLiteral(0))
 			}
 		case InstructionCmpl:
+			if len(ctx.stack) < 2 {
+				panic(ctx.CurrentInstruction.Error("stack underflow"))
+			}
 			a := pop(ctx)
 			b := pop(ctx)
 			push(ctx, b)
 			push(ctx, a)
-			if a.Less(b) {
+			if b.Less(a) {
 				push(ctx, IntLiteral(1))
 			} else {
 				push(ctx, IntLiteral(0))
 			}
 		case InstructionCmpge:
+			if len(ctx.stack) < 2 {
+				panic(ctx.CurrentInstruction.Error("stack underflow"))
+			}
 			a := pop(ctx)
 			b := pop(ctx)
 			push(ctx, b)
 			push(ctx, a)
-			if a.GreaterOrEqual(b) {
+			if b.GreaterOrEqual(a) {
 				push(ctx, IntLiteral(1))
 			} else {
 				push(ctx, IntLiteral(0))
 			}
 		case InstructionCmple:
+			if len(ctx.stack) < 2 {
+				panic(ctx.CurrentInstruction.Error("stack underflow"))
+			}
 			a := pop(ctx)
 			b := pop(ctx)
 			push(ctx, b)
 			push(ctx, a)
-			if a.LessOrEqual(b) {
+			if b.LessOrEqual(a) {
 				push(ctx, IntLiteral(1))
 			} else {
 				push(ctx, IntLiteral(0))
@@ -342,7 +380,7 @@ func runInstructions(machine *Machine) *Machine {
 		case InstructionAdd:
 			a := pop(ctx)
 			b := pop(ctx)
-			push(ctx, a.Add(b))
+			push(ctx, b.Add(a))
 		case InstructionSub:
 			a := pop(ctx)
 			b := pop(ctx)
@@ -350,11 +388,11 @@ func runInstructions(machine *Machine) *Machine {
 		case InstructionMul:
 			a := pop(ctx)
 			b := pop(ctx)
-			push(ctx, a.Mul(b))
+			push(ctx, b.Mul(a))
 		case InstructionDiv:
 			a := pop(ctx)
 			b := pop(ctx)
-			push(ctx, a.Div(b))
+			push(ctx, b.Div(a))
 		case InstructionJmp:
 			if instr.value.Type() != LiteralInt {
 				panic("ERROR: jump target must be an integer")
@@ -568,9 +606,6 @@ func nativeOpen(ctx *RuntimeContext) {
 
 // Write to a file descriptor
 func nativeWrite(ctx *RuntimeContext) {
-	// Try to pop fd first (top of stack)
-	// Usage 1: push_str "hello"; get_str 0; push 1; native 1 -> Stack: [ptr, fd]
-	// Usage 2: push char; push char; push len; push fd; native 1 -> Stack: [..., char, char, len, fd] ??
 	fd := pop(ctx) // FD
 	if fd.Type() != LiteralInt {
 		panic(ctx.CurrentInstruction.Error("write fd must be integer"))
@@ -602,6 +637,10 @@ func nativeWrite(ctx *RuntimeContext) {
 	s := ""
 	for i := ptrIdx; i < len(ctx.heap); i++ {
 		charLit := ctx.heap[i]
+		if charLit.Type() == LiteralInt {
+			s += string(rune(charLit.valueInt))
+			continue
+		}
 		if charLit.Type() != LiteralChar {
 			continue
 		}
@@ -611,6 +650,7 @@ func nativeWrite(ctx *RuntimeContext) {
 		s += string(charLit.valueChar)
 	}
 	fmt.Fprint(writer, s)
+	push(ctx, IntLiteral(int64(len(s))))
 }
 
 // Read from a file descriptor into a buffer

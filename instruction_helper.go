@@ -264,6 +264,14 @@ func castFloatToIntIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionCastFloatToInt, line: ctx.Line, fileName: ctx.FileName}
 }
 
+func refIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionRef, line: ctx.Line, fileName: ctx.FileName}
+}
+
+func derefIns(ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionDeref, line: ctx.Line, fileName: ctx.FileName}
+}
+
 func noopIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionNoOp, line: ctx.Line, fileName: ctx.FileName}
 }
@@ -468,6 +476,10 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 			instructions = append(instructions, castIntToFloatIns(ctx))
 		case token.TypeCastFloatToInt:
 			instructions = append(instructions, castFloatToIntIns(ctx))
+		case token.TypeRef:
+			instructions = append(instructions, refIns(ctx))
+		case token.TypeDeref:
+			instructions = append(instructions, derefIns(ctx))
 		default:
 			panic(ctx.Error("unknown token type encountered during instruction generation"))
 		}

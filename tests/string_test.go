@@ -7,7 +7,8 @@ var explanatoryTest = ProgramTestCase{
 		push_str "world\n"
 		get_str 1     ; Pushes ptr to "hello"
 		push STDOUT   ; Push File Descriptor (fd) 1 (Stdout)
-		write         ; Execute write(fd, ptr)`,
+		write         ; Execute write(fd, ptr)
+		pop`,
 	expected:        []string{"world"},
 	additionalFiles: StdDefs,
 }
@@ -19,6 +20,7 @@ var stringPushTest = ProgramTestCase{
 		get_str 0
 		push 1
 		native 1
+		pop
 		halt`,
 	expected: []string{"Hello, World!"},
 }
@@ -30,6 +32,7 @@ var stringEscapeTest = ProgramTestCase{
 		get_str 0
 		push 1
 		native 1
+		pop
 		halt`,
 	expected: []string{"Line 1", "Line 2\tTabbed"},
 }
@@ -40,6 +43,7 @@ var stringEscapeTestMultiLine = ProgramTestCase{
 		get_str 0
 		push 1
 		native 1
+		pop
 		halt`,
 	expected: []string{"Line 1", "Line 2"},
 }
@@ -96,6 +100,7 @@ var stringWriteStderrTest = ProgramTestCase{
 		get_str 0
 		push 2
 		native 1
+		pop
 		halt`,
 	expected:       []string{},            // Stdout should be empty
 	expectedStderr: []string{"error_msg"}, // Stderr should contain this
@@ -109,6 +114,7 @@ var stringWriteInvalidFDTypeTest = ProgramTestCase{
 		get_str 0
 		push 1.5
 		native 1
+		pop
 		halt`,
 	expectedError: "write fd must be integer",
 }
@@ -121,6 +127,7 @@ var stringWriteInvalidPointerTypeTest = ProgramTestCase{
 	program: `push 1.5
 		push 1
 		native 1
+		pop
 		halt`,
 	expectedError: "write string pointer must be integer",
 }
@@ -132,6 +139,7 @@ var stringWriteInvalidHeapPointerTest = ProgramTestCase{
 	program: `push 999
 		push 1
 		native 1
+		pop
 		halt`,
 	expectedError: "segmentation fault",
 }
@@ -144,6 +152,7 @@ var stringMacroImportTest = ProgramTestCase{
 		get_str 0
 		push STDOUT
 		write
+		pop
 		halt`,
 	additionalFiles: StdDefs,
 	expected:        []string{"Hello, world!"},
@@ -190,6 +199,7 @@ var intToStrTest = ProgramTestCase{
 		int_to_str
 		push STDOUT
 		write
+		pop
 		halt`,
 	expected:        []string{"12345"},
 	additionalFiles: StdDefs,
@@ -203,6 +213,7 @@ var stringPopStrTest = ProgramTestCase{
 		get_str 0
 		push 1
 		native 1
+		pop
 		halt`,
 	expected: []string{"keep"},
 }
@@ -215,6 +226,7 @@ var stringDupStrTest = ProgramTestCase{
 		get_str 0
 		push 1
 		native 1
+		pop
 		halt`,
 	expected: []string{"hello"},
 }
@@ -227,9 +239,11 @@ var stringSwapStrTest = ProgramTestCase{
 		get_str 1
 		push 1
 		native 1
+		pop
 		get_str 0
 		push 1
 		native 1
+		pop
 		halt`,
 	expected: []string{"firstsecond"},
 }
@@ -242,6 +256,7 @@ var stringInDupStrTest = ProgramTestCase{
 		get_str 2
 		push 1
 		native 1
+		pop
 		halt`,
 	expected: []string{"bottom"},
 }
@@ -255,12 +270,15 @@ var stringInSwapStrTest = ProgramTestCase{
 		get_str 0
 		push 1
 		native 1
+		pop
 		get_str 1
 		push 1
 		native 1
+		pop
 		get_str 2
 		push 1
 		native 1
+		pop
 		halt`,
 	expected: []string{"CBA"},
 }
@@ -301,6 +319,7 @@ var testFibTest = ProgramTestCase{
 	int_to_str
 	push STDOUT
 	write
+	pop
 
 
 	inswap 0
@@ -311,6 +330,7 @@ var testFibTest = ProgramTestCase{
 	get_str 0
 	push STDOUT
 	write
+	pop
 
 	jmp loop 
 
@@ -320,13 +340,16 @@ var testFibTest = ProgramTestCase{
 	get_str 1
 	push STDOUT
 	write
+	pop
 	int_to_str
 	push STDOUT
 	write
+	pop
 
 	get_str 0
 	push STDOUT
-	write`,
+	write
+	pop`,
 	expected: []string{
 		"0", "1", "1", "2", "3", "5", "8", "13", "21", "34", "55", "89", "144", "233", "377",
 		"610", "987", "1597", "2584", "4181", "6765", "10946", "17711", "28657", "46368", "75025",

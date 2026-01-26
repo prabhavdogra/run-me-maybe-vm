@@ -145,6 +145,7 @@ var fileOpsTest = ProgramTestCase{
 		get_str 0       ; ptr to "Hello" (Index 0)
 		push 3          ; FD
 		write           ; write(3, ptr)
+		pop
 
 		; 4. Close FD 3
 		push 3

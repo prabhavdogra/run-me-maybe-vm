@@ -131,7 +131,7 @@ var TimeTest = ProgramTestCase{
 	program: `@imp "stddefs.wm"
 		push 0
 		time             ; [0, T]
-		cmpg             ; Checks T > 0? (Because a=T, b=0). Stack: [0, T, 1] (if T>0)
+		cmpl             ; Checks T > 0? (Because a=T, b=0). Stack: [0, T, 1] (if T>0)
 		
 		; Branching based on result
 		nzjmp success    ; Pops 1. Stack: [0, T].

@@ -215,7 +215,8 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			token.TypeCmpl, token.TypeCmpge, token.TypeCmple, token.TypePrint,
 			token.TypeInt, token.TypeHalt, token.TypeLabel, token.TypeIntToStr,
 			token.TypeNull, token.TypePopStr, token.TypeDupStr, token.TypeSwapStr,
-			token.TypeCastIntToFloat, token.TypeCastFloatToInt:
+			token.TypeCastIntToFloat, token.TypeCastFloatToInt,
+			token.TypeRef, token.TypeDeref:
 			current = current.AddNextNode(curToken)
 			instructionNumber++
 		default:
