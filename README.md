@@ -92,11 +92,14 @@ All native syscalls are invoked via `native <ID>`. Arguments are popped from the
 | `2` | `read` | `ptr`, `len`, `fd` | - | Reads `len` bytes from `fd` into heap buffer at `ptr`. Supports `0` (Stdin). |
 | `3` | `close` | `fd` | - | Closes the file descriptor `fd`. |
 | `4` | `malloc`| `size` | `ptr` | Allocates `size` bytes on the heap. Returns pointer. |
-| `5` | `free` | `ptr` | - | Frees heap memory allocated at `ptr`. |
+| `6` | `free` | `ptr` | - | Frees heap memory allocated at `ptr`. |
+| `7` | `read/scanf` | `type` (0=int, 1=char, 2=float) | `value` | Reads from stdin. Pushes read value. |
+| `8` | `pow` | `base`, `exp` | `result` | Calculates `base^exp`. Returns integer result. |
 | `60` | `exit` | `code` | - | Exits the VM with status `code`. |
 | `90` | `strcmp` | `ptr2`, `ptr1` | `result` | Compares two null-terminated strings. Returns `1` if equal, `0` otherwise. |
 | `91` | `strcpy` | `src`, `dest` | `dest` | Copies null-terminated string from `src` to `dest`. Returns `dest`. |
 | `92` | `memcpy` | `size`, `src`, `dest` | `dest` | Copies `size` bytes from `src` to `dest`. Returns `dest`. |
+| `98` | `float_to_str`| `float` | `ptr` | Converts float to null-terminated string (6 decimal places) on heap. Returns pointer. |
 | `99` | `int_to_str`| `int` | `ptr` | Converts integer to null-terminated string on heap. Returns pointer. |
 
 ## Preprocessor Directives

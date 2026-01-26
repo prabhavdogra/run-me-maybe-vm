@@ -68,6 +68,30 @@ var registerTests = []ProgramTestCase{
 		expected: []string{"INT 50", "INT 999"},
 	},
 	{
+		name: "native_pow",
+		program: `
+			@imp "stddefs.wm"
+			push 3 ; power
+			push 2 ; base
+			pow
+			print  ; INT 8
+		`,
+		expected:        []string{"INT 8"},
+		additionalFiles: StdDefs,
+	},
+	{
+		name: "native_ftoa",
+		program: `
+			@imp "stddefs.wm"
+			push 3.14159
+			float_to_str
+			push 1
+			native 1 ; write
+		`,
+		expected:        []string{"3.14159000"},
+		additionalFiles: StdDefs,
+	},
+	{
 		name: "registers_mov_imm_types",
 		program: `
 			mov r0 42

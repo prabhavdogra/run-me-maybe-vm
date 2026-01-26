@@ -15,6 +15,7 @@ var StdDefs = map[string]string{
 	@def open native 0
 	@def write native 1
 	@def read native 2
+	@def pow native 8
 	@def close native 3
 	@def malloc native 4
 	@def realloc native 5
@@ -27,6 +28,7 @@ var StdDefs = map[string]string{
 	@def memcpy native 92
 	@def strcat native 93
 	@def strlen native 94
+	@def float_to_str native 98
 	@def int_to_str native 99
 	@def assert native 100
 	`,

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"time"
 	"vm/internal/parser"
@@ -535,6 +536,8 @@ func runInstructions(machine *Machine) *Machine {
 			case 7:
 				// scanf(ptr)
 				nativeScanf(ctx)
+			case 8:
+				nativePow(ctx)
 			case 10:
 				// time
 				nativeTime(ctx)
@@ -556,6 +559,8 @@ func runInstructions(machine *Machine) *Machine {
 			case 94:
 				// 94: strlen
 				nativeStrlen(ctx)
+			case 98:
+				nativeFloatToStr(ctx)
 			case 99:
 				// 99: int_to_str
 				nativeIntToStr(ctx)
@@ -885,6 +890,34 @@ func nativeExit(ctx *RuntimeContext) {
 	}
 	code := int(codeVal.valueInt)
 	os.Exit(code)
+}
+
+func nativePow(ctx *RuntimeContext) {
+	powerVal := pop(ctx)
+	numVal := pop(ctx)
+	if powerVal.Type() != LiteralInt || numVal.Type() != LiteralInt {
+		panic(ctx.CurrentInstruction.Error("pow requires integer arguments"))
+	}
+	// Patch logic: pow(power, num). pop() gives power first.
+	// usage: push 8; push 10; native 8 -> 10^8
+	// power=10, num=8. pow(10, 8).
+	res := math.Pow(float64(powerVal.valueInt), float64(numVal.valueInt))
+	push(ctx, IntLiteral(int64(res)))
+}
+
+func nativeFloatToStr(ctx *RuntimeContext) {
+	val := pop(ctx)
+	if val.Type() != LiteralFloat {
+		panic(ctx.CurrentInstruction.Error("float_to_str requires float argument"))
+	}
+	s := fmt.Sprintf("%.8f", val.valueFloat)
+	// Allocate on heap
+	ptr := int64(len(ctx.heap))
+	for _, ch := range s {
+		ctx.heap = append(ctx.heap, CharLiteral(ch))
+	}
+	ctx.heap = append(ctx.heap, CharLiteral(0))
+	push(ctx, IntLiteral(ptr))
 }
 
 func nativeStrcmp(ctx *RuntimeContext) {
