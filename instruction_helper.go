@@ -327,7 +327,7 @@ func printStack(machine *Machine) {
 func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int) {
 	instructions := []Instruction{}
 	cur := parsedTokens
-	entrypointIndex := 0
+	entrypointIndex := -1
 
 	for cur != nil {
 		ctx := InstructionContext{
@@ -355,6 +355,9 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 		case token.TypeEntrypoint:
 			if cur.Next.Value.Type != token.TypeInt {
 				panic(ctx.Error("expected integer (label address) after entrypoint"))
+			}
+			if entrypointIndex != -1 {
+				panic(ctx.Error("cannot define entrypoint more than once"))
 			}
 			val, err := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
 			if err != nil {
@@ -578,6 +581,9 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 			panic(ctx.Error("unknown token type encountered during instruction generation"))
 		}
 		cur = cur.Next
+	}
+	if entrypointIndex == -1 {
+		entrypointIndex = 0
 	}
 	return instructions, entrypointIndex
 }
