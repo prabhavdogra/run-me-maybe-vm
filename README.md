@@ -35,6 +35,21 @@ go run . path/to/source.cmm --debug
 go test -v ./...
 ```
 
+## Editor Support
+
+### VSCode Extension
+**Option 1: CLI Installation**
+```bash
+code --install-extension ./vscode-extension
+```
+
+**Option 2: Manual Installation**
+```bash
+mkdir -p ~/.vscode/extensions/cmm-assembly-0.0.1
+cp -r vscode-extension/* ~/.vscode/extensions/cmm-assembly-0.0.1/
+```
+*Note: Reload VSCode (Cmd+Shift+P > "Reload Window") after installation.*
+
 ## Instruction Set
 
 | Instruction | Description |

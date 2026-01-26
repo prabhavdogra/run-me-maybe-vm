@@ -28,7 +28,7 @@
         "comments": {
             "patterns": [
                 {
-                    "scopeName": "comment.line.semicolon.cmm",
+                    "name": "comment.line.semicolon.cmm",
                     "match": ";.*$"
                 }
             ]
