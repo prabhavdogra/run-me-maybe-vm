@@ -276,6 +276,10 @@ func movStrIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionMovStr, line: ctx.Line, fileName: ctx.FileName}
 }
 
+func indexIns(val rune, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionIndex, value: CharLiteral(val), line: ctx.Line, fileName: ctx.FileName}
+}
+
 func noopIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionNoOp, line: ctx.Line, fileName: ctx.FileName}
 }
@@ -486,6 +490,20 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 			instructions = append(instructions, derefIns(ctx))
 		case token.TypeMovStr:
 			instructions = append(instructions, movStrIns(ctx))
+		case token.TypeIndex:
+			if cur.Next == nil {
+				panic(ctx.Error("expected char after index"))
+			}
+			if cur.Next.Value.Type == token.TypeChar {
+				if len(cur.Next.Value.Text) == 0 {
+					panic(ctx.Error("empty character literal for index"))
+				}
+				charValue := rune(cur.Next.Value.Text[0])
+				instructions = append(instructions, indexIns(charValue, ctx))
+			} else {
+				panic(ctx.Error("expected char after index"))
+			}
+			cur = cur.Next
 		default:
 			panic(ctx.Error("unknown token type encountered during instruction generation"))
 		}

@@ -50,6 +50,7 @@ const (
 	InstructionRef
 	InstructionDeref
 	InstructionMovStr
+	InstructionIndex
 	InstructionHalt
 )
 
@@ -159,6 +160,8 @@ func (i InstructionSet) String() string {
 		return "DEREF"
 	case InstructionMovStr:
 		return "MOV_STR"
+	case InstructionIndex:
+		return "INDEX"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
@@ -272,6 +275,30 @@ func runInstructions(machine *Machine) *Machine {
 			} else {
 				panic(ctx.CurrentInstruction.Error("mov_str requires char or int (pointer)"))
 			}
+		case InstructionIndex:
+			idxVal := pop(ctx)
+			if idxVal.Type() != LiteralInt {
+				panic(ctx.CurrentInstruction.Error("index argument must be an integer"))
+			}
+			idx := idxVal.valueInt
+
+			ptrVal := pop(ctx)
+			if ptrVal.Type() != LiteralInt {
+				panic(ctx.CurrentInstruction.Error("index pointer must be an integer"))
+			}
+			ptr := ptrVal.valueInt
+
+			if idx < 0 {
+				panic(ctx.CurrentInstruction.Error("index cannot be less than 0"))
+			}
+			targetAddr := ptr + idx
+			if targetAddr < 0 || int(targetAddr) >= len(ctx.heap) {
+				panic(ctx.CurrentInstruction.Error("segmentation fault: index out of bounds"))
+			}
+
+			ctx.heap[targetAddr] = instr.value
+
+			push(ctx, ptrVal)
 		case InstructionPush:
 			push(ctx, instr.value)
 		case InstructionPushStr:

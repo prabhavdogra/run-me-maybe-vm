@@ -219,6 +219,14 @@ func generateList(tokens token.Tokens, labelMap map[string]int64) *ParserList {
 			token.TypeRef, token.TypeDeref, token.TypeMovStr:
 			current = current.AddNextNode(curToken)
 			instructionNumber++
+		case token.TypeIndex:
+			if nextToken.Type != token.TypeChar {
+				panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error(fmt.Sprintf("expected char after 'index' instruction, but found %s '%s'", nextToken.Type, nextToken.Text)))
+			}
+			current = current.AddNextNode(curToken)
+			current = current.AddNextNode(nextToken)
+			instructionNumber++
+			i++
 		default:
 			panic(token.TokenContext{Line: curToken.Line, Character: curToken.Character, FileName: curToken.FileName}.Error("unknown token type encountered during parsing"))
 		}

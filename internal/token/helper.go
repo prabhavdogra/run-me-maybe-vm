@@ -105,6 +105,8 @@ func (tt TokenType) String() string {
 		return "deref"
 	case TypeMovStr:
 		return "mov_str"
+	case TypeIndex:
+		return "index"
 	default:
 		return "invalid"
 	}
@@ -221,6 +223,8 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypeDeref
 	case "mov_str":
 		return TypeMovStr
+	case "index":
+		return TypeIndex
 	default:
 		return checkLabelType(name)
 	}

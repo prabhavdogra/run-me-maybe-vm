@@ -61,6 +61,7 @@ go test -v ./...
 | `ref` | Moves the top value to the heap and pushes a pointer (index) to it. |
 | `deref` | Pop a pointer (index) call and push the value stored at that heap location. |
 | `mov_str` | Pops a character from stack and pushes it to the heap string. If char, creates new heap string. |
+| `index <char>` | Pops index and string pointer from stack. Sets heap[ptr + index] = char. Pushes ptr back. |
 | `push_str <string>` | (Directive) Allocates string in heap and adds to string stack at load time. |
 | `get_str <index>` | Push the pointer to the string at `index` in the string stack onto the data stack. |
 | `pop_str` | Remove the top string from the string stack. |
