@@ -51,6 +51,8 @@ const (
 	InstructionDeref
 	InstructionMovStr
 	InstructionIndex
+	InstructionMov
+	InstructionPushReg
 	InstructionHalt
 )
 
@@ -162,6 +164,10 @@ func (i InstructionSet) String() string {
 		return "MOV_STR"
 	case InstructionIndex:
 		return "INDEX"
+	case InstructionMov:
+		return "MOV"
+	case InstructionPushReg:
+		return "PUSH_REG"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", i)
 	}
@@ -171,6 +177,7 @@ func runInstructions(machine *Machine) *Machine {
 	ctx := &RuntimeContext{
 		Machine:     machine,
 		returnStack: make([]int, 0, maxReturnStackSize),
+		registers:   [4]Literal{},
 	}
 	// Jump to entrypoint
 	insPtr := machine.entrypoint
@@ -299,6 +306,16 @@ func runInstructions(machine *Machine) *Machine {
 			ctx.heap[targetAddr] = instr.value
 
 			push(ctx, ptrVal)
+		case InstructionMov:
+			if instr.registerIndex < 0 || instr.registerIndex >= len(ctx.registers) {
+				panic(ctx.CurrentInstruction.Error("invalid register index"))
+			}
+			ctx.registers[instr.registerIndex] = instr.value
+		case InstructionPushReg:
+			if instr.registerIndex < 0 || instr.registerIndex >= len(ctx.registers) {
+				panic(ctx.CurrentInstruction.Error("invalid register index"))
+			}
+			push(ctx, ctx.registers[instr.registerIndex])
 		case InstructionPush:
 			push(ctx, instr.value)
 		case InstructionPushStr:

@@ -49,6 +49,21 @@ func pop(ctx *RuntimeContext) Literal {
 	ctx.stack = ctx.stack[:len(ctx.stack)-1]
 	return value
 }
+
+func getRegisterIndex(name string) int {
+	switch name {
+	case "r0":
+		return 0
+	case "r1":
+		return 1
+	case "r2":
+		return 2
+	case "r3":
+		return 3
+	default:
+		panic(fmt.Sprintf("unknown register %s", name))
+	}
+}
 func indexSwap(ctx *RuntimeContext, index int64) {
 	if index < 0 || int(index) >= len(ctx.stack) {
 		panic(ctx.CurrentInstruction.Error("index out of bounds for swap"))
@@ -280,6 +295,14 @@ func indexIns(val rune, ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionIndex, value: CharLiteral(val), line: ctx.Line, fileName: ctx.FileName}
 }
 
+func pushRegIns(idx int, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionPushReg, registerIndex: idx, line: ctx.Line, fileName: ctx.FileName}
+}
+
+func movIns(idx int, val Literal, ctx InstructionContext) Instruction {
+	return Instruction{instructionType: InstructionMov, registerIndex: idx, value: val, line: ctx.Line, fileName: ctx.FileName}
+}
+
 func noopIns(ctx InstructionContext) Instruction {
 	return Instruction{instructionType: InstructionNoOp, line: ctx.Line, fileName: ctx.FileName}
 }
@@ -354,6 +377,9 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 				for _, char := range strVal {
 					instructions = append(instructions, pushCharIns(char, ctx))
 				}
+			} else if cur.Next.Value.Type == token.TypeRegister {
+				regIdx := getRegisterIndex(cur.Next.Value.Text)
+				instructions = append(instructions, pushRegIns(regIdx, ctx))
 			} else if cur.Next.Value.Type == token.TypeNull {
 				instructions = append(instructions, pushNullIns(ctx))
 			}
@@ -490,6 +516,34 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 			instructions = append(instructions, derefIns(ctx))
 		case token.TypeMovStr:
 			instructions = append(instructions, movStrIns(ctx))
+		case token.TypeMov:
+			if cur.Next == nil || cur.Next.Value.Type != token.TypeRegister {
+				panic(ctx.Error("expected register after mov"))
+			}
+			regIdx := getRegisterIndex(cur.Next.Value.Text)
+			cur = cur.Next
+
+			if cur.Next == nil {
+				panic(ctx.Error("expected immediate value after register in mov"))
+			}
+			var val Literal
+			switch cur.Next.Value.Type {
+			case token.TypeInt:
+				v, _ := strconv.ParseInt(cur.Next.Value.Text, 10, 64)
+				val = IntLiteral(v)
+			case token.TypeFloat:
+				v, _ := strconv.ParseFloat(cur.Next.Value.Text, 64)
+				val = FloatLiteral(v)
+			case token.TypeChar:
+				if len(cur.Next.Value.Text) == 0 {
+					panic(ctx.Error("empty char literal"))
+				}
+				val = CharLiteral(rune(cur.Next.Value.Text[0]))
+			default:
+				panic(ctx.Error("mov only supports immediate values (int, float, char)"))
+			}
+			instructions = append(instructions, movIns(regIdx, val, ctx))
+			cur = cur.Next
 		case token.TypeIndex:
 			if cur.Next == nil {
 				panic(ctx.Error("expected char after index"))

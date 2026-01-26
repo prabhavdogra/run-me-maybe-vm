@@ -107,6 +107,10 @@ func (tt TokenType) String() string {
 		return "mov_str"
 	case TypeIndex:
 		return "index"
+	case TypeRegister:
+		return "register"
+	case TypeMov:
+		return "mov"
 	default:
 		return "invalid"
 	}
@@ -225,6 +229,10 @@ func checkBuiltinKeywords(name string) TokenType {
 		return TypeMovStr
 	case "index":
 		return TypeIndex
+	case "mov":
+		return TypeMov
+	case "r0", "r1", "r2", "r3":
+		return TypeRegister
 	default:
 		return checkLabelType(name)
 	}
@@ -234,6 +242,7 @@ func GetWord(input string, currentIndex int) (string, int) {
 	keyword := ""
 	for len(input) > currentIndex &&
 		(unicode.IsLetter(rune(input[currentIndex])) ||
+			unicode.IsDigit(rune(input[currentIndex])) ||
 			rune(input[currentIndex]) == ':' ||
 			rune(input[currentIndex]) == '_') {
 		keyword += string(rune(input[currentIndex]))

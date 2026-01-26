@@ -24,12 +24,14 @@ type RuntimeContext struct {
 	*Machine
 	returnStack        []int
 	CurrentInstruction Instruction
+	registers          [4]Literal
 }
 
 type Instruction struct {
 	operator        uint8
 	instructionType InstructionSet
 	value           Literal
+	registerIndex   int
 	length          int
 	line            int
 	fileName        string

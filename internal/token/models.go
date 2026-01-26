@@ -67,6 +67,8 @@ const (
 	TypeDeref
 	TypeMovStr
 	TypeIndex
+	TypeRegister
+	TypeMov
 )
 
 type Token struct {
