@@ -100,32 +100,37 @@ var PrintIntTest = ProgramTestCase{
 			pop`,
 	additionalFiles: map[string]string{
 		"std.wm": `
+		print_newline:
+			push '\n'
+			ref
+			push 1
+			native 1
+			pop
+			ret
+
 		convert:
+			dup
 			push 0
-			cmpg
+			cmpl
 			zjmp _not_neg
 			push '-'
 			ref
 			push 1 
 			native 1
 			pop
-			swap
 			push 0
 			swap
 			sub
-			swap
-		_not_neg:
-			pop
+			_not_neg:
+			dup
 			push 9
-			cmpl
+			cmpg
 			zjmp _lessthannine
-			pop
 			dup
 			push 10
 			div
 			call convert 
-		_lessthannine:
-			pop
+			_lessthannine:
 			push 10
 			mod
 			push 48
@@ -133,11 +138,11 @@ var PrintIntTest = ProgramTestCase{
 			ref
 			push 1 
 			native 1
+			pop
 			ret
 
 		printint:
 			call convert
-			pop
 			ret
 		`,
 	},
