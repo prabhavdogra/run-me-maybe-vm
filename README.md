@@ -128,13 +128,3 @@ All native syscalls are invoked via `native <ID>`. Arguments are popped from the
   @def MAX_SIZE 100
   push MAX_SIZE
   ```
-
-## Project Structure
-
-- `main.go`: Entry point, orchestrates lexing, parsing, and execution.
-- `internal/lexer/`: Lexical analysis and macro expansion.
-- `internal/parser/`: Token processing and label resolution.
-- `internal/token/`: Token types and helper functions.
-- `tests/`: Integration and unit tests.
-- `instruction.go`: VM execution loop and logic.
-- `literal.go`: Data type definitions and literal arithmetic.
