@@ -2,7 +2,7 @@ package tests
 
 var FizzBuzzTest = ProgramTestCase{
 	name: "fizzbuzz",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 			@def N 100
 
 			jmp main

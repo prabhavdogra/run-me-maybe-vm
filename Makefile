@@ -1,14 +1,14 @@
 program:
-	go run . "program.cmm"
+	go run . "program.rmm"
 
 program2:
-	go run . "program2.cmm"
+	go run . "program2.rmm"
 
 program3:
-	go run . "t_fib.cmm"
+	go run . "t_fib.rmm"
 
 debug:
-	go run . "program.cmm" --debug
+	go run . "program.rmm" --debug
 
 test:
 	go test -v ./... -timeout=30s | grep -i fail || true
@@ -20,7 +20,7 @@ tools:
 	cd vscode-extension && vsce package
 
 install_tools:
-	cd vscode-extension && code --install-extension compilememaybeasm-0.0.2.vsix
+	cd vscode-extension && code --install-extension runmemaybeasm-0.0.1.vsix
 
 uninstall_tools:
-	code --uninstall-extension undefined_publisher.compilememaybeasm
+	code --uninstall-extension undefined_publisher.runmemaybeasm

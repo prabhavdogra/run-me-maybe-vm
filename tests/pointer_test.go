@@ -87,7 +87,7 @@ var PointerArithmeticTest = ProgramTestCase{
 var PrintIntTest = ProgramTestCase{
 	name: "print_int",
 	program: `
-		@imp "std.cmm"
+		@imp "std.rmm"
 		entrypoint main
 
 		main:
@@ -99,7 +99,7 @@ var PrintIntTest = ProgramTestCase{
 			native 1
 			pop`,
 	additionalFiles: map[string]string{
-		"std.cmm": `
+		"std.rmm": `
 		print_newline:
 			push '\n'
 			ref

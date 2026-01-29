@@ -3,7 +3,7 @@ package tests
 // 1. Strcmp Test (Explicit equality check)
 var StrcmpTest = ProgramTestCase{
 	name: "native_strcmp",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 		push_str "hello"
 		push_str "hello"
 		get_str 0
@@ -27,7 +27,7 @@ var StrcmpTest = ProgramTestCase{
 // 2. Strcpy Test (Copy string)
 var StrcpyTest = ProgramTestCase{
 	name: "native_strcpy",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 		push 10
 		malloc           ; Dst buffer
 		push_str "copy"
@@ -47,7 +47,7 @@ var StrcpyTest = ProgramTestCase{
 // 3. Memcpy Test (Copy memory block)
 var MemcpyTest = ProgramTestCase{
 	name: "native_memcpy",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 		push 10
 		malloc           ; Dest buffer
 		push_str "data"
@@ -69,7 +69,7 @@ var MemcpyTest = ProgramTestCase{
 // Native 99: Stack inputs [int]. Output [ptr].
 var NativeIntToStrTest = ProgramTestCase{
 	name: "native_int_to_str",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 		push 12345
 		native 99		 ; Converts to string pointer
 		push STDOUT
@@ -84,7 +84,7 @@ var NativeIntToStrTest = ProgramTestCase{
 // 5. Strcat Test
 var StrcatTest = ProgramTestCase{
 	name: "native_strcat",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 		push 20
 		malloc           ; dest
 		dup
@@ -111,7 +111,7 @@ var StrcatTest = ProgramTestCase{
 // 6. Native Strlen Test
 var NativeStrlenTest = ProgramTestCase{
 	name: "native_strlen",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 		push_str "12345"
 		get_str 0
 		strlen           ; Native 94. Returns length (5)
@@ -128,7 +128,7 @@ var NativeStrlenTest = ProgramTestCase{
 // 7. Time Test
 var TimeTest = ProgramTestCase{
 	name: "native_time",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 		push 0
 		time             ; [0, T]
 		cmpl             ; Checks T > 0? (Because a=T, b=0). Stack: [0, T, 1] (if T>0)
@@ -156,7 +156,7 @@ var TimeTest = ProgramTestCase{
 // 8. Realloc Test
 var ReallocTest = ProgramTestCase{
 	name: "native_realloc",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 		push 5
 		malloc           ; ptr (size 5)
 		dup              ; ptr, ptr
@@ -187,7 +187,7 @@ var ReallocTest = ProgramTestCase{
 // 9. Assert Test
 var AssertTest = ProgramTestCase{
 	name: "native_assert",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 		push 1
 		assert           ; Should pass
 		
@@ -201,7 +201,7 @@ var AssertTest = ProgramTestCase{
 // 10. NULL Test
 var NullTest = ProgramTestCase{
 	name: "keyword_null",
-	program: `@imp "stddefs.cmm"
+	program: `@imp "stddefs.rmm"
 		push NULL        ; Pushes LiteralNull
 		print            ; Should print "NULL"
 		halt`,

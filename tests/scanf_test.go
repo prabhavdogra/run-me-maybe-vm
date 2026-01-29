@@ -3,7 +3,7 @@ package tests
 var scanfTests = []ProgramTestCase{
 	{
 		name: "scanf_basic",
-		program: `@imp "stddefs.cmm"
+		program: `@imp "stddefs.rmm"
 			push 10		; [size]
 			malloc      ; mallon(size) 
 						; Stack: [ptr]

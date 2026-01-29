@@ -1,6 +1,6 @@
-# cmm Assembly VSCode Extension
+# rmm Assembly VSCode Extension
 
-Syntax highlighting support for the cmm Assembly language (`.cmm` files).
+Syntax highlighting support for the rmm Assembly language (`.rmm` files).
 
 ## Features
 
@@ -17,7 +17,7 @@ Syntax highlighting support for the cmm Assembly language (`.cmm` files).
 1. Copy the `vscode-extension` folder to your local machine.
 2. Run `code --install-extension vscode-extension` directory, or:
    - Package it using `vsce package`.
-   - Install the resulting `.vsix` file using `code --install-extension cmm-assembly-0.0.1.vsix`.
+   - Install the resulting `.vsix` file using `code --install-extension rmm-assembly-0.0.1.vsix`.
 
 ## Development
 

@@ -4,7 +4,7 @@ var fibRecTest = ProgramTestCase{
 	name: "fib_recursive",
 	program: `
 	@def N 10
-	@imp "stddefs.cmm"
+	@imp "stddefs.rmm"
 	entrypoint main
 
 	fib:

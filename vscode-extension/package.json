@@ -1,9 +1,9 @@
 {
-  "name": "compilememaybeasm",
-  "displayName": "CompileMeMaybe Assembly",
-  "description": "Syntax highlighting for CompileMeMaybe Assembly Language",
+  "name": "runmemaybeasm",
+  "displayName": "RunMeMaybe Assembly",
+  "description": "Syntax highlighting for RunMeMaybe Assembly Language",
   "version": "0.0.2",
-  "publisher": "compilememaybedev",
+  "publisher": "runmemaybedev",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -12,27 +12,27 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/prabhavdogra/compile-me-maybe"
+    "url": "https://github.com/prabhavdogra/run-me-maybe"
   },
   "contributes": {
     "languages": [
       {
-        "id": "cmm",
+        "id": "rmm",
         "aliases": [
-          "cmm Assembly",
-          "cmm"
+          "rmm Assembly",
+          "rmm"
         ],
         "extensions": [
-          ".cmm"
+          ".rmm"
         ],
         "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
       {
-        "language": "cmm",
-        "scopeName": "source.cmm",
-        "path": "./syntaxes/cmm.tmLanguage.json"
+        "language": "rmm",
+        "scopeName": "source.rmm",
+        "path": "./syntaxes/rmm.tmLanguage.json"
       }
     ]
   }

@@ -93,7 +93,7 @@ func TestPrograms(t *testing.T) {
 				}
 
 				// Write main program with absolute path
-				mainFilePath := filepath.Join(tmpDir, "main.cmm")
+				mainFilePath := filepath.Join(tmpDir, "main.rmm")
 				if err := os.WriteFile(mainFilePath, []byte(tc.program), 0644); err != nil {
 					t.Fatalf("failed to write main file: %v", err)
 				}
@@ -176,7 +176,7 @@ func TestPrograms(t *testing.T) {
 			}
 
 			// Legacy single-file mode
-			tmp, err := os.CreateTemp("", "prog-*.cmm")
+			tmp, err := os.CreateTemp("", "prog-*.rmm")
 			if err != nil {
 				t.Fatalf("failed to create temp file: %v", err)
 			}

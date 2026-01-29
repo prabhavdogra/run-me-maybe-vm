@@ -1,12 +1,12 @@
-# CompileMeMaybe (cmm)
+# RunMeMaybe (rmm)
 
-A lightweight, stack-based virtual machine written in Go, featuring the custom **CompileMeMaybe** (`.cmm`) assembly language, a lexer with preprocessor support, and a parser.
+A lightweight, stack-based virtual machine written in Go, featuring the custom **RunMeMaybe** (`.rmm`) assembly language, a lexer with preprocessor support, and a parser.
 
 ## Features
 
 - **Stack-based Execution**: All operations occur on a central stack.
 - **Preprocessor**:
-  - `@imp "file.cmm"`: Resolve and include external files.
+  - `@imp "file.rmm"`: Resolve and include external files.
   - `@def NAME VALUE`: Simple macro substitution.
 - **Support for Multiple Literals**: Integers, Floats, and Characters.
 - **Flexible Instruction Set**: Arithmetic, stack manipulation, control flow, and comparison.
@@ -21,13 +21,13 @@ A lightweight, stack-based virtual machine written in Go, featuring the custom *
 
 ### Running a Program
 ```bash
-go run . path/to/source.cmm
+go run . path/to/source.rmm
 ```
 
 ### Running in Debug Mode
 Debug mode prints the lexed tokens, parsed instruction list, and the final state of the stack.
 ```bash
-go run . path/to/source.cmm --debug
+go run . path/to/source.rmm --debug
 ```
 
 ### Running Tests
@@ -121,7 +121,7 @@ All native syscalls are invoked via `native <ID>`. Arguments are popped from the
 
 - **Imports**: Resolve paths relative to the current file.
   ```assembly
-  @imp "stdlib.cmm"
+  @imp "stdlib.rmm"
   ```
 - **Macros**: Simple text substitution for constants or shorthand.
   ```assembly

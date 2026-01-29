@@ -173,7 +173,7 @@ var stdLibTests = []ProgramTestCase{
 		name: "std_stringcmp_equal",
 		program: `
 				entrypoint main
-				@imp "std.cmm"
+				@imp "std.rmm"
 				main:
 				push_str "Hello"
 				push_str "Hello"
@@ -192,7 +192,7 @@ var stdLibTests = []ProgramTestCase{
 		name: "std_stringcmp_not_equal",
 		program: `
 				entrypoint main
-				@imp "std.cmm"
+				@imp "std.rmm"
 				main:
 				push_str "Hello"
 				push_str "World"
@@ -210,7 +210,7 @@ var stdLibTests = []ProgramTestCase{
 		name: "std_stringlen",
 		program: `
 				entrypoint main
-				@imp "std.cmm"
+				@imp "std.rmm"
 				main:
 				push_str "Hello"
 				get_str 0

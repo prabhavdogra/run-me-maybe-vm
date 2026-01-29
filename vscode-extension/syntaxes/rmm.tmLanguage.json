@@ -1,6 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-    "name": "cmm Assembly",
+    "name": "rmm Assembly",
     "patterns": [
         {
             "include": "#comments"
@@ -28,7 +28,7 @@
         "comments": {
             "patterns": [
                 {
-                    "name": "comment.line.semicolon.cmm",
+                    "name": "comment.line.semicolon.rmm",
                     "match": ";.*$"
                 }
             ]
@@ -36,23 +36,23 @@
         "strings": {
             "patterns": [
                 {
-                    "name": "string.quoted.double.cmm",
+                    "name": "string.quoted.double.rmm",
                     "begin": "\"",
                     "end": "\"",
                     "patterns": [
                         {
-                            "name": "constant.character.escape.cmm",
+                            "name": "constant.character.escape.rmm",
                             "match": "\\\\."
                         }
                     ]
                 },
                 {
-                    "name": "string.quoted.single.cmm",
+                    "name": "string.quoted.single.rmm",
                     "begin": "'",
                     "end": "'",
                     "patterns": [
                         {
-                            "name": "constant.character.escape.cmm",
+                            "name": "constant.character.escape.rmm",
                             "match": "\\\\."
                         }
                     ]
@@ -62,7 +62,7 @@
         "registers": {
             "patterns": [
                 {
-                    "name": "variable.language.register.cmm",
+                    "name": "variable.language.register.rmm",
                     "match": "\\b(r[0-9]+)\\b"
                 }
             ]
@@ -70,11 +70,11 @@
         "numbers": {
             "patterns": [
                 {
-                    "name": "constant.numeric.float.cmm",
+                    "name": "constant.numeric.float.rmm",
                     "match": "\\b[0-9]+\\.[0-9]+\\b"
                 },
                 {
-                    "name": "constant.numeric.integer.cmm",
+                    "name": "constant.numeric.integer.rmm",
                     "match": "\\b[0-9]+\\b"
                 }
             ]
@@ -82,23 +82,23 @@
         "keywords": {
             "patterns": [
                 {
-                    "name": "keyword.control.cmm",
+                    "name": "keyword.control.rmm",
                     "match": "\\b(jmp|zjmp|nzjmp|call|ret|halt|entrypoint|native)\\b"
                 },
                 {
-                    "name": "keyword.control.directive.cmm",
+                    "name": "keyword.control.directive.rmm",
                     "match": "\\b(noop|print)\\b"
                 },
                 {
-                    "name": "keyword.operator.cmm",
+                    "name": "keyword.operator.rmm",
                     "match": "\\b(add|sub|mul|div|mod|cmpe|cmpne|cmpg|cmpl|cmpge|cmple|itof|ftoi|add_f|sub_f|mul_f|div_f)\\b"
                 },
                 {
-                    "name": "keyword.other.cmm",
+                    "name": "keyword.other.rmm",
                     "match": "\\b(push|pop|dup|swap|inswap|indup|push_ptr|push_str|get_str|pop_str|dup_str|indup_str|swap_str|inswap_str|ref|deref|mov_str|index|mov|top|int_to_str)\\b"
                 },
                 {
-                    "name": "constant.language.null.cmm",
+                    "name": "constant.language.null.rmm",
                     "match": "\\bNULL\\b"
                 }
             ]
@@ -106,11 +106,11 @@
         "labels": {
             "patterns": [
                 {
-                    "name": "entity.name.function.label.cmm",
+                    "name": "entity.name.function.label.rmm",
                     "match": "\\b[a-z_][a-z0-9_]*:"
                 },
                 {
-                    "name": "string.other.label.usage.cmm",
+                    "name": "string.other.label.usage.rmm",
                     "match": "\\b[a-z_][a-z0-9_]*\\b"
                 }
             ]
@@ -118,11 +118,11 @@
         "directives": {
             "patterns": [
                 {
-                    "name": "keyword.control.directive.cmm",
+                    "name": "keyword.control.directive.rmm",
                     "match": "@(imp|def)"
                 }
             ]
         }
     },
-    "scopeName": "source.cmm"
+    "scopeName": "source.rmm"
 }

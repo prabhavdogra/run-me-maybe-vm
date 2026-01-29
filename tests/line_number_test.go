@@ -11,27 +11,27 @@ var LineNumberTests = []ProgramTestCase{
 		pop  ; 1st element
 		pop  ; Stack underflow here (Line 5)
 		halt`,
-		expectedError:   "ERROR (main.cmm:5): stack underflow",
+		expectedError:   "ERROR (main.rmm:5): stack underflow",
 		additionalFiles: map[string]string{},
 	},
 	{
 		name: "panic_macro_lines",
-		program: `@imp "stddefs.cmm"
+		program: `@imp "stddefs.rmm"
 		push "w"
 		open
 		halt`,
-		expectedError:   "ERROR (main.cmm:3): open flags must be integer",
+		expectedError:   "ERROR (main.rmm:3): open flags must be integer",
 		additionalFiles: StdDefs,
 	},
 	{
 		name: "panic_multiline_macro_lines",
-		program: `@imp "stddefs.cmm"
+		program: `@imp "stddefs.rmm"
 		
 		
 		push "w"
 		open
 		halt`,
-		expectedError:   "ERROR (main.cmm:5): open flags must be integer",
+		expectedError:   "ERROR (main.rmm:5): open flags must be integer",
 		additionalFiles: StdDefs,
 	},
 }
