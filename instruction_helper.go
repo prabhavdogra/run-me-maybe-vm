@@ -344,7 +344,6 @@ func generateInstructions(parsedTokens *parser.ParserList) (InstructionList, int
 		case token.TypeInvalid:
 			panic(ctx.Error("invalid token encountered during instruction generation"))
 		case token.TypeNoOp:
-			instructions = append(instructions, noopIns(ctx))
 		case token.TypeCall:
 			if cur.Next.Value.Type != token.TypeInt {
 				panic(ctx.Error("expected integer (label address) after call"))
